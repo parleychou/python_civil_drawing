@@ -979,9 +979,9 @@
               <li><strong>零依赖纯粹性</strong>：让学生彻底看清数据结构本身，不迷失在庞大的商业类库调用中。</li>
             </ul>
           </div>
-          <pre class="code-panel"><code># 核心抽象架构 (brep_primitives)
+          <pre class="code-panel"><code># 核心抽象架构 (src)
 from abc import ABC, abstractmethod
-from core.geometry_data import GeometryData, Point3D
+from src import GeometryData, Point3D
 import pyvista as pv
 
 class ParametricSurfaceData(GeometryData, ABC):
@@ -1614,15 +1614,19 @@ class MeshData(GeometryData):
           <div>
             <div class="eyebrow">实战场景</div>
             <h2 class="section-title">同屏三几何体对比渲染实战</h2>
-            <p class="lead">在脚本 <code>examples/07_render_surface_brep_mesh_scene.py</code> 中，我们将三大几何体置于同一 3D 视口中并排展示：</p>
+            <p class="lead">在脚本 <code>examples/06_07_render_surface_brep_mesh_scene.py</code> 中，我们将三大几何体置于同一 3D 视口中并排展示：</p>
             <ul>
               <li><strong>空间平移错位</strong>：通过设置空间 X 轴位移 Offset，避免模型原点相互遮挡冲突。</li>
               <li><strong>要素标记对比</strong>：同时展现 Surface 的等值线、B-Rep 的珊瑚红顶点与淡蓝面、Mesh 的海绿节点与麦黄三角面。</li>
               <li><strong>一键调度</strong>：单次 <code>RenderEngine.render([surf, brep, mesh])</code> 即可统一完成三维交互。</li>
             </ul>
           </div>
-          <pre class="code-panel"><code># 同屏对比渲染场景脚本核心逻辑 (07_render_...)
-from brep_primitives import *
+          <pre class="code-panel"><code># 同屏对比渲染场景脚本核心逻辑 (06_07_render_...)
+from src import (
+    HyperbolicParaboloid,
+    create_cube_brep,
+    create_pyramid_mesh,
+)
 import pyvista as pv
 
 # 1. 创建参数化马鞍曲面并平移至左侧 (X = -2500)
@@ -1657,33 +1661,32 @@ plotter.show()</code></pre>
             <div class="panel">
               <h2>核心架构与单元测试</h2>
               <p>
-                <code>src/brep_primitives.py</code> (曲面/实体/网格)<br>
-                <code>src/geometry_primitives.py</code> (几何图元)<br>
-                <code>test/test_brep_mesh_rendering.py</code><br>
+                <code>src/__init__.py</code> (统一核心包导出)<br>
+                <code>test/test_06_01_brep_mesh_rendering.py</code><br>
                 <span style="font-size:14px; color:var(--palm); font-weight:bold;">✔ 15项 pytest 测试用例全部通过</span>
               </p>
             </div>
             <div class="panel">
               <h2>数据结构生成示例</h2>
               <p>
-                <code>examples/01_create_surface_example.py</code><br>
+                <code>examples/06_01_create_surface_example.py</code><br>
                 (控制台打印双曲抛物面采样点)<br>
-                <code>examples/03_create_brep_example.py</code><br>
+                <code>examples/06_03_create_brep_example.py</code><br>
                 (打印长方体点-边-面完整拓扑表)<br>
-                <code>examples/05_create_mesh_example.py</code><br>
+                <code>examples/06_05_create_mesh_example.py</code><br>
                 (打印四棱锥顶点与面片索引)
               </p>
             </div>
             <div class="panel">
               <h2>独立与综合渲染脚本</h2>
               <p>
-                <code>examples/02_render_surface_marked.py</code><br>
+                <code>examples/06_02_render_surface_marked.py</code><br>
                 (双曲表面与深石板灰等值线)<br>
-                <code>examples/04_render_brep_marked.py</code><br>
+                <code>examples/06_04_render_brep_marked.py</code><br>
                 (珊瑚红点 + 钢青边 + 淡蓝面)<br>
-                <code>examples/06_render_mesh_marked.py</code><br>
+                <code>examples/06_06_render_mesh_marked.py</code><br>
                 (海绿节点 + 麦黄离散面片)<br>
-                <code>examples/07_render_surface_brep_mesh_scene.py</code>
+                <code>examples/06_07_render_surface_brep_mesh_scene.py</code>
               </p>
             </div>
           </div>
