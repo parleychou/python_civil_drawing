@@ -1,13 +1,13 @@
 """Render basic geometry data through the course RenderEngine."""
 
+from __future__ import annotations
+
 import sys
 from pathlib import Path
+
 _SRC_DIR = Path(__file__).resolve().parent.parent / "src"
 if str(_SRC_DIR) not in sys.path:
     sys.path.insert(0, str(_SRC_DIR))
-
-
-from __future__ import annotations
 
 import math
 import sys
@@ -15,7 +15,8 @@ from pathlib import Path
 
 CURRENT_DIR = Path(__file__).resolve().parent
 RENDER_ENGINE_DIR = CURRENT_DIR.parents[1] / "04-接入渲染引擎" / "scripts"
-sys.path.append(str(RENDER_ENGINE_DIR))
+if RENDER_ENGINE_DIR.exists():
+    sys.path.append(str(RENDER_ENGINE_DIR))
 
 from render_engine import RenderEngine  # noqa: E402
 from geometry_primitives import (  # noqa: E402

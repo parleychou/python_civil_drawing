@@ -41,10 +41,12 @@ class GeometryData(ABC):
 
 def _serialize_parameter(value: object) -> object:
     """Recursively convert geometry types to plain Python for display."""
-    # Avoid circular import: GeometryData.data_structure() calls this at
-    # runtime, by which time all modules are already loaded.
-    from point3d import Point3D
-    from vector3d import Vector3D
+    try:
+        from .point3d import Point3D
+        from .vector3d import Vector3D
+    except (ImportError, ValueError):
+        from point3d import Point3D
+        from vector3d import Vector3D
 
     if isinstance(value, (Point3D, Vector3D)):
         return value.to_tuple()

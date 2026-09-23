@@ -27,8 +27,11 @@ def find_chapter_scripts(prefix: str) -> Path:
         try:
             for child in parent.iterdir():
                 if child.is_dir() and child.name.startswith(prefix):
-                    scripts_sub = child / "scripts"
-                    return scripts_sub if scripts_sub.exists() else child
+                    for sub_name in ("src", "scripts"):
+                        sub = child / sub_name
+                        if sub.exists():
+                            return sub
+                    return child
         except OSError:
             continue
     return Path()

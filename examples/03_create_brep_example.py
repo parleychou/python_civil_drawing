@@ -11,12 +11,6 @@ if str(_SRC_DIR) not in sys.path:
     sys.path.insert(0, str(_SRC_DIR))
 
 
-import sys
-from pathlib import Path
-
-# 将当前 scripts 目录加入 sys.path 以加载核心模块
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-
 from brep_primitives import create_cube_brep
 
 

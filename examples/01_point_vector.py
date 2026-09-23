@@ -11,10 +11,10 @@ import sys
 from pathlib import Path
 
 from geometry_primitives import Point3D
-
 CURRENT_DIR = Path(__file__).resolve().parent
 RENDER_ENGINE_DIR = CURRENT_DIR.parents[1] / "04-接入渲染引擎" / "scripts"
-sys.path.append(str(RENDER_ENGINE_DIR))
+if RENDER_ENGINE_DIR.exists():
+    sys.path.append(str(RENDER_ENGINE_DIR))
 
 from render_engine import RenderEngine  # noqa: E402
 
