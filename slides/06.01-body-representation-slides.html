@@ -831,6 +831,18 @@
           <div class="eyebrow">交流答疑</div>
           <h1 class="slide-title">联系主讲与技术交流</h1>
           <p class="lead">本课程由上海非解构数字科技提供算法与工程支持。欢迎通过以下方式加入技术交流群，获取配套课件、脚本源码与答疑指导。</p>
+          <div class="repo-banner" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; background: rgba(17, 120, 166, 0.08); border: 1.5px solid var(--ocean); border-radius: 12px; padding: 14px 20px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: var(--deep-ocean); color: #fff; border-radius: 6px; font-weight: 900; font-size: 16px;">📦</span>
+              <div>
+                <div style="font-size: 15px; font-weight: 800; color: var(--deep-ocean);">官方开源代码仓库 (GitHub) · 全部源码扁平化开箱即用</div>
+                <div style="font-size: 13px; color: var(--ocean); font-family: monospace; font-weight: 600;">git clone https://github.com/parleychou/python_civil_drawing.git</div>
+              </div>
+            </div>
+            <a href="https://github.com/parleychou/python_civil_drawing" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: var(--ocean); color: #fff; text-decoration: none; padding: 8px 18px; border-radius: 8px; font-weight: 700; font-size: 14px; box-shadow: 0 2px 6px rgba(17,120,166,0.3);">
+              <span>前往 GitHub 仓库 ↗</span>
+            </a>
+          </div>
           <div class="qr-container">
             <div class="qr-card lecturer">
               <div class="qr-img-wrapper"><img src="qr_zhou.png" class="qr-img" alt="讲师微信二维码"></div>
@@ -1632,11 +1644,10 @@ plotter.show()</code></pre>
             <div class="panel">
               <h2>核心架构与单元测试</h2>
               <p>
-                <code>brep_primitives/</code> (含双曲马鞍面/球面/B-Rep/Mesh)<br>
-                <code>brep_mesh_rendering.py</code> (兼容层)<br>
+                <code>brep_primitives.py</code> (双曲面/球面/B-Rep/Mesh)<br>
+                <code>geometry_primitives.py</code> (基础几何图元)<br>
                 <code>test_brep_mesh_rendering.py</code><br>
-                <span style="font-size:14px; color:var(--palm); font-weight:bold;">✔ 6项 pytest 测试用例全部通过</span>
-
+                <span style="font-size:14px; color:var(--palm); font-weight:bold;">✔ 15项 pytest 测试用例全部通过</span>
               </p>
             </div>
             <div class="panel">
@@ -1663,6 +1674,18 @@ plotter.show()</code></pre>
               </p>
             </div>
           </div>
+          <div style="margin-top: 22px; padding: 16px 22px; background: rgba(17, 120, 166, 0.08); border-left: 4px solid var(--ocean); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <strong style="color: var(--deep-ocean); font-size: 16px;">📦 官方开源代码仓库 (GitHub) · 开箱即用</strong>
+              <div style="font-family: monospace; font-size: 14px; color: var(--ocean); margin-top: 4px; font-weight: 600;">
+                git clone https://github.com/parleychou/python_civil_drawing.git
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <a href="https://github.com/parleychou/python_civil_drawing" target="_blank" style="padding: 8px 16px; background: var(--deep-ocean); color: #fff; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 700;">前往 GitHub 仓库 ↗</a>
+              <a href="https://drawing.python.venchy.online/" target="_blank" style="padding: 8px 16px; background: #fff; color: var(--deep-ocean); border: 1px solid var(--ocean); border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 700;">在线课件门户 ↗</a>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -1683,10 +1706,11 @@ plotter.show()</code></pre>
           <div class="practice-box">
             <h2>验收标准检查单</h2>
             <ul>
+              <li><strong>代码拉取与运行</strong>：<code>git clone https://github.com/parleychou/python_civil_drawing.git</code>。</li>
               <li><strong>统一基类继承</strong>：所有几何类必须派生自 <code>GeometryData</code>，不引入外部黑盒 CAD 库。</li>
               <li><strong>多态转换成功</strong>：Surface、B-Rep、Mesh 均能正确实现 <code>to_pyvista()</code> 并生成数据集。</li>
               <li><strong>色彩标记清晰</strong>：Surface（浅海绿+深灰线）、B-Rep（珊瑚红+钢青+淡蓝）、Mesh（海绿+麦黄）。</li>
-              <li><strong>测试全部通过</strong>：执行 <code>pytest</code> 验证类结构、继承关系与坐标计算无误。</li>
+              <li><strong>测试全部通过</strong>：执行 <code>pytest scripts/</code> 验证类结构、继承关系与坐标计算无误。</li>
             </ul>
           </div>
         </div>
