@@ -932,7 +932,7 @@
               <span class="pill pill-surf">PARADIGM 01</span>
               <h2 style="margin-top:10px;">参数化曲面 (Surface)</h2>
               <p><strong>底层本质</strong>：连续数学解析映射。</p>
-              <p>通过双变量参数坐标 $(u, v)$ 输入解析方程，求出空间 $(x, y, z)$ 坐标。具备<strong>无限数学精度</strong>，是空间异形屋盖与幕墙形态设计之源。</p>
+              <p>通过双变量参数坐标 (<i>u</i>, <i>v</i>) 输入解析方程，求出空间 (<i>x</i>, <i>y</i>, <i>z</i>) 坐标。具备<strong>无限数学精度</strong>，是空间异形屋盖与幕墙形态设计之源。</p>
               <div class="tag-row" style="margin-top:12px;">
                 <span class="tag" style="font-size:14px; padding:4px 8px;">解析映射</span>
                 <span class="tag" style="font-size:14px; padding:4px 8px;">双参数域 (u,v)</span>
@@ -1021,17 +1021,17 @@ class MeshData(GeometryData):
           <div>
             <div class="eyebrow">范式一：参数曲面</div>
             <h2 class="section-title">原理：双参数连续映射与微分几何</h2>
-            <p class="lead">参数曲面通过二维参数域 $(u, v)$ 建立到三维空间的连续向量函数：</p>
-            <p style="font-size:22px; font-weight:700; color:var(--deep-ocean); margin: 8px 0;">
-              $$S(u, v) = \big( x(u,v), \; y(u,v), \; z(u,v) \big)$$
-            </p>
+            <p class="lead">参数曲面通过二维参数域 (<i>u</i>, <i>v</i>) 建立到三维空间的连续向量函数：</p>
+            <div style="font-size:22px; font-weight:700; color:var(--deep-ocean); margin: 10px 0; padding: 10px 16px; background: rgba(17,120,166,0.06); border-left: 4px solid var(--ocean); border-radius: 6px; font-family: 'Times New Roman', 'Segoe UI', serif; letter-spacing: 0.5px;">
+              <b><i>S</i></b>(<i>u</i>, <i>v</i>) = ( <i>x</i>(<i>u</i>, <i>v</i>), &nbsp; <i>y</i>(<i>u</i>, <i>v</i>), &nbsp; <i>z</i>(<i>u</i>, <i>v</i>) )
+            </div>
             <ul>
               <li><strong>无限数学分辨率</strong>：不存在多边形棱角锯齿，在理论上可在任意微小步长下进行解析求值。</li>
               <li><strong>严密微分几何性质</strong>：
-                偏导向量 $\vec{T}_u = \frac{\partial S}{\partial u}, \; \vec{T}_v = \frac{\partial S}{\partial v}$ 决定切平面；<br>
-                单位法向量为叉积规范化：$\vec{n} = \frac{\vec{T}_u \times \vec{T}_v}{\|\vec{T}_u \times \vec{T}_v\|}$。
+                偏导切向量 <b><i>T</i></b><sub><i>u</i></sub> = ∂<b><i>S</i></b>/∂<i>u</i>, &nbsp; <b><i>T</i></b><sub><i>v</i></sub> = ∂<b><i>S</i></b>/∂<i>v</i> 决定切平面；<br>
+                单位法向量为叉积规范化：<b><i>n</i></b> = (<b><i>T</i></b><sub><i>u</i></sub> × <b><i>T</i></b><sub><i>v</i></sub>) / ‖<b><i>T</i></b><sub><i>u</i></sub> × <b><i>T</i></b><sub><i>v</i></sub>‖。
               </li>
-              <li><strong>采样重构</strong>：在参数空间网格采样 $M \times N$ 点阵，送入 <code>StructuredGrid</code> 还原光滑表面。</li>
+              <li><strong>采样重构</strong>：在参数空间网格采样 <i>M</i> × <i>N</i> 点阵，送入 <code>StructuredGrid</code> 还原光滑表面。</li>
             </ul>
           </div>
           <div class="panel">
@@ -1043,7 +1043,7 @@ class MeshData(GeometryData):
               z(u, v) = (u² / a²) - (v² / b²)
             </div>
             <p style="font-size:15px; color:var(--muted);">
-              • $a, b$ 控制沿主轴方向的抛物线开合曲率。<br>
+              • <i>a</i>, <i>b</i> 控制沿主轴方向的抛物线开合曲率。<br>
               • 负高斯曲率（鞍点），在两个正交方向上分别为上凸与下凹。<br>
               • 下面三页将通过 Three.js 动画演示从参数点阵到光滑曲面的完整创建过程。
             </p>
@@ -1058,11 +1058,11 @@ class MeshData(GeometryData):
         <div class="content grid-3d">
           <div>
             <div class="eyebrow">Surface 创建流程 · 步骤 1/3</div>
-            <h2 class="section-title">参数域 $(u, v)$ 采样与空间点阵求值</h2>
-            <p class="lead">参数曲面的第一步是离散采样：在二维参数空间 $(u, v) \in [-L, L] \times [-L, L]$ 划分规则步长，输入解析函数评估出三维点阵：</p>
+            <h2 class="section-title">参数域 (<i>u</i>, <i>v</i>) 采样与空间点阵求值</h2>
+            <p class="lead">参数曲面的第一步是离散采样：在二维参数空间 (<i>u</i>, <i>v</i>) ∈ [−<i>L</i>, <i>L</i>] × [−<i>L</i>, <i>L</i>] 划分规则步长，输入解析函数评估出三维点阵：</p>
             <ul>
-              <li><strong>解析求值</strong>：每个网格节点 $(u_i, v_j)$ 代入 $S(u, v)$ 独立算出 $(x, y, z)$ 坐标。</li>
-              <li><strong>空间鞍点阵列</strong>：右侧三维视图展示了由 $18 \times 18$ 采样点生成的双曲抛物面马鞍形离散点云。</li>
+              <li><strong>解析求值</strong>：每个网格节点 (<i>u</i><sub><i>i</i></sub>, <i>v</i><sub><i>j</i></sub>) 代入 <b><i>S</i></b>(<i>u</i>, <i>v</i>) 独立算出 (<i>x</i>, <i>y</i>, <i>z</i>) 坐标。</li>
+              <li><strong>空间鞍点阵列</strong>：右侧三维视图展示了由 18 × 18 采样点生成的双曲抛物面马鞍形离散点云。</li>
               <li><strong>内存紧凑</strong>：在程序中仅需存储参数定义域与解析函数对象本身。</li>
             </ul>
             <div class="takeaway">点云虽然是离散的，但由于其源于解析方程，点与点之间具备严格的二维拓扑排列顺序。</div>
@@ -1088,11 +1088,11 @@ class MeshData(GeometryData):
           <div>
             <div class="eyebrow">Surface 创建流程 · 步骤 2/3</div>
             <h2 class="section-title">生成参数等值线网络 (Isocurves)</h2>
-            <p class="lead">建立点与点的连接骨架：沿着固定的 $u = u_i$ 与 $v = v_j$ 扫描线将相邻采样点依次连接：</p>
+            <p class="lead">建立点与点的连接骨架：沿着固定的 <i>u</i> = <i>u</i><sub><i>i</i></sub> 与 <i>v</i> = <i>v</i><sub><i>j</i></sub> 扫描线将相邻采样点依次连接：</p>
             <ul>
               <li><strong>U 向与 V 向正交等值线</strong>：深青色与石板灰曲线交织成网，精确刻画了曲率在两个正交方向的拉伸与下凹。</li>
               <li><strong>空间找形线框</strong>：在索网或网壳工程中，这组等值线就是实际预应力拉索的排布轨迹。</li>
-              <li><strong>规避拓扑混淆</strong>：参数空间自带 $(i, j)$ 行列结构，无需搜索邻近点即可直接连线。</li>
+              <li><strong>规避拓扑混淆</strong>：参数空间自带 (<i>i</i>, <i>j</i>) 行列结构，无需搜索邻近点即可直接连线。</li>
             </ul>
             <div class="takeaway">等值线网络构成了曲面的三维骨架，清晰体现了双曲抛物面特有的直纹曲面性质！</div>
           </div>
@@ -1119,7 +1119,7 @@ class MeshData(GeometryData):
             <h2 class="section-title">四边形面片铺设与法向量光滑渲染</h2>
             <p class="lead">最后一步：在等值线网格单元之间填充连续面片，并根据解析微分求出顶点法向量进行光照渲染：</p>
             <ul>
-              <li><strong>法向量计算</strong>：通过偏导叉积 $\vec{n} = \vec{T}_u \times \vec{T}_v$ 获得精确解析法向（见视图中黄色法向量针）。</li>
+              <li><strong>法向量计算</strong>：通过偏导叉积 <b><i>n</i></b> = <b><i>T</i></b><sub><i>u</i></sub> × <b><i>T</i></b><sub><i>v</i></sub> 获得精确解析法向（见视图中黄色法向量针）。</li>
               <li><strong>光滑着色 (Smooth Shading)</strong>：GPU 在法向量辅助下进行高光插值，还原马鞍面光滑如镜的连续张力外观。</li>
               <li><strong>生成 StructuredGrid</strong>：调用 <code>surf.to_pyvista()</code>，在 PyVista 中一键送入渲染引擎展示。</li>
             </ul>
@@ -1152,7 +1152,7 @@ class MeshData(GeometryData):
             </div>
             <div class="panel">
               <h2>连续建筑异形表皮</h2>
-              <p>扎哈、极值形态建筑幕墙设计要求曲面保持 $C^1$（切向连续）或 $C^2$（曲率连续），消除光影反光折痕。参数曲面是计算机辅助曲面造型（CAS）的源头。</p>
+              <p>扎哈、极值形态建筑幕墙设计要求曲面保持 <i>C</i><sup>1</sup>（切向连续）或 <i>C</i><sup>2</sup>（曲率连续），消除光影反光折痕。参数曲面是计算机辅助曲面造型（CAS）的源头。</p>
             </div>
             <div class="panel">
               <h2>空间桥梁与箱梁放样</h2>
@@ -1175,12 +1175,12 @@ class MeshData(GeometryData):
             <h2 class="section-title">原理：欧拉公式与几何拓扑严格解耦</h2>
             <p class="lead">B-Rep (Boundary Representation) 的根本公理：“三维实心体由包围它的封闭二维边界表面所唯一确定”。</p>
             <ul>
-              <li><strong>欧拉-庞加莱公式</strong>：多面体顶点 $V$、边 $E$ 与面 $F$ 严格服从拓扑平衡：
-                <span style="font-weight:bold; color:var(--coral); font-size:20px;">$V - E + F = 2(1 - g)$</span>（简单体 $V - E + F = 2$）。
+              <li><strong>欧拉-庞加莱公式</strong>：多面体顶点 <i>V</i>、边 <i>E</i> 与面 <i>F</i> 严格服从拓扑平衡：
+                <span style="font-weight:bold; color:var(--coral); font-size:20px;"><i>V</i> − <i>E</i> + <i>F</i> = 2(1 − <i>g</i>)</span>（简单体 <i>V</i> − <i>E</i> + <i>F</i> = 2）。
               </li>
               <li><strong>几何 (Geometry) vs 拓扑 (Topology)</strong>：
-                <br>• <strong>几何</strong>：点坐标 $(x,y,z)$、棱线方程、表面解析面（定义“在哪里、多大”）；
-                <br>• <strong>拓扑</strong>：Vertex $\to$ Edge $\to$ Loop (Wire) $\to$ Face $\to$ Shell $\to$ Solid（定义“谁与谁相接”）。
+                <br>• <strong>几何</strong>：点坐标 (<i>x</i>, <i>y</i>, <i>z</i>)、棱线方程、表面解析面（定义“在哪里、多大”）；
+                <br>• <strong>拓扑</strong>：Vertex → Edge → Loop (Wire) → Face → Shell → Solid（定义“谁与谁相接”）。
               </li>
               <li><strong>法向一致性</strong>：面外法向量严格背离实体内部朝外，赋予计算机判断“体内/体外”的绝对依据。</li>
             </ul>
@@ -1211,8 +1211,8 @@ class MeshData(GeometryData):
             <ul>
               <li><strong>几何独立性</strong>：此时 8 个点仅仅是空间中的独立坐标 <code>Point3D(x, y, z)</code>，尚未建立任何连通信息。</li>
               <li><strong>底面 4 点与顶面 4 点</strong>：
-                <br>底面：$V0(0,0,0), V1(w,0,0), V2(w,d,0), V3(0,d,0)$；
-                <br>顶面：$V4(0,0,h), V5(w,0,h), V6(w,d,h), V7(0,d,h)$。
+                <br>底面：<i>V</i><sub>0</sub>(0, 0, 0), <i>V</i><sub>1</sub>(<i>w</i>, 0, 0), <i>V</i><sub>2</sub>(<i>w</i>, <i>d</i>, 0), <i>V</i><sub>3</sub>(0, <i>d</i>, 0)；
+                <br>顶面：<i>V</i><sub>4</sub>(0, 0, <i>h</i>), <i>V</i><sub>5</sub>(<i>w</i>, 0, <i>h</i>), <i>V</i><sub>6</sub>(<i>w</i>, <i>d</i>, <i>h</i>), <i>V</i><sub>7</sub>(0, <i>d</i>, <i>h</i>)。
               </li>
               <li><strong>色彩规范</strong>：在工程渲染中采用珊瑚红（<code>coral</code>）球体与高亮标签进行醒目标识。</li>
             </ul>
@@ -1241,9 +1241,9 @@ class MeshData(GeometryData):
             <h2 class="section-title">建立 12 条拓扑棱边 (Edges)</h2>
             <p class="lead">第二步：建立一维边界连通拓扑。通过引用顶点索引对 <code>(start_idx, end_idx)</code> 定义长方体的 12 条棱边：</p>
             <ul>
-              <li><strong>底面 4 条边</strong>：连接 $V0 \to V1 \to V2 \to V3 \to V0$；</li>
-              <li><strong>顶面 4 条边</strong>：连接 $V4 \to V5 \to V6 \to V7 \to V4$；</li>
-              <li><strong>侧向 4 条柱边</strong>：连接上下对应点 $(0,4), (1,5), (2,6), (3,7)$。</li>
+              <li><strong>底面 4 条边</strong>：连接 <i>V</i><sub>0</sub> → <i>V</i><sub>1</sub> → <i>V</i><sub>2</sub> → <i>V</i><sub>3</sub> → <i>V</i><sub>0</sub>；</li>
+              <li><strong>顶面 4 条边</strong>：连接 <i>V</i><sub>4</sub> → <i>V</i><sub>5</sub> → <i>V</i><sub>6</sub> → <i>V</i><sub>7</sub> → <i>V</i><sub>4</sub>；</li>
+              <li><strong>侧向 4 条柱边</strong>：连接上下对应点 (0, 4), (1, 5), (2, 6), (3, 7)。</li>
               <li><strong>骨架成型</strong>：钢青色（<code>steelblue</code>）棱边连接成严密的线框拓扑，消除了纯线框模型的二义性。</li>
             </ul>
             <div class="takeaway">边建立了一级拓扑结构。每条棱边精确知道自己的两个端点，为后续面的闭合打下基础。</div>
@@ -1281,12 +1281,12 @@ class MeshData(GeometryData):
                 赋予淡蓝色（<code>lightblue</code>）半透明表面，支持布尔运算与体积计算。
               </li>
             </ul>
-            <div class="takeaway">至此，长方体完成了点 $\to$ 边 $\to$ 面的完整闭合，成为标准的 CAD/BIM B-Rep 实体！</div>
+            <div class="takeaway">至此，长方体完成了点 → 边 → 面的完整闭合，成为标准的 CAD/BIM B-Rep 实体！</div>
           </div>
           <div class="three-box-card">
             <div class="three-box-header">
               <span class="step-badge">步骤 3/3：表面围合成体</span>
-              <span style="font-size:12px; color:var(--muted);">2D 面 $\to$ 3D 实心体</span>
+              <span style="font-size:12px; color:var(--muted);">2D 面 → 3D 实心体</span>
             </div>
             <div class="three-stage" id="stage-brep-step3">
               <span class="badge-3d">3D · 拖拽旋转</span>
@@ -1366,8 +1366,8 @@ class MeshData(GeometryData):
             <ul>
               <li><strong>无拓扑归属性</strong>：与 B-Rep 的顶点不同，Mesh 顶点没有任何“属于哪条边”的复杂指针，仅仅是内存中的一串紧凑浮点数。</li>
               <li><strong>四棱锥的 5 个顶点</strong>：
-                <br>底面 4 点：$MV0(0,0,0), MV1(w,0,0), MV2(w,d,0), MV3(0,d,0)$；
-                <br>锥顶点：$MV4(w/2, d/2, h)$ 位于中心高空。
+                <br>底面 4 点：<i>MV</i><sub>0</sub>(0, 0, 0), <i>MV</i><sub>1</sub>(<i>w</i>, 0, 0), <i>MV</i><sub>2</sub>(<i>w</i>, <i>d</i>, 0), <i>MV</i><sub>3</sub>(0, <i>d</i>, 0)；
+                <br>锥顶点：<i>MV</i><sub>4</sub>(<i>w</i>/2, <i>d</i>/2, <i>h</i>) 位于中心高空。
               </li>
               <li><strong>色彩规范</strong>：以海绿色（<code>seagreen</code>）圆球展示顶点缓冲中的数据点。</li>
             </ul>
