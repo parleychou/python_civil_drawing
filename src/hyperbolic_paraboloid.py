@@ -1,16 +1,8 @@
 """HyperbolicParaboloid — parametric saddle surface."""
 
-import sys
 from dataclasses import dataclass
-from pathlib import Path
 
-from _common import find_chapter_scripts
 from parametric_surface import ParametricSurfaceData
-
-_ch5 = find_chapter_scripts("05")
-if _ch5.exists():
-    sys.path.insert(0, str(_ch5))
-
 from point3d import Point3D
 
 

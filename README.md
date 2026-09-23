@@ -62,19 +62,19 @@ A pure, self-contained geometry and rendering kernel where all geometric types i
 - **2D Parametric Surfaces**: `ParametricSurfaceData`, `HyperbolicParaboloid` (saddle surface), `SphereSurface`
 - **3D Topologies (B-Rep & Mesh)**: `BrepData` (Euler topological connectivity), `MeshData` (indexed vertex buffer & polygon faces), `factories.py`
 - **Rendering Engine**: `RenderEngine` (PyVista-based multi-viewport rendering, camera management, coordinate axes)
-- **Package Facades**: `geometry_primitives.py`, `brep_primitives.py`, `geometry_data.py`, `brep_mesh_rendering.py`
+- **Unified Package Entry**: `__init__.py` (re-exports all geometry, surface, brep, mesh, and rendering classes under `src`)
 
 ### 2. Examples & Real Object Creation (`examples/`)
 Runnable demonstration scripts that use the core geometry system or third-party tools:
-- **Surface, B-Rep & Mesh Demonstrations**: `01_create_surface_example.py` ~ `07_render_surface_brep_mesh_scene.py`
-- **Primitive Scene Rendering**: `05_render_geometry_scene.py`, `07_render_points_and_curves.py`
-- **Structural Object Modeling**: `02_render_beam_cube.py`, `06_pyvista_beam_cube.py`
+- **Surface, B-Rep & Mesh Demonstrations**: `06_01_create_surface_example.py` ~ `06_07_render_surface_brep_mesh_scene.py`
+- **Primitive Scene Rendering**: `05_07_render_geometry_scene.py`, `04_06_render_points_and_curves.py`
+- **Structural Object Modeling**: `04_02_render_beam_cube.py`, `04_03_pyvista_beam_cube.py`
 - **Essential Library Tutorials**: NumPy, Matplotlib, Pandas, openpyxl, SciPy, build123d, ezdxf, Shapely
 
 ### 3. Unit Tests (`test/`)
 Dedicated test directory powered by `pytest`:
-- `test_geometry_data.py`: Unit tests for Chapter 05 geometric primitives.
-- `test_brep_mesh_rendering.py`: Unit tests for Chapter 06 Surface, B-Rep, and Mesh structures and rendering.
+- `test_05_01_geometry_data.py`: Unit tests for Chapter 05 geometric primitives.
+- `test_06_01_brep_mesh_rendering.py`: Unit tests for Chapter 06 Surface, B-Rep, and Mesh structures and rendering.
 
 ---
 

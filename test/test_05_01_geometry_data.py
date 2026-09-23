@@ -1,16 +1,9 @@
 """Tests for basic geometry data objects."""
 
 import math
-import sys
 import unittest
-from pathlib import Path
 
-# 将 src 目录加入 sys.path
-SRC_DIR = Path(__file__).resolve().parent.parent / "src"
-if str(SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(SRC_DIR))
-
-from geometry_primitives import (
+from src import (
     Arc3D,
     Circle3D,
     CoordinateSystem3D,

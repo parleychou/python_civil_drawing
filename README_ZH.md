@@ -62,19 +62,19 @@ python_civil_drawing/
 - **2D 参数化曲面**：`ParametricSurfaceData`、`HyperbolicParaboloid`（马鞍面）、`SphereSurface`（球面）
 - **3D 实体与网格**：`BrepData`（欧拉拓扑边界表示）、`MeshData`（离散多边形网格）、`factories.py`
 - **渲染引擎**：`RenderEngine`（基于 PyVista 的多视口调度、相机预设与坐标轴渲染）
-- **统一导出接口**：`geometry_primitives.py`、`brep_primitives.py`、`geometry_data.py`、`brep_mesh_rendering.py`
+- **统一包导出接口**：`__init__.py`（向外统一导出 `src` 命名空间下的所有几何、曲面、实体、网格与渲染核心类）
 
 ### 2. 示例与实物建模 (`examples/`)
 基于纯几何内核构建实际结构对象与功能验证的脚本：
-- **曲面、B-Rep 与网格构建渲染**：`01_create_surface_example.py` ~ `07_render_surface_brep_mesh_scene.py`
-- **图元与点线场景渲染**：`05_render_geometry_scene.py`、`07_render_points_and_curves.py`
-- **梁立方体建模**：`02_render_beam_cube.py`、`06_pyvista_beam_cube.py`
+- **曲面、B-Rep 与网格构建渲染**：`06_01_create_surface_example.py` ~ `06_07_render_surface_brep_mesh_scene.py`
+- **图元与点线场景渲染**：`05_07_render_geometry_scene.py`、`04_06_render_points_and_curves.py`
+- **梁立方体建模**：`04_02_render_beam_cube.py`、`04_03_pyvista_beam_cube.py`
 - **第三方库实操教学**：NumPy、Matplotlib、Pandas、openpyxl、SciPy、build123d、ezdxf、Shapely
 
 ### 3. 单元测试 (`test/`)
 独立测试目录，使用 `pytest` 运行：
-- `test_geometry_data.py`：第 05 章基础几何类型（点、向量、坐标系、线、面、圆、弧）单元测试。
-- `test_brep_mesh_rendering.py`：第 06 章曲面、B-Rep、Mesh 数据结构与拓扑、PyVista 转换测试。
+- `test_05_01_geometry_data.py`：第 05 章基础几何类型（点、向量、坐标系、线、面、圆、弧）单元测试。
+- `test_06_01_brep_mesh_rendering.py`：第 06 章曲面、B-Rep、Mesh 数据结构与拓扑、PyVista 转换测试。
 
 ---
 

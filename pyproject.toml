@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ce-geometry"
+version = "0.1.0"
+description = "土木工程几何数据与渲染核心系统 — 纯粹几何建模与渲染教学示例"
+requires-python = ">=3.9"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]

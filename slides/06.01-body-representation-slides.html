@@ -1035,18 +1035,28 @@ class MeshData(GeometryData):
             </ul>
           </div>
           <div class="panel">
-            <h2>双曲抛物面 (马鞍面) 解析方程</h2>
-            <p>土木工程经典双曲马鞍面参数方程：</p>
-            <div style="background:#f0f8fa; padding:12px; border-left:4px solid var(--ocean); font-family:monospace; font-size:16px; margin:10px 0;">
-              x(u, v) = u<br>
-              y(u, v) = v<br>
-              z(u, v) = (u² / a²) - (v² / b²)
+            <h2>双曲抛物面 (马鞍面) 参数化表达</h2>
+            <p style="margin-bottom:8px;">土木大跨空间薄壳与索网屋盖经典参数解析方程：</p>
+            <div style="background:#f0f8fa; padding:12px 14px; border-left:4px solid var(--ocean); border-radius:4px; font-family:'Times New Roman', 'Segoe UI', serif; margin:10px 0;">
+              <div style="font-size:18px; font-weight:700; color:var(--deep-ocean); margin-bottom:6px; letter-spacing:0.3px;">
+                <b><i>S</i></b>(<i>u</i>, <i>v</i>) = <i>u</i> <b><i>i</i></b> + <i>v</i> <b><i>j</i></b> + <i>c</i> · [ (<i>u</i> / <i>a</i>)² − (<i>v</i> / <i>b</i>)² ] <b><i>k</i></b>
+              </div>
+              <div style="font-size:15px; color:var(--ink); font-family:monospace; line-height:1.5;">
+                ⎧ <i>x</i>(<i>u</i>, <i>v</i>) = <i>u</i><br>
+                ⎨ <i>y</i>(<i>u</i>, <i>v</i>) = <i>v</i><br>
+                ⎩ <i>z</i>(<i>u</i>, <i>v</i>) = <i>c</i> · [ (<i>u</i> / <i>a</i>)² − (<i>v</i> / <i>b</i>)² ]
+              </div>
             </div>
-            <p style="font-size:15px; color:var(--muted);">
-              • <i>a</i>, <i>b</i> 控制沿主轴方向的抛物线开合曲率。<br>
-              • 负高斯曲率（鞍点），在两个正交方向上分别为上凸与下凹。<br>
-              • 下面三页将通过 Three.js 动画演示从参数点阵到光滑曲面的完整创建过程。
-            </p>
+            <ul style="font-size:14px; line-height:1.6; color:var(--ink); margin-top:8px;">
+              <li><strong>参数域</strong>：(<i>u</i>, <i>v</i>) ∈ [−<i>u</i><sub>max</sub>, <i>u</i><sub>max</sub>] × [−<i>v</i><sub>max</sub>, <i>v</i><sub>max</sub>]，投射为底面平面网格。</li>
+              <li><strong>曲率基准 (<i>a</i>, <i>b</i>)</strong>：控制 <i>X</i> / <i>Y</i> 轴向抛物线开合跨度（代码默认 1500 mm）。</li>
+              <li><strong>矢高系数 (<i>c</i>)</strong>：控制中心鞍点到边界角点的高差幅度（代码默认 600 mm）。</li>
+              <li><strong>直纹曲面性质 (Ruled Surface)</strong>：曲面上每一点均交汇两条空间直母线，是索网结构能够使用<strong>平直预应力拉索</strong>张拉成型的几何本质。</li>
+              <li><strong>微分曲率特性</strong>：负高斯曲率（<i>K</i> &lt; 0，沿正交轴一凹一凸），天然具备抗风振自平衡刚度。</li>
+            </ul>
+            <div style="margin-top:8px; font-size:12px; color:var(--muted); font-family:monospace;">
+              * 笛卡尔二次曲面隐式形式：<i>z</i> / <i>c</i> = <i>x</i>² / <i>a</i>² − <i>y</i>² / <i>b</i>²
+            </div>
           </div>
         </div>
       </div>
@@ -1065,6 +1075,9 @@ class MeshData(GeometryData):
               <li><strong>空间鞍点阵列</strong>：右侧三维视图展示了由 18 × 18 采样点生成的双曲抛物面马鞍形离散点云。</li>
               <li><strong>内存紧凑</strong>：在程序中仅需存储参数定义域与解析函数对象本身。</li>
             </ul>
+            <div style="background:#f0f8fa; padding:8px 12px; border-left:3px solid var(--ocean); border-radius:4px; font-family:'Times New Roman', monospace; font-size:14px; margin:10px 0; color:var(--deep-ocean);">
+              <b><i>P</i></b><sub><i>i</i>,<i>j</i></sub> = <code>evaluate</code>(<i>u</i><sub><i>i</i></sub>, <i>v</i><sub><i>j</i></sub>) = Point3D(<i>u</i><sub><i>i</i></sub>, &nbsp; <i>v</i><sub><i>j</i></sub>, &nbsp; <i>c</i> · [ (<i>u</i><sub><i>i</i></sub>/<i>a</i>)² − (<i>v</i><sub><i>j</i></sub>/<i>b</i>)² ])
+            </div>
             <div class="takeaway">点云虽然是离散的，但由于其源于解析方程，点与点之间具备严格的二维拓扑排列顺序。</div>
           </div>
           <div class="three-box-card">

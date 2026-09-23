@@ -4,14 +4,7 @@
 并打印该拓扑结构的所有构成元素。
 """
 
-import sys
-from pathlib import Path
-_SRC_DIR = Path(__file__).resolve().parent.parent / "src"
-if str(_SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(_SRC_DIR))
-
-
-from brep_primitives import create_cube_brep
+from src import create_cube_brep
 
 
 def main() -> None:

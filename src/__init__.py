@@ -10,48 +10,32 @@ _SRC_DIR = str(Path(__file__).resolve().parent)
 if _SRC_DIR not in sys.path:
     sys.path.insert(0, _SRC_DIR)
 
-try:
-    from ._base import GeometryData
-    from .point3d import Point3D
-    from .vector3d import Vector3D
-    from .coordinate_system3d import CoordinateSystem3D
-    from .curve import Curve
-    from .line3d import Line3D, Line3d
-    from .plane3d import Plane3D
-    from .circle3d import Circle3D
-    from .arc3d import Arc3D
-    from .parametric_surface import ParametricSurfaceData
-    from .hyperbolic_paraboloid import HyperbolicParaboloid
-    from .sphere_surface import SphereSurface
-    from .brep_data import BrepData
-    from .mesh_data import MeshData
-    from .factories import (
-        create_cube_brep,
-        create_box_brep,
-        create_pyramid_mesh,
-    )
-    from .render_engine import RenderEngine
-except (ImportError, ValueError):
-    from _base import GeometryData
-    from point3d import Point3D
-    from vector3d import Vector3D
-    from coordinate_system3d import CoordinateSystem3D
-    from curve import Curve
-    from line3d import Line3D, Line3d
-    from plane3d import Plane3D
-    from circle3d import Circle3D
-    from arc3d import Arc3D
-    from parametric_surface import ParametricSurfaceData
-    from hyperbolic_paraboloid import HyperbolicParaboloid
-    from sphere_surface import SphereSurface
-    from brep_data import BrepData
-    from mesh_data import MeshData
-    from factories import (
-        create_cube_brep,
-        create_box_brep,
-        create_pyramid_mesh,
-    )
-    from render_engine import RenderEngine
+# NOTE: bare (top-level) imports are intentional. The submodules themselves
+# use bare imports (``from _base import ...``) for their internal cross-references,
+# so re-exporting via bare imports here keeps a single class object for each name.
+# Using relative imports (``from ._base import``) would create a *second* module
+# instance (``src._base``) with a *different* class object, which breaks
+# ``isinstance`` and ``__eq__`` checks across the public API.
+from _base import GeometryData
+from point3d import Point3D
+from vector3d import Vector3D
+from coordinate_system3d import CoordinateSystem3D
+from curve import Curve
+from line3d import Line3D, Line3d
+from plane3d import Plane3D
+from circle3d import Circle3D
+from arc3d import Arc3D
+from parametric_surface import ParametricSurfaceData
+from hyperbolic_paraboloid import HyperbolicParaboloid
+from sphere_surface import SphereSurface
+from brep_data import BrepData
+from mesh_data import MeshData
+from factories import (
+    create_cube_brep,
+    create_box_brep,
+    create_pyramid_mesh,
+)
+from render_engine import RenderEngine
 
 __all__ = [
     "GeometryData",

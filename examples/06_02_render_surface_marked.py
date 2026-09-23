@@ -8,42 +8,10 @@
 - 支持传入参数 --sphere 渲染已有保留案例：空间旋转壳体【参数球面】
 """
 
-import sys
-from pathlib import Path
-_SRC_DIR = Path(__file__).resolve().parent.parent / "src"
-if str(_SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(_SRC_DIR))
-
-
 import argparse
 import math
-import sys
-from pathlib import Path
 
-# 动态寻找第 04 章和第 05 章的脚本目录
-def find_chapter_scripts(prefix: str) -> Path:
-    current = Path(__file__).resolve()
-    for parent in current.parents:
-        try:
-            for child in parent.iterdir():
-                if child.is_dir() and child.name.startswith(prefix):
-                    for sub_name in ("src", "scripts"):
-                        sub = child / sub_name
-                        if sub.exists():
-                            return sub
-                    return child
-        except OSError:
-            continue
-    return Path()
-
-scripts_dir = Path(__file__).resolve().parent
-ch4_path = find_chapter_scripts("04")
-sys.path.insert(0, str(scripts_dir))
-if ch4_path.exists():
-    sys.path.insert(0, str(ch4_path))
-
-from brep_primitives import HyperbolicParaboloid, SphereSurface
-from render_engine import RenderEngine
+from src import HyperbolicParaboloid, RenderEngine, SphereSurface
 
 
 def render_hyperbolic_paraboloid() -> None:
@@ -160,10 +128,10 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    if args.sphere:
-        render_sphere_surface()
-    else:
-        render_hyperbolic_paraboloid()
+    # if args.sphere:
+    render_sphere_surface()
+    # else:
+        # render_hyperbolic_paraboloid()
 
 
 if __name__ == "__main__":

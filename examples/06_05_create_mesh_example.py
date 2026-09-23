@@ -4,14 +4,7 @@
 在控制台打印网格的顶点与面片索引，展示顶点-面片索引机制。
 """
 
-import sys
-from pathlib import Path
-_SRC_DIR = Path(__file__).resolve().parent.parent / "src"
-if str(_SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(_SRC_DIR))
-
-
-from brep_primitives import create_pyramid_mesh
+from src import create_pyramid_mesh
 
 
 def main() -> None:

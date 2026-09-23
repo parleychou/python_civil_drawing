@@ -1,26 +1,19 @@
 """验证 B-Rep、Mesh 和 Surface 数据结构及其继承关系的单元测试。"""
 
-import sys
-import unittest
 import math
-from pathlib import Path
+import unittest
 
-# 将 src 目录加入 sys.path
-SRC_DIR = Path(__file__).resolve().parent.parent / "src"
-if str(SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(SRC_DIR))
-
-from brep_primitives import (
+from src import (
     BrepData,
+    GeometryData,
+    HyperbolicParaboloid,
     MeshData,
     ParametricSurfaceData,
-    SphereSurface,
-    HyperbolicParaboloid,
-    create_cube_brep,
-    create_box_brep,
-    create_pyramid_mesh,
     Point3D,
-    GeometryData,
+    SphereSurface,
+    create_box_brep,
+    create_cube_brep,
+    create_pyramid_mesh,
 )
 
 

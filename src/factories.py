@@ -1,16 +1,7 @@
 """Factory functions for teaching-example solids."""
 
-import sys
-from pathlib import Path
-
-from _common import find_chapter_scripts
 from brep_data import BrepData
 from mesh_data import MeshData
-
-_ch5 = find_chapter_scripts("05")
-if _ch5.exists():
-    sys.path.insert(0, str(_ch5))
-
 from point3d import Point3D
 
 

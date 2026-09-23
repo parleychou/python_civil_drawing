@@ -1,18 +1,9 @@
 """BrepData — custom B-Rep boundary representation data structure."""
 
-import sys
 from dataclasses import dataclass
-from pathlib import Path
 
 import numpy as np
 import pyvista as pv
-
-# Resolve import path to chapter 05 geometry primitives
-from _common import find_chapter_scripts
-
-_ch5 = find_chapter_scripts("05")
-if _ch5.exists():
-    sys.path.insert(0, str(_ch5))
 
 from _base import GeometryData
 from point3d import Point3D
