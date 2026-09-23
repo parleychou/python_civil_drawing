@@ -5,8 +5,10 @@ import unittest
 import math
 from pathlib import Path
 
-# 将当前 scripts 目录加入 sys.path
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+# 将 scripts 目录加入 sys.path
+SCRIPTS_DIR = Path(__file__).resolve().parent.parent / "scripts"
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
 
 from brep_primitives import (
     BrepData,

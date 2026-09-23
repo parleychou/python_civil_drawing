@@ -63,7 +63,10 @@ Organized as a unified, flat directory for ease of learning and execution:
   - **Boundary Representation (B-Rep)**: `BrepData` with explicit vertex, edge, and face topological connectivity (box/cube generation).
   - **Polygon Mesh**: `MeshData` with indexed vertices and polygonal faces (pyramid mesh).
   - **Multi-Object Scene**: `07_render_surface_brep_mesh_scene.py` side-by-side interactive 3D comparison.
-- **Unit Tests**: Full test suite (`test_geometry_data.py` and `test_brep_mesh_rendering.py`) powered by `pytest`.
+### 2. Unit Tests (`test/`)
+Dedicated test directory powered by `pytest`:
+- `test_geometry_data.py`: Unit tests for Chapter 05 geometric primitives (Point, Vector, CoordinateSystem, Line, Plane, Circle, Arc).
+- `test_brep_mesh_rendering.py`: Unit tests for Chapter 06 Surface, B-Rep, and Mesh data structures, topological validity, and PyVista conversion.
 
 ---
 
@@ -78,7 +81,7 @@ Organized as a unified, flat directory for ease of learning and execution:
 
 ### Run Unit Tests
 ```bash
-pytest scripts/
+pytest test/
 ```
 
 ### Run Demos

@@ -63,7 +63,10 @@ python_civil_drawing/
   - 边界表示法 (`BrepData`, 长方体/立方体精确拓扑)
   - 多边形网格 (`MeshData`, 四棱锥网格)
   - 对比渲染场景 (`07_render_surface_brep_mesh_scene.py`)
-- **单元测试**：`test_geometry_data.py` 和 `test_brep_mesh_rendering.py`（使用 `pytest` 运行）。
+### 2. 单元测试 (`test/`)
+独立测试目录，使用 `pytest` 运行：
+- `test_geometry_data.py`：第 05 章基础几何类型（点、向量、坐标系、线、面、圆、弧）单元测试。
+- `test_brep_mesh_rendering.py`：第 06 章曲面、B-Rep、Mesh 数据结构与拓扑、PyVista 转换测试。
 
 ---
 
@@ -78,7 +81,7 @@ python_civil_drawing/
 
 ### 运行单元测试
 ```bash
-pytest scripts/
+pytest test/
 ```
 
 ### 运行示例脚本
