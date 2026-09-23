@@ -1639,13 +1639,13 @@ plotter.show()</code></pre>
       <div class="canvas">
         <div class="content">
           <div class="eyebrow">源码清单</div>
-          <h2 class="section-title">本章 Python 几何与渲染源码体系 (scripts / examples / test)</h2>
+          <h2 class="section-title">本章 Python 几何与渲染源码体系 (src / examples / test)</h2>
           <div class="three">
             <div class="panel">
               <h2>核心架构与单元测试</h2>
               <p>
-                <code>scripts/brep_primitives.py</code> (曲面/实体/网格)<br>
-                <code>scripts/geometry_primitives.py</code> (几何图元)<br>
+                <code>src/brep_primitives.py</code> (曲面/实体/网格)<br>
+                <code>src/geometry_primitives.py</code> (几何图元)<br>
                 <code>test/test_brep_mesh_rendering.py</code><br>
                 <span style="font-size:14px; color:var(--palm); font-weight:bold;">✔ 15项 pytest 测试用例全部通过</span>
               </p>
@@ -1710,7 +1710,7 @@ plotter.show()</code></pre>
               <li><strong>统一基类继承</strong>：所有几何类必须派生自 <code>GeometryData</code>，不引入外部黑盒 CAD 库。</li>
               <li><strong>多态转换成功</strong>：Surface、B-Rep、Mesh 均能正确实现 <code>to_pyvista()</code> 并生成数据集。</li>
               <li><strong>色彩标记清晰</strong>：Surface（浅海绿+深灰线）、B-Rep（珊瑚红+钢青+淡蓝）、Mesh（海绿+麦黄）。</li>
-              <li><strong>测试全部通过</strong>：执行 <code>pytest scripts/</code> 验证类结构、继承关系与坐标计算无误。</li>
+              <li><strong>测试全部通过</strong>：执行 <code>pytest test/</code> 验证类结构、继承关系与坐标计算无误。</li>
             </ul>
           </div>
         </div>

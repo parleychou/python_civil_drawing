@@ -5,10 +5,10 @@ import sys
 import unittest
 from pathlib import Path
 
-# 将 scripts 目录加入 sys.path
-SCRIPTS_DIR = Path(__file__).resolve().parent.parent / "scripts"
-if str(SCRIPTS_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPTS_DIR))
+# 将 src 目录加入 sys.path
+SRC_DIR = Path(__file__).resolve().parent.parent / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 from geometry_primitives import (
     Arc3D,

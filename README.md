@@ -47,7 +47,7 @@ All slides are built with HTML5, responsive styling, and embedded Three.js 3D in
 
 ```text
 python_civil_drawing/
-├── scripts/     # Pure geometry data classes & RenderEngine core system
+├── src/         # Pure geometry data classes & RenderEngine core system
 ├── examples/    # Real-world object creation, scenes, and library practices
 ├── test/        # Unit test suite powered by pytest
 ├── slides/      # Interactive HTML5 + Three.js slide presentations
@@ -55,7 +55,7 @@ python_civil_drawing/
 └── README_ZH.md # Chinese documentation
 ```
 
-### 1. Pure Geometry & Render Core (`scripts/`)
+### 1. Pure Geometry & Render Core (`src/`)
 A pure, self-contained geometry and rendering kernel where all geometric types inherit from `GeometryData`:
 - **Base Abstraction**: `_base.py` (`GeometryData(ABC)`, `CurveData`, `SurfaceData`)
 - **0D-1D Geometric Primitives**: `Point3D`, `Vector3D`, `CoordinateSystem3D`, `Line3D`, `Plane3D`, `Circle3D`, `Arc3D`, `Curve`

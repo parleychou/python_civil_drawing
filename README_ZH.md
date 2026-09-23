@@ -47,7 +47,7 @@
 
 ```text
 python_civil_drawing/
-├── scripts/     # 纯几何内核与 RenderEngine 基础渲染系统
+├── src/         # 纯几何内核与 RenderEngine 基础渲染系统
 ├── examples/    # 实际对象建模、综合场景渲染与第三方库实操代码
 ├── test/        # pytest 单元测试目录
 ├── slides/      # 各章节交互式 HTML 幻灯片课件与三维可视化演示
@@ -55,7 +55,7 @@ python_civil_drawing/
 └── README_ZH.md # 中文文档
 ```
 
-### 1. 纯几何与渲染内核 (`scripts/`)
+### 1. 纯几何与渲染内核 (`src/`)
 高度内聚的纯几何与渲染引擎体系，所有几何对象均继承自 `GeometryData`：
 - **基类抽象**：`_base.py` (`GeometryData(ABC)`, `CurveData`, `SurfaceData`)
 - **0D-1D 几何图元**：`Point3D`、`Vector3D`、`CoordinateSystem3D`、`Line3D`、`Plane3D`、`Circle3D`、`Arc3D`、`Curve`
