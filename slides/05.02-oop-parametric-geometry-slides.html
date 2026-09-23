@@ -1,0 +1,1578 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>05.02 面向对象与几何参数化表达</title>
+  <style>
+    :root {
+      --sun-50: #fff8e6;
+      --sun-100: #fff1ca;
+      --sun-200: #ffe29a;
+      --citrus: #f7a928;
+      --coral: #ff6f61;
+      --ocean: #1178a6;
+      --deep-ocean: #0d3f5e;
+      --palm: #2f8f6b;
+      --ink: #1f2a32;
+      --muted: #65717a;
+      --paper: #fffdf7;
+      --line: #e8d9b9;
+      --shell: #10384e;
+      --shadow: 0 22px 60px rgba(13, 63, 94, 0.14);
+      --soft-shadow: 0 12px 30px rgba(13, 63, 94, 0.09);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 16% 10%, rgba(255, 226, 154, 0.72) 0 17%, transparent 18%),
+        linear-gradient(145deg, rgba(255, 248, 230, 0.98), rgba(232, 244, 247, 0.92) 68%, rgba(255, 253, 247, 0.98));
+      overflow: hidden;
+    }
+    .deck { width: 100vw; height: 100vh; position: relative; }
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 5vh 6vw 7vh;
+      opacity: 0;
+      transform: translateX(28px);
+      pointer-events: none;
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+    .slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+    .canvas {
+      width: min(1180px, 100%);
+      min-height: min(720px, 82vh);
+      position: relative;
+      padding: clamp(30px, 5vw, 64px);
+      border: 1px solid rgba(232, 217, 185, 0.92);
+      background: rgba(255, 253, 247, 0.91);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .canvas::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(17, 120, 166, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 120, 166, 0.07) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
+      pointer-events: none;
+    }
+    .canvas::after {
+      content: "";
+      position: absolute;
+      right: -110px;
+      bottom: -100px;
+      width: 360px;
+      height: 240px;
+      border-top: 2px solid rgba(17, 120, 166, 0.24);
+      border-radius: 50% 0 0 0;
+      transform: rotate(-8deg);
+      pointer-events: none;
+    }
+    .content { position: relative; z-index: 1; width: 100%; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      color: var(--ocean);
+      font-size: 17px;
+      font-weight: 800;
+    }
+    .eyebrow::before { content: ""; width: 34px; height: 4px; background: var(--citrus); }
+    .slide-title {
+      max-width: 980px;
+      margin: 0 0 24px;
+      color: var(--deep-ocean);
+      font-size: clamp(38px, 5.5vw, 68px);
+      line-height: 1.08;
+      font-weight: 850;
+    }
+    .section-title {
+      margin: 0 0 18px;
+      color: var(--deep-ocean);
+      font-size: clamp(30px, 3.8vw, 48px);
+      line-height: 1.15;
+      font-weight: 800;
+    }
+    .lead {
+      max-width: 860px;
+      color: var(--muted);
+      font-size: clamp(18px, 2vw, 24px);
+      line-height: 1.55;
+    }
+    p, li { font-size: 19px; line-height: 1.6; }
+    ul, ol { margin: 0; padding-left: 1.25em; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 36px;
+      align-items: center;
+    }
+    .grid-top {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+    .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .panel, .concept-card, .practice-box {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.82);
+      padding: 24px;
+      box-shadow: var(--soft-shadow);
+      border-radius: 4px;
+    }
+    .panel h2, .concept-card h2, .practice-box h2 {
+      margin: 0 0 12px;
+      color: var(--deep-ocean);
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 800;
+    }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+    .tag {
+      border: 1px solid rgba(17, 120, 166, 0.24);
+      background: rgba(255, 248, 230, 0.92);
+      color: var(--deep-ocean);
+      padding: 8px 14px;
+      font-size: 16px;
+      font-weight: 750;
+      border-radius: 2px;
+    }
+    .takeaway {
+      display: inline-block;
+      margin-top: 18px;
+      padding: 12px 18px;
+      color: var(--deep-ocean);
+      background: #fff0bf;
+      border-left: 6px solid var(--coral);
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .code-panel {
+      margin: 0;
+      color: #f7fbff;
+      background: var(--shell);
+      border-left: 8px solid var(--citrus);
+      padding: 20px;
+      overflow: auto;
+      font-size: 15px;
+      line-height: 1.45;
+      box-shadow: var(--soft-shadow);
+      white-space: pre;
+      border-radius: 0 4px 4px 0;
+      max-height: 480px;
+      font-family: "Fira Code", Consolas, Monaco, monospace;
+    }
+    .table-container {
+      overflow-x: auto;
+      margin-top: 16px;
+      box-shadow: var(--soft-shadow);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255, 255, 255, 0.8);
+      text-align: left;
+    }
+    th, td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      font-size: 16px;
+    }
+    th {
+      background: var(--sun-100);
+      color: var(--deep-ocean);
+      font-weight: 800;
+    }
+    tr:last-child td { border-bottom: none; }
+    
+    /* Interactive Widget Styles */
+    .widget-container {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 20px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid var(--line);
+      padding: 20px;
+      box-shadow: var(--soft-shadow);
+      border-radius: 6px;
+      min-height: 420px;
+    }
+    .widget-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .control-group label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--deep-ocean);
+    }
+    .control-group input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+    }
+    .control-group .value-display {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: right;
+      margin-top: -2px;
+    }
+    .shape-selector {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+    .shape-btn {
+      flex: 1;
+      padding: 8px 5px;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--ink);
+      cursor: pointer;
+      text-align: center;
+      border-radius: 4px;
+      transition: all 150ms ease;
+    }
+    .shape-btn.active {
+      background: var(--ocean);
+      color: white;
+      border-color: var(--ocean);
+    }
+    .widget-display {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+    }
+    .svg-stage {
+      width: 100%;
+      height: 300px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: inset 0 2px 8px rgba(13, 63, 94, 0.05);
+      border-radius: 4px;
+    }
+    .info-panel {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--shell);
+      color: #f7fbff;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .info-panel .math-formula {
+      color: var(--sun-200);
+      margin-bottom: 4px;
+      font-weight: bold;
+    }
+
+    .nav {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      z-index: 5;
+    }
+    .nav button {
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(13, 63, 94, 0.22);
+      background: var(--paper);
+      color: var(--deep-ocean);
+      font-size: 22px;
+      cursor: pointer;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 150ms;
+    }
+    .nav button:hover { background: var(--sun-200); }
+    .counter { min-width: 76px; text-align: center; color: var(--deep-ocean); font-weight: 800; font-size: 16px; }
+    
+    /* Cover Slide Styles */
+    .cover-canvas {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      background: radial-gradient(circle at 80% 20%, rgba(17, 120, 166, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 20% 80%, rgba(247, 169, 40, 0.15) 0%, transparent 50%),
+                  rgba(255, 253, 247, 0.95);
+    }
+
+    .cover-canvas::after {
+      content: "";
+      position: absolute;
+      right: -50px;
+      bottom: -50px;
+      width: 450px;
+      height: 450px;
+      border: 2px dashed rgba(17, 120, 166, 0.15);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .cover-canvas::before {
+      content: "";
+      position: absolute;
+      left: 10%;
+      top: 15%;
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, rgba(255, 111, 97, 0.1), rgba(247, 169, 40, 0.1));
+      clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+      animation: rotateSlow 20s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes rotateSlow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .cover-content {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      justify-content: center;
+      max-width: 62%;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cover-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      color: var(--ocean);
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+
+    .cover-eyebrow::before {
+      content: "";
+      width: 40px;
+      height: 4px;
+      background: var(--coral);
+    }
+
+    .cover-title {
+      margin: 0 0 20px;
+      color: var(--deep-ocean);
+      font-size: clamp(38px, 5.2vw, 68px);
+      line-height: 1.25;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--deep-ocean) 30%, var(--ocean));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .cover-subtitle {
+      color: var(--muted);
+      font-size: clamp(22px, 3vw, 32px);
+      line-height: 1.4;
+      font-weight: 400;
+      margin-bottom: 60px;
+    }
+
+    .cover-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: auto;
+      border-top: 1px solid rgba(13, 63, 94, 0.15);
+      padding-top: 32px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .meta-line {
+      color: var(--deep-ocean);
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .cover-graphic {
+      position: absolute;
+      right: 2%;
+      top: 45%;
+      transform: translateY(-50%);
+      width: clamp(300px, 40vw, 520px);
+      height: auto;
+      z-index: 1;
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    .struct-line {
+      stroke-linecap: round;
+    }
+
+    .struct-node {
+      stroke: var(--paper);
+      stroke-width: 2;
+    }
+
+    .axis-line {
+      stroke-linecap: round;
+    }
+
+    /* Python Card Style */
+    .python-card {
+      position: absolute;
+      right: 4%;
+      bottom: 12%;
+      width: clamp(260px, 25vw, 360px);
+      background: rgba(16, 56, 78, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+      border-radius: 8px;
+      font-family: "Fira Code", Consolas, Monaco, monospace;
+      color: #f7fbff;
+      z-index: 3;
+      padding: 12px 14px;
+      animation: floatCard 6s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatCard {
+      from { transform: translateY(0px) rotate(1deg); }
+      to { transform: translateY(-12px) rotate(-1deg); }
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot.red { background: #ff5f56; }
+    .dot.yellow { background: #ffbd2e; }
+    .dot.green { background: #27c93f; }
+
+    .card-title {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.45);
+      margin-left: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .card-body {
+      font-size: 12px;
+      line-height: 1.6;
+      text-align: left;
+      height: 112px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .code-line {
+      margin: 2px 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .keyword { color: #ff6f61; font-weight: 700; }
+    .comment { color: #65717a; font-style: italic; }
+    .number { color: #f7a928; }
+    .string { color: #2f8f6b; }
+
+    @media (max-width: 960px) {
+      body { overflow: auto; }
+      .deck { height: auto; min-height: 100vh; }
+      .slide { position: relative; min-height: 100vh; display: none; padding: 24px 16px 76px; }
+      .slide.active { display: grid; }
+      .canvas { min-height: 78vh; padding: 28px; }
+      .grid, .grid-top { grid-template-columns: 1fr; }
+      .slide-title { font-size: 34px; }
+      .section-title { font-size: 28px; }
+      p, li { font-size: 17px; }
+      .widget-container { grid-template-columns: 1fr; }
+      
+      .cover-title { font-size: 44px; }
+      .cover-subtitle { font-size: 20px; margin-bottom: 30px; }
+      .cover-meta { gap: 8px; flex-direction: column; }
+      .cover-graphic { position: relative; right: auto; top: auto; transform: none; width: 90%; margin: 20px auto 0; }
+      .python-card { position: relative; right: auto; bottom: auto; width: 90%; margin: 15px auto 0; animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" aria-live="polite">
+    <!-- Slide 1: Cover -->
+    <section class="slide active">
+      <div class="canvas cover-canvas">
+        <!-- SVG structural graphic (Civil + Graphics: 3D Beam & Column) -->
+        <svg class="cover-graphic" viewBox="0 0 500 400" width="500" height="400">
+          <defs>
+            <pattern id="grid-pattern" width="25" height="25" patternUnits="userSpaceOnUse">
+              <path d="M 25 0 L 0 0 0 25" fill="none" stroke="rgba(17, 120, 166, 0.05)" stroke-width="1"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid-pattern)" />
+
+          <!-- 3D Axes -->
+          <g class="axes-3d" transform="translate(140, 240)">
+            <line id="axis-x" x1="0" y1="0" x2="160" y2="80" class="axis-line" stroke="var(--coral)" stroke-width="2" style="opacity: 0; transition: opacity 0.5s;" />
+            <text id="axis-x-lbl" x="170" y="90" fill="var(--coral)" font-size="12" font-weight="bold" style="opacity: 0; transition: opacity 0.5s;">X (梁轴线)</text>
+            
+            <line id="axis-y" x1="0" y1="0" x2="-100" y2="50" class="axis-line" stroke="var(--palm)" stroke-width="2" style="opacity: 0; transition: opacity 0.5s;" />
+            <text id="axis-y-lbl" x="-125" y="65" fill="var(--palm)" font-size="12" font-weight="bold" style="opacity: 0; transition: opacity 0.5s;">Y (跨宽)</text>
+            
+            <line id="axis-z" x1="0" y1="0" x2="0" y2="-160" class="axis-line" stroke="var(--ocean)" stroke-width="2" style="opacity: 0; transition: opacity 0.5s;" />
+            <text id="axis-z-lbl" x="-15" y="-175" fill="var(--ocean)" font-size="12" font-weight="bold" style="opacity: 0; transition: opacity 0.5s;">Z (高度)</text>
+          </g>
+
+          <!-- 3D Column and Beam Elements -->
+          <g class="structure-3d">
+            <!-- Column 3D Solid Faces -->
+            <polygon id="col-face-l" points="160,300 210,325 210,125 160,100" fill="rgba(17, 120, 166, 0.15)" stroke="var(--ocean)" stroke-width="1" style="opacity: 0; transition: opacity 0.8s;" />
+            <polygon id="col-face-r" points="210,325 260,300 260,100 210,125" fill="rgba(17, 120, 166, 0.2)" stroke="var(--ocean)" stroke-width="1" style="opacity: 0; transition: opacity 0.8s;" />
+            <polygon id="col-face-t" points="160,100 210,125 260,100 210,75" fill="rgba(17, 120, 166, 0.25)" stroke="var(--ocean)" stroke-width="1" style="opacity: 0; transition: opacity 0.8s;" />
+            
+            <!-- Column Wireframe Edges -->
+            <g id="col-wire" stroke="var(--deep-ocean)" stroke-width="2" stroke-linecap="round" fill="none" style="opacity: 0; transition: opacity 0.5s;">
+              <line x1="160" y1="300" x2="160" y2="100" />
+              <line x1="210" y1="325" x2="210" y2="125" />
+              <line x1="260" y1="300" x2="260" y2="100" />
+              <line x1="160" y1="100" x2="210" y2="125" />
+              <line x1="210" y1="125" x2="260" y2="100" />
+              <line x1="160" y1="100" x2="210" y2="75" />
+              <line x1="210" y1="75" x2="260" y2="100" />
+            </g>
+
+            <!-- Beam 3D Solid Faces -->
+            <polygon id="beam-face-t" points="220,165 250,150 370,210 340,225" fill="rgba(247, 169, 40, 0.2)" stroke="var(--citrus)" stroke-width="1" style="opacity: 0; transition: opacity 0.8s;" />
+            <polygon id="beam-face-fl" points="220,165 340,225 340,270 220,210" fill="rgba(247, 169, 40, 0.25)" stroke="var(--citrus)" stroke-width="1" style="opacity: 0; transition: opacity 0.8s;" />
+            
+            <!-- Beam Wireframe Edges -->
+            <g id="beam-wire" stroke="var(--citrus)" stroke-width="2" stroke-linecap="round" fill="none" style="opacity: 0; transition: opacity 0.5s;">
+              <line x1="220" y1="165" x2="340" y2="225" />
+              <line x1="250" y1="150" x2="370" y2="210" />
+              <line x1="220" y1="210" x2="340" y2="270" />
+              <line x1="250" y1="195" x2="370" y2="255" />
+              <line x1="340" y1="225" x2="370" y2="210" />
+              <line x1="370" y1="210" x2="370" y2="255" />
+              <line x1="370" y1="255" x2="340" y2="270" />
+              <line x1="340" y1="270" x2="340" y2="225" />
+            </g>
+
+            <!-- Connection Highlight (Junction) -->
+            <polygon id="junction-face" points="220,165 250,150 250,195 220,210" fill="rgba(255, 111, 97, 0.4)" stroke="var(--coral)" stroke-width="2.5" style="opacity: 0; transition: opacity 0.8s;" />
+            <circle id="junction-node" cx="235" cy="180" r="8" fill="var(--coral)" stroke="var(--paper)" stroke-width="2" style="opacity: 0; transform: scale(0); transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);" />
+          </g>
+        </svg>
+
+        <!-- Python Terminal Card (Python Theme) -->
+        <div class="python-card">
+          <div class="card-header">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span class="card-title">beam_column_model.py</span>
+          </div>
+          <div class="card-body" id="py-code-body">
+            <!-- Typewriter will dynamically insert highlighted lines here -->
+          </div>
+        </div>
+
+        <div class="content cover-content">
+          <div class="cover-eyebrow">土木人的Python课系列课程</div>
+          <h1 class="cover-title">数字化土木工程的<br>图形学表达（3）</h1>
+          <div class="cover-meta">
+            <div class="meta-line">周文琪</div>
+            <div class="meta-line">上海非解构数字科技有限公司</div>
+            <div class="meta-line">2026.08.13</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 2: Naive Geometry Primitives -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">朴素建模</div>
+            <h2 class="section-title">各自为战的朴素图元类</h2>
+            <p>在最基础的面向对象思想下，如果不做进一步的抽象，我们通常会为每种图形编写一个类，直接继承自几何根基类 <code>GeometryData</code>：</p>
+            <ul>
+              <li><strong>独立的特征属性</strong>：直线段持有 <code>start</code> 和 <code>end</code>；整圆和圆弧持有圆心、半径及角度。</li>
+              <li><strong>硬编码渲染实现</strong>：每个类都必须手写并实现自己专属的 <code>to_pyvista()</code> 方法。</li>
+              <li><strong>重复的代数计算</strong>：为了在 3D 空间中定位，圆与圆弧必须在内部手动获取局部基矢并循环进行三角函数插值采样。</li>
+            </ul>
+            <div class="takeaway">虽然这样能画出图形，但底层的生成行为高度冗余，且使得几何内核与渲染引擎严重耦合。</div>
+          </div>
+          <pre class="code-panel"><code># 各自动手实现 to_pyvista (以圆和线为例)
+@dataclass
+class Line3D(GeometryData):
+    start: Point3D
+    end: Point3D
+
+    def to_pyvista(self) -> pv.DataSet:
+        return pv.Line(self.start.to_tuple(), self.end.to_tuple())
+
+@dataclass
+class Circle3D(GeometryData):
+    plane: Plane3D
+    radius: float = 1.0
+
+    def to_pyvista(self) -> pv.DataSet:
+        points = []
+        u, v = self.plane.local_axes()
+        for i in range(72):
+            angle = 2.0 * math.pi * (i / 72)
+            offset_u = u.scale(self.radius * math.cos(angle))
+            offset_v = v.scale(self.radius * math.sin(angle))
+            pt = self.plane.center + offset_u + offset_v
+            points.append(pt.to_tuple())
+        
+        polyline = pv.PolyData(points)
+        polyline.lines = [73, *range(72), 0]
+        return polyline</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 3: Pain Points & Redundancy -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">架构痛点</div>
+            <h2 class="section-title">痛点剖析：野蛮生长的库</h2>
+            <p>对比 <code>Circle3D</code> 与 <code>Arc3D</code> 的实现代码，我们可以直观地看到以下架构硬伤：</p>
+            <ul>
+              <li><strong>重复的采样逻辑</strong>：两个类都在内部通过循环获取局部坐标轴 <code>u, v</code>、计算 cos 和 sin 乘法、做相同的平移相加。</li>
+              <li><strong>重复的网格封装</strong>：它们都在各自的方法中调用 <code>pv.PolyData</code> 并手动配置拓扑索引（<code>lines</code>），如果未来引入 20 种新曲线，就需要复制 20 份相同的打包样板代码。</li>
+              <li><strong>修改极其脆弱</strong>：若未来决定将渲染引擎换成 Matplotlib，必须把每一个图元类的 <code>to_pyvista</code> 函数全部重写一遍。</li>
+            </ul>
+          </div>
+          <div class="practice-box">
+            <h2>核心架构思考</h2>
+            <ul>
+              <li>这些几何对象，底层到底有没有共同的<strong>数学本质</strong>？</li>
+              <li>“在指定范围采样点”和“打包成折线网格”的行为，是否能够提取为父类的<strong>通用算法</strong>？</li>
+              <li>如何将“几何的数学定义”与“渲染网格构建”彻底解耦？</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 4: Parametric Representation -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">数学物理统一</div>
+            <h2 class="section-title">参数化：用进度参数 t 统一曲线</h2>
+            <p>解决重复代码的突破口，在于引入图形学最核心的思想：<strong>参数化表达（Parametric Representation）</strong>。</p>
+            <ul>
+              <li><strong>进度参数 t</strong>：引入一个独立的无量纲参数 <strong><code>t</code></strong>（区间限制在 <code>[0, 1]</code> 之间）。</li>
+              <li><strong>运动的轨迹</strong>：不要把几何体看作死板的线条，而是将其看作一个点随着“时间”（参数 <code>t</code>）在三维空间中运动扫掠出的轨迹：<code>P(t) = (x(t), y(t), z(t))</code>。</li>
+              <li><strong>统一的行为契约</strong>：任何曲线只要给定一个 t 在 [0, 1] 之间的进度，都应该返回对应的空间 3D 坐标。</li>
+            </ul>
+            <div class="takeaway">轨道比喻：参数化就像是在空间中铺设铁路，参数 t 就是列车从起点（0%）到终点（100%）的行程进度。</div>
+          </div>
+          <div class="concept-card">
+            <h2>三大常用参数化映射公式</h2>
+            <p><strong>1. 直线段参数方程</strong>：<br>
+              <code>P(t) = (1 - t) * P_start + t * P_end</code></p>
+            <p><strong>2. 整圆参数方程</strong>：<br>
+              <code>P(t) = P_center + R·cos(2πt)·u + R·sin(2πt)·v</code></p>
+            <p><strong>3. 圆弧参数方程</strong>：<br>
+              <code>θ(t) = θ_start + t·(θ_end - θ_start)</code><br>
+              <code>P(t) = P_center + R·cos(θ(t))·u + R·sin(θ(t))·v</code></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 5: Curve Base Class Abstraction -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">模板方法模式</div>
+            <h2 class="section-title">Curve 类：让曲线计算一劳永逸</h2>
+            <p>通过参数化接口，我们在 <code>curve.py</code> 中建立曲线基类 <code>Curve</code>：</p>
+            <ul>
+              <li><strong>抽象方法契约</strong>：定义抽象方法 <code>point_at(t)</code>，强迫子类只实现这一个数学公式。</li>
+              <li><strong>统一的等分采样</strong>：在父类中统一实现 <code>sample_points(count)</code>，它在参数域 [0, 1] 间生成 t 并循环调用 <code>point_at(t)</code>。</li>
+              <li><strong>统一的网格打包</strong>：在父类中统一实现 <code>to_pyvista()</code>，完全依赖 <code>sample_points()</code> 生成的顶点来组装网格。</li>
+            </ul>
+            <div class="takeaway">模板方法模式：父类负责统筹通用的行为逻辑（采样、网格生成），具体的算法公式（point_at）留给子类去“填空”。</div>
+          </div>
+          <pre class="code-panel"><code># geometry_primitives/curve.py (核心抽象)
+class Curve(GeometryData, ABC):
+    @abstractmethod
+    def point_at(self, t: float) -> "Point3D":
+        """子类必须重写该方法，定义 t ∈ [0, 1] 上的点坐标"""
+        pass
+
+    def sample_points(self, count: int) -> list["Point3D"]:
+        # 统一的采样算法：依赖 point_at(t)
+        t_values = np.linspace(0.0, 1.0, count)
+        return [self.point_at(float(t)) for t in t_values]
+
+    def to_pyvista(self) -> "pv.DataSet":
+        # 统一的网格折线组装算法：完全与具体子类解耦
+        points = self.sample_points(72)
+        pts_tuples = [p.to_tuple() for p in points]
+        polyline = pv.PolyData(pts_tuples)
+        polyline.lines = [len(points), *range(len(points))]
+        return polyline</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 6: Subclasses Refactored -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">重写与多态</div>
+            <h2 class="section-title">重构派生类：只保留纯粹的数学</h2>
+            <p>继承 <code>Curve</code> 之后，子类的代码变得极其干净：</p>
+            <ul>
+              <li><strong>仅保留参数字段 and 公式</strong>：没有了点集拼接、没有了 PyVista 导入，子类只专注于描述自己纯粹的数学几何意义。</li>
+              <li><strong>定制默认采样数</strong>：直线段默认采样 <code>count = 2</code>；整圆默认采样 <code>count = 72</code>；圆弧默认采样 <code>count = 32</code>。</li>
+            </ul>
+            <div class="takeaway">高内聚低耦合：任何渲染、采样逻辑的变化，只需在父类中修改一处，所有具体曲线自动继承更新。</div>
+          </div>
+          <pre class="code-panel"><code># Line3D 仅仅需要重写 point_at
+@dataclass
+class Line3D(Curve):
+    start: Point3D = field(default_factory=Point3D)
+    end: Point3D = field(default_factory=lambda: Point3D(1, 0, 0))
+
+    def point_at(self, t: float) -> Point3D:
+        return self.start * (1.0 - t) + self.end * t
+
+    def sample_points(self, count: int = 2) -> list[Point3D]:
+        return super().sample_points(count)
+
+# Circle3D 也只需专注于极坐标与空间平面的映射
+@dataclass
+class Circle3D(Curve):
+    radius: float = 1.0
+    plane: Plane3D = field(default_factory=Plane3D)
+
+    def point_at(self, t: float) -> Point3D:
+        angle = 2.0 * math.pi * t
+        u, v = self.plane.local_axes()
+        offset_u = u.scale(self.radius * math.cos(angle))
+        offset_v = v.scale(self.radius * math.sin(angle))
+        return self.plane.center + offset_u + offset_v</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 7: OOP Engineering Value -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">面向对象四大特性实践</div>
+            <h2 class="section-title">运算符重载与多态渲染的威力</h2>
+            <p>面向对象并非“画蛇添足”，它在土木几何计算和引擎架构设计中展现出强大的工程实力：</p>
+            <ul>
+              <li><strong>魔法方法（运算符重载）</strong>：重写 <code>Point3D</code> 和 <code>Vector3D</code> 的 <code>__add__</code>、<code>__sub__</code> 方法，使我们能用 <code>v = p_end - p_start</code>，<code>p = p_start + v</code> 等极具数学美感的方式直接编程。</li>
+              <li><strong>渲染多态性</strong>：渲染引擎无需写大量的 <code>if-else</code> 去判断几何体类型，仅通过统一接口 <code>item.render(engine)</code>，底层就会自动动态绑定并执行各子类的渲染逻辑。</li>
+            </ul>
+          </div>
+          <pre class="code-panel"><code># 1. 运算符重载让几何运算浑然天成
+start = Point3D(0, 0, 0)
+end = Point3D(3000, 4000, 0)
+direction_vector = end - start   # 触发 __sub__，得到 Vector3D
+
+# 2. 对具体类型“视而不见”的多态渲染循环
+objects: list[GeometryData] = [
+    CoordinateSystem3D(),
+    Line3D(Point3D(0,0,0), Point3D(5,5,5)),
+    Circle3D(radius=500),
+    Arc3D(radius=2000, start_angle=0, end_angle=math.pi)
+]
+
+for item in objects:
+    item.render(engine)          # 运行时动态多态分发</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 8: Discretization Concept -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">离散化 (Discretization)</div>
+            <h2 class="section-title">离散化：折线逼近光滑曲线</h2>
+            <p>屏幕和显卡（WebGL 或 VTK/PyVista）只认识基本的线段和三角形，<strong>世界上不存在能被屏幕直接画出来的“完美圆滑曲线”</strong>：</p>
+            <ul>
+              <li><strong>采样折线</strong>：为了渲染参数化曲线，必须将参数 t 在 [0, 1] 之间划分为 N 个等分值，算出对应的三维点并用直线段连接为折线（Polyline）。</li>
+              <li><strong>精度与性能的权衡</strong>：N 太小会有明显的折线楞角（如圆看起来像正八边形），N 太大会极度浪费显存和计算性能。</li>
+            </ul>
+          </div>
+          <div class="practice-box">
+            <h2>离散化在土木工程中的影响</h2>
+            <ul>
+              <li><strong>工程算量</strong>：若以太低的精度多边形近似圆柱体，会导致计算出的混凝土体积偏小，造成算量误差。</li>
+              <li><strong>碰撞检测</strong>：在进行 BIM Clash 检查时，粗糙的折线离散化会导致接触面处产生轻微的几何碰撞产生轻微误报或漏报。</li>
+              <li><strong>出图规范</strong>：低精度采样会让 CAD 导出的弧线图纸呈现出不合规范的锯齿折角。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 9: Interactive Widget -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content">
+          <div class="eyebrow">动手体验</div>
+          <h2 class="section-title" style="margin-bottom:12px;">参数化与离散化交互可视化</h2>
+          
+          <div class="widget-container">
+            <!-- Left Side: Controls -->
+            <div class="widget-controls">
+              <div class="shape-selector">
+                <button class="shape-btn active" data-shape="line">直线段</button>
+                <button class="shape-btn" data-shape="circle">整圆</button>
+                <button class="shape-btn" data-shape="arc">圆弧</button>
+              </div>
+
+              <!-- Line Specific Controls -->
+              <div id="line-ctrls" class="shape-specific-ctrls">
+                <div class="control-group">
+                  <label for="line-ex">终点 X 坐标</label>
+                  <input type="range" id="line-ex" min="-200" max="200" value="150" />
+                  <div class="value-display" id="line-ex-val">150 px</div>
+                </div>
+                <div class="control-group">
+                  <label for="line-ey">终点 Y 坐标</label>
+                  <input type="range" id="line-ey" min="-150" max="150" value="100" />
+                  <div class="value-display" id="line-ey-val">100 px</div>
+                </div>
+              </div>
+
+              <!-- Circle/Arc Specific Controls -->
+              <div id="circle-ctrls" class="shape-specific-ctrls" style="display:none;">
+                <div class="control-group">
+                  <label for="shape-r">半径 R</label>
+                  <input type="range" id="shape-r" min="30" max="130" value="100" />
+                  <div class="value-display" id="shape-r-val">100 px</div>
+                </div>
+                <div class="control-group">
+                  <label for="shape-cx">中心 X 坐标</label>
+                  <input type="range" id="shape-cx" min="-100" max="100" value="0" />
+                  <div class="value-display" id="shape-cx-val">0 px</div>
+                </div>
+                <div class="control-group">
+                  <label for="shape-cy">中心 Y 坐标</label>
+                  <input type="range" id="shape-cy" min="-100" max="100" value="0" />
+                  <div class="value-display" id="shape-cy-val">0 px</div>
+                </div>
+              </div>
+
+              <!-- Arc Angle Controls -->
+              <div id="arc-ctrls" class="shape-specific-ctrls" style="display:none;">
+                <div class="control-group">
+                  <label for="arc-start">起始角 θ₁</label>
+                  <input type="range" id="arc-start" min="0" max="360" value="0" />
+                  <div class="value-display" id="arc-start-val">0°</div>
+                </div>
+                <div class="control-group">
+                  <label for="arc-end">终止角 θ₂</label>
+                  <input type="range" id="arc-end" min="0" max="360" value="135" />
+                  <div class="value-display" id="arc-end-val">135°</div>
+                </div>
+              </div>
+
+              <hr style="border:none; border-top:1px solid var(--line); margin:4px 0;">
+
+              <!-- Shared Controls -->
+              <div class="control-group">
+                <label for="sampling-n" style="color:var(--ocean);">采样点数 N</label>
+                <input type="range" id="sampling-n" min="2" max="64" value="8" />
+                <div class="value-display" id="sampling-n-val" style="font-weight:bold; color:var(--ocean);">8</div>
+              </div>
+
+              <div class="control-group">
+                <label for="param-t" style="color:var(--palm);">参数值 t</label>
+                <input type="range" id="param-t" min="0" max="1" step="0.01" value="0.5" />
+                <div class="value-display" id="param-t-val" style="font-weight:bold; color:var(--palm);">0.5</div>
+              </div>
+            </div>
+
+            <!-- Right Side: SVG Viewport & Code Display -->
+            <div class="widget-display">
+              <svg class="svg-stage" id="viewport" viewBox="0 0 500 300">
+                <defs>
+                  <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="var(--coral)" />
+                  </marker>
+                </defs>
+                <!-- Grid background -->
+                <g id="svg-grid" stroke="rgba(17, 120, 166, 0.05)" stroke-width="1"></g>
+                <!-- Reference Axes -->
+                <line x1="50" y1="150" x2="450" y2="150" stroke="rgba(13, 63, 94, 0.15)" stroke-width="1" stroke-dasharray="4" />
+                <line x1="250" y1="30" x2="250" y2="270" stroke="rgba(13, 63, 94, 0.15)" stroke-width="1" stroke-dasharray="4" />
+                <!-- Mathematical Curve (dashed, high-res) -->
+                <path id="continuous-curve" fill="none" stroke="#ddd" stroke-width="2" stroke-dasharray="3,3" />
+                <!-- Discretized Polyline -->
+                <path id="discrete-polyline" fill="none" stroke="var(--ocean)" stroke-width="2.5" />
+                <!-- Discretized Vertices -->
+                <g id="discrete-vertices"></g>
+                <!-- Evaluated point P(t) -->
+                <circle id="point-t" r="6.5" fill="var(--palm)" stroke="white" stroke-width="2" />
+                <!-- Tangent vector at P(t) -->
+                <line id="tangent-vector" stroke="var(--coral)" stroke-width="3" marker-end="url(#arrow)" />
+              </svg>
+
+              <div class="info-panel">
+                <div class="math-formula" id="info-formula">C(t) = P₀ + t·(P₁ - P₀)</div>
+                <div>当前坐标 P(t): <span id="info-coords">x = 0.00, y = 0.00</span></div>
+                <div>切线方向 dC/dt: <span id="info-tangent">dx = 1.00, dy = 0.00</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 10: Practice Exercise -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid-top">
+          <div>
+            <div class="eyebrow">学以致用</div>
+            <h2 class="section-title">课堂作业：开发三次贝塞尔曲线</h2>
+            <p>贝塞尔曲线 (Bézier Curve) 广泛用于大跨度桥梁拱线、立交桥线形和异形建筑边界的表达。</p>
+            <p><strong>开发任务</strong>：请在 <code>scripts/geometry_primitives/</code> 中创建一个新的模块 <code>bezier3d.py</code>。要求：</p>
+            <ul>
+              <li><strong>继承结构</strong>：新建 <code>BezierCurve3D</code> 继承自基类 <code>Curve</code>。</li>
+              <li><strong>数据参数</strong>：存储 4 个控制点：<code>p0, p1, p2, p3</code> (类型皆为 <code>Point3D</code>)。</li>
+              <li><strong>计算内核</strong>：重写 <code>point_at(t)</code> 方法，实现三次贝塞尔曲线方程（根据参数 t 混合 4 个控制点）：
+                <p style="font-size:20px; text-align:center; font-family:monospace; color:var(--deep-ocean); background:rgba(17,120,166,0.06); padding:10px; border-radius:4px; margin: 12px 0;">B(t) = (1-t)³ * P0 + 3*(1-t)² * t * P1 + 3*(1-t) * t² * P2 + t³ * P3</p>
+              </li>
+              <li><strong>验证渲染</strong>：在 <code>05_render_geometry_scene.py</code> 中实例化一条贝塞尔曲线，并在 3D 视口中进行渲染。</li>
+            </ul>
+          </div>
+          
+          <pre class="code-panel" style="font-size:14px; max-height:430px;"><code># 贝塞尔曲线模板参考
+from dataclasses import dataclass
+from geometry_primitives.curve import Curve
+from geometry_primitives.point3d import Point3D
+
+@dataclass
+class BezierCurve3D(Curve):
+    p0: Point3D
+    p1: Point3D
+    p2: Point3D
+    p3: Point3D
+
+    def point_at(self, t: float) -> Point3D:
+        # 三次贝塞尔曲线的伯恩斯坦多项式基函数
+        b0 = (1.0 - t) ** 3
+        b1 = 3.0 * ((1.0 - t) ** 2) * t
+        b2 = 3.0 * (1.0 - t) * (t ** 2)
+        b3 = t ** 3
+        
+        # 矢量合成
+        x = b0*self.p0.x + b1*self.p1.x + b2*self.p2.x + b3*self.p3.x
+        y = b0*self.p0.y + b1*self.p1.y + b2*self.p2.y + b3*self.p3.y
+        z = b0*self.p0.z + b1*self.p1.z + b2*self.p2.z + b3*self.p3.z
+        return Point3D(x, y, z)
+
+    def sample_points(self, count: int = 40) -> list[Point3D]:
+        return super().sample_points(count)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slide 11: Summary -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">本节小结</div>
+            <h2 class="section-title">面向对象与参数化建模的核心收束</h2>
+            <p>本课时深入剖析了面向对象设计与图形参数化背后的软件工程哲学与数学方法：</p>
+            <ul>
+              <li><strong>软件架构</strong>：<code>GeometryData</code> 与 <code>Curve</code> 并非画图的线条，而是底层的计算协议。它们把三维空间位置的数学计算与渲染系统的细节进行了彻底的解耦。</li>
+              <li><strong>参数表达</strong>：计算机图形学以归一化的参数 t (0 到 1 之间) 作为媒介，将连续的几何方程转换为离散的点网格，这是现代 BIM 模型能在电脑屏幕上展现的终极奥秘。</li>
+            </ul>
+            <div class="takeaway">掌握了这两者，你们就具备了像软件开发人员一样编写建筑设计逻辑的能力，而不再局限于做普通的图纸消费者。</div>
+          </div>
+          <div class="concept-card" style="background:#f1faf7; border-color:rgba(47, 143, 107, 0.3);">
+            <h2 style="color:var(--palm);">下一章预告：从曲线走向面与体</h2>
+            <p>在下节课中，我们将跨越一维曲线，探索三维<strong>面和体的表达方式</strong>。探讨如何使用网格（Mesh）和边界表示法（B-Rep）来构建真正的墙体、梁柱等三维实体构件！</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="nav" aria-label="Slide navigation">
+    <button type="button" id="prev" aria-label="上一页">&lt;</button>
+    <div class="counter"><span id="current">1</span>/<span id="total">11</span></div>
+    <button type="button" id="next" aria-label="下一页">&gt;</button>
+  </nav>
+
+  <script>
+    // Slide deck navigation logic
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const current = document.querySelector("#current");
+    const total = document.querySelector("#total");
+    let index = 0;
+    total.textContent = slides.length;
+    
+    function show(nextIndex) {
+      index = Math.max(0, Math.min(slides.length - 1, nextIndex));
+      slides.forEach((slide, slideIndex) => {
+        slide.classList.toggle("active", slideIndex === index);
+      });
+      current.textContent = index + 1;
+      document.title = `05.02 面向对象与几何参数化 - ${index + 1}/${slides.length}`;
+      if (typeof checkSlideAnimation === 'function') {
+        checkSlideAnimation();
+      }
+    }
+    
+    document.querySelector("#prev").addEventListener("click", () => show(index - 1));
+    document.querySelector("#next").addEventListener("click", () => show(index + 1));
+    
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") {
+        event.preventDefault();
+        show(index + 1);
+      }
+      if (event.key === "ArrowLeft" || event.key === "PageUp") {
+        event.preventDefault();
+        show(index - 1);
+      }
+      if (event.key === "Home") {
+        event.preventDefault();
+        show(0);
+      }
+      if (event.key === "End") {
+        event.preventDefault();
+        show(slides.length - 1);
+      }
+    });
+
+    // ----------------------------------------------------
+    // Cover Slide Typewriter and 3D Column-Beam Animation
+    // ----------------------------------------------------
+    const elements = {
+      canvas: document.querySelector('.cover-canvas'),
+      axes: [
+        document.getElementById('axis-x'), document.getElementById('axis-x-lbl'),
+        document.getElementById('axis-y'), document.getElementById('axis-y-lbl'),
+        document.getElementById('axis-z'), document.getElementById('axis-z-lbl')
+      ],
+      col: [
+        document.getElementById('col-face-l'),
+        document.getElementById('col-face-r'),
+        document.getElementById('col-face-t'),
+        document.getElementById('col-wire')
+      ],
+      beam: [
+        document.getElementById('beam-face-t'),
+        document.getElementById('beam-face-fl'),
+        document.getElementById('beam-wire')
+      ],
+      junction: [
+        document.getElementById('junction-face')
+      ],
+      jNode: document.getElementById('junction-node')
+    };
+
+    const highlightSteps = [
+      {
+        lines: [
+          { text: "import numpy as np", html: '<span class="keyword">import</span> numpy <span class="keyword">as</span> np' },
+          { text: "import pyvista as pv", html: '<span class="keyword">import</span> pyvista <span class="keyword">as</span> pv' }
+        ]
+      },
+      {
+        lines: [
+          { text: "# 1. 创建柱网构件 (Column)", html: '<span class="comment"># 1. 创建柱网构件 (Column)</span>' },
+          { text: "col = pv.Box([-0.3,0.3,-0.3,0.3,0,3])", html: 'col = pv.Box([-<span class="number">0.3</span>,<span class="number">0.3</span>,-<span class="number">0.3</span>,<span class="number">0.3</span>,<span class="number">0</span>,<span class="number">3</span>])' }
+        ]
+      },
+      {
+        lines: [
+          { text: "# 2. 创建横梁构件 (Beam)", html: '<span class="comment"># 2. 创建横梁构件 (Beam)</span>' },
+          { text: "beam = pv.Box([0.3,2.5,-0.2,0.2,2,2.5])", html: 'beam = pv.Box([<span class="number">0.3</span>,<span class="number">2.5</span>,-<span class="number">0.2</span>,<span class="number">0.2</span>,<span class="number">2</span>,<span class="number">2.5</span>])' }
+        ]
+      },
+      {
+        lines: [
+          { text: "# 3. 计算节点连接 (Boolean)", html: '<span class="comment"># 3. 计算节点连接 (Boolean)</span>' },
+          { text: "connection = col.boolean_union(beam)", html: 'connection = col.boolean_union(beam)' }
+        ]
+      },
+      {
+        lines: [
+          { text: "# 4. 图形学渲染输出", html: '<span class="comment"># 4. 图形学渲染输出</span>' },
+          { text: "connection.plot(color='cyan')", html: 'connection.plot(color=<span class="string">\'cyan\'</span>)' }
+        ]
+      }
+    ];
+
+    let isAnimRunning = false;
+    let animTimeout = null;
+    let animTimeout3D1 = null;
+    let animTimeout3D2 = null;
+    let animTimeout3D3 = null;
+    let animTimeout3D4 = null;
+    let textIntervals = [];
+
+    function trigger3DModel(trigger) {
+      if (trigger === 'axes') {
+        elements.axes.forEach(el => { if(el) el.style.opacity = "1"; });
+      } else if (trigger === 'col') {
+        elements.col.forEach(el => { if(el) el.style.opacity = "1"; });
+      } else if (trigger === 'beam') {
+        elements.beam.forEach(el => { if(el) el.style.opacity = "1"; });
+      } else if (trigger === 'junction') {
+        elements.junction.forEach(el => { if(el) el.style.opacity = "1"; });
+        if (elements.jNode) {
+          elements.jNode.style.opacity = "1";
+          elements.jNode.style.transform = "scale(1)";
+        }
+      } else if (trigger === 'plot') {
+        if (elements.canvas) {
+          elements.canvas.style.boxShadow = "0 22px 60px rgba(17, 120, 166, 0.3)";
+          setTimeout(() => {
+            elements.canvas.style.boxShadow = "";
+          }, 1500);
+        }
+      }
+    }
+
+    function resetAnimation() {
+      // Clear intervals and timeouts
+      textIntervals.forEach(interval => clearInterval(interval));
+      textIntervals = [];
+      clearTimeout(animTimeout);
+      clearTimeout(animTimeout3D1);
+      clearTimeout(animTimeout3D2);
+      clearTimeout(animTimeout3D3);
+      clearTimeout(animTimeout3D4);
+
+      const codeBody = document.getElementById('py-code-body');
+      if (codeBody) codeBody.innerHTML = "";
+
+      elements.axes.forEach(el => { if(el) el.style.opacity = "0"; });
+      elements.col.forEach(el => { if(el) el.style.opacity = "0"; });
+      elements.beam.forEach(el => { if(el) el.style.opacity = "0"; });
+      elements.junction.forEach(el => { if(el) el.style.opacity = "0"; });
+      if (elements.jNode) {
+        elements.jNode.style.opacity = "0";
+        elements.jNode.style.transform = "scale(0)";
+      }
+    }
+
+    function typeLine(stepIdx, lineIdx) {
+      if (!isAnimRunning) return;
+      if (stepIdx >= highlightSteps.length) {
+        animTimeout = setTimeout(() => {
+          resetAnimation();
+          animTimeout = setTimeout(() => {
+            typeLine(0, 0);
+            start3DDrawing();
+          }, 1000);
+        }, 5000);
+        return;
+      }
+
+      const step = highlightSteps[stepIdx];
+      if (lineIdx >= step.lines.length) {
+        animTimeout = setTimeout(() => typeLine(stepIdx + 1, 0), 1000);
+        return;
+      }
+
+      const line = step.lines[lineIdx];
+      const codeBody = document.getElementById('py-code-body');
+      if (!codeBody) return;
+      const lineContainer = document.createElement('div');
+      lineContainer.className = 'code-line';
+      codeBody.appendChild(lineContainer);
+      codeBody.scrollTop = codeBody.scrollHeight;
+
+      let charIdx = 0;
+      const interval = setInterval(() => {
+        if (!isAnimRunning) {
+          clearInterval(interval);
+          return;
+        }
+        lineContainer.textContent = line.text.substring(0, charIdx) + "_";
+        charIdx++;
+        codeBody.scrollTop = codeBody.scrollHeight;
+        if (charIdx > line.text.length) {
+          clearInterval(interval);
+          lineContainer.innerHTML = line.html;
+          codeBody.scrollTop = codeBody.scrollHeight;
+          animTimeout = setTimeout(() => typeLine(stepIdx, lineIdx + 1), 300);
+        }
+      }, 25);
+      textIntervals.push(interval);
+    }
+
+    function start3DDrawing() {
+      // Clear any existing 3D timeouts
+      clearTimeout(animTimeout3D1);
+      clearTimeout(animTimeout3D2);
+      clearTimeout(animTimeout3D3);
+      clearTimeout(animTimeout3D4);
+
+      // Hide all components initially
+      elements.axes.forEach(el => { if(el) el.style.opacity = "0"; });
+      elements.col.forEach(el => { if(el) el.style.opacity = "0"; });
+      elements.beam.forEach(el => { if(el) el.style.opacity = "0"; });
+      elements.junction.forEach(el => { if(el) el.style.opacity = "0"; });
+      if (elements.jNode) {
+        elements.jNode.style.opacity = "0";
+        elements.jNode.style.transform = "scale(0)";
+      }
+
+      // Start 3D drawing steps
+      trigger3DModel('axes');
+
+      animTimeout3D1 = setTimeout(() => {
+        if (isAnimRunning) trigger3DModel('col');
+      }, 1500);
+
+      animTimeout3D2 = setTimeout(() => {
+        if (isAnimRunning) trigger3DModel('beam');
+      }, 3000);
+
+      animTimeout3D3 = setTimeout(() => {
+        if (isAnimRunning) trigger3DModel('junction');
+      }, 4500);
+
+      animTimeout3D4 = setTimeout(() => {
+        if (isAnimRunning) trigger3DModel('plot');
+      }, 6000);
+    }
+
+    function startCoverAnimation() {
+      if (isAnimRunning) return;
+      isAnimRunning = true;
+      resetAnimation();
+      
+      // Start typewriter
+      typeLine(0, 0);
+
+      // Start independent 3D drawing timeline
+      start3DDrawing();
+    }
+
+    function stopCoverAnimation() {
+      isAnimRunning = false;
+      clearTimeout(animTimeout);
+      clearTimeout(animTimeout3D1);
+      clearTimeout(animTimeout3D2);
+      clearTimeout(animTimeout3D3);
+      clearTimeout(animTimeout3D4);
+      resetAnimation();
+    }
+
+    function checkSlideAnimation() {
+      if (index === 0) {
+        startCoverAnimation();
+      } else {
+        stopCoverAnimation();
+      }
+    }
+
+    // Auto start cover animation on page load
+    setTimeout(startCoverAnimation, 500);
+
+    // ----------------------------------------------------
+    // Interactive Widget JavaScript
+    // ----------------------------------------------------
+    let currentShape = 'line';
+    const svgOriginX = 250;
+    const svgOriginY = 150;
+
+    // Dom Elements
+    const shapeBtns = document.querySelectorAll(".shape-btn");
+    const lineCtrls = document.getElementById("line-ctrls");
+    const circleCtrls = document.getElementById("circle-ctrls");
+    const arcCtrls = document.getElementById("arc-ctrls");
+    
+    // Sliders
+    const lineExSlider = document.getElementById("line-ex");
+    const lineEySlider = document.getElementById("line-ey");
+    const shapeRSlider = document.getElementById("shape-r");
+    const shapeCxSlider = document.getElementById("shape-cx");
+    const shapeCySlider = document.getElementById("shape-cy");
+    const arcStartSlider = document.getElementById("arc-start");
+    const arcEndSlider = document.getElementById("arc-end");
+    const samplingNSlider = document.getElementById("sampling-n");
+    const paramTSlider = document.getElementById("param-t");
+
+    // Display elements
+    const lineExVal = document.getElementById("line-ex-val");
+    const lineEyVal = document.getElementById("line-ey-val");
+    const shapeRVal = document.getElementById("shape-r-val");
+    const shapeCxVal = document.getElementById("shape-cx-val");
+    const shapeCyVal = document.getElementById("shape-cy-val");
+    const arcStartVal = document.getElementById("arc-start-val");
+    const arcEndVal = document.getElementById("arc-end-val");
+    const samplingNVal = document.getElementById("sampling-n-val");
+    const paramTVal = document.getElementById("param-t-val");
+
+    // SVG elements
+    const svgGrid = document.getElementById("svg-grid");
+    const continuousPath = document.getElementById("continuous-curve");
+    const discretePath = document.getElementById("discrete-polyline");
+    const discreteVerticesGroup = document.getElementById("discrete-vertices");
+    const pointTMarker = document.getElementById("point-t");
+    const tangentArrow = document.getElementById("tangent-vector");
+
+    // Info panel
+    const infoFormula = document.getElementById("info-formula");
+    const infoCoords = document.getElementById("info-coords");
+    const infoTangent = document.getElementById("info-tangent");
+
+    // Initialize Grid
+    function createGrid() {
+      let gridHTML = "";
+      for (let x = 50; x <= 450; x += 50) {
+        gridHTML += `<line x1="${x}" y1="30" x2="${x}" y2="270" />`;
+      }
+      for (let y = 50; y <= 250; y += 50) {
+        gridHTML += `<line x1="50" y1="${y}" x2="450" y2="${y}" />`;
+      }
+      svgGrid.innerHTML = gridHTML;
+    }
+    createGrid();
+
+    // Shape selection
+    shapeBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        shapeBtns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentShape = btn.dataset.shape;
+        
+        // Toggle controls
+        lineCtrls.style.display = currentShape === 'line' ? 'block' : 'none';
+        circleCtrls.style.display = (currentShape === 'circle' || currentShape === 'arc') ? 'block' : 'none';
+        arcCtrls.style.display = currentShape === 'arc' ? 'block' : 'none';
+
+        updateFormulaText();
+        draw();
+      });
+    });
+
+    function updateFormulaText() {
+      if (currentShape === 'line') {
+        infoFormula.textContent = "C(t) = P_start + t · (P_end - P_start)";
+      } else if (currentShape === 'circle') {
+        infoFormula.textContent = "C(t) = (x_c + R·cos(2πt), y_c + R·sin(2πt))";
+      } else {
+        infoFormula.textContent = "θ(t) = θ_s + t·(θ_e - θ_s), C(t) = (x_c + R·cos(θ), y_c + R·sin(θ))";
+      }
+    }
+
+    // Geometry Evaluation Functions
+    function pointAt(t) {
+      if (currentShape === 'line') {
+        const startX = -150;
+        const startY = -100;
+        const endX = parseFloat(lineExSlider.value);
+        const endY = parseFloat(lineEySlider.value);
+        return {
+          x: startX * (1 - t) + endX * t,
+          y: startY * (1 - t) + endY * t
+        };
+      } else if (currentShape === 'circle') {
+        const cx = parseFloat(shapeCxSlider.value);
+        const cy = parseFloat(shapeCySlider.value);
+        const r = parseFloat(shapeRSlider.value);
+        const angle = 2 * Math.PI * t;
+        return {
+          x: cx + r * Math.cos(angle),
+          y: cy + r * Math.sin(angle)
+        };
+      } else { // arc
+        const cx = parseFloat(shapeCxSlider.value);
+        const cy = parseFloat(shapeCySlider.value);
+        const r = parseFloat(shapeRSlider.value);
+        const startAngle = parseFloat(arcStartSlider.value) * Math.PI / 180;
+        const endAngle = parseFloat(arcEndSlider.value) * Math.PI / 180;
+        const angle = startAngle + (endAngle - startAngle) * t;
+        return {
+          x: cx + r * Math.cos(angle),
+          y: cy + r * Math.sin(angle)
+        };
+      }
+    }
+
+    function tangentAt(t) {
+      if (currentShape === 'line') {
+        const startX = -150;
+        const startY = -100;
+        const endX = parseFloat(lineExSlider.value);
+        const endY = parseFloat(lineEySlider.value);
+        const dx = endX - startX;
+        const dy = endY - startY;
+        const len = Math.sqrt(dx*dx + dy*dy);
+        return len > 1e-6 ? { dx: dx/len, dy: dy/len } : { dx: 0, dy: 0 };
+      } else if (currentShape === 'circle') {
+        const angle = 2 * Math.PI * t;
+        const dx = -Math.sin(angle);
+        const dy = Math.cos(angle);
+        return { dx, dy };
+      } else { // arc
+        const startAngle = parseFloat(arcStartSlider.value) * Math.PI / 180;
+        const endAngle = parseFloat(arcEndSlider.value) * Math.PI / 180;
+        const delta = endAngle - startAngle;
+        const angle = startAngle + delta * t;
+        const dx = -Math.sin(angle) * (delta >= 0 ? 1 : -1);
+        const dy = Math.cos(angle) * (delta >= 0 ? 1 : -1);
+        return { dx, dy };
+      }
+    }
+
+    // Convert Math Coordinate to SVG Coordinate (y is inverted in screen space)
+    function toSVG(pt) {
+      return {
+        x: svgOriginX + pt.x,
+        y: svgOriginY - pt.y
+      };
+    }
+
+    // Main Draw Function
+    function draw() {
+      // 1. Update text displays
+      lineExVal.textContent = lineExSlider.value + " px";
+      lineEyVal.textContent = lineEySlider.value + " px";
+      shapeRVal.textContent = shapeRSlider.value + " px";
+      shapeCxVal.textContent = shapeCxSlider.value + " px";
+      shapeCyVal.textContent = shapeCySlider.value + " px";
+      arcStartVal.textContent = arcStartSlider.value + "°";
+      arcEndVal.textContent = arcEndSlider.value + "°";
+      samplingNVal.textContent = samplingNSlider.value;
+      paramTVal.textContent = paramTSlider.value;
+
+      const N = parseInt(samplingNSlider.value);
+      const t = parseFloat(paramTSlider.value);
+
+      // 2. Plot mathematical curve (dashed background)
+      let mathPoints = [];
+      const res = 100;
+      for (let i = 0; i <= res; i++) {
+        mathPoints.push(toSVG(pointAt(i / res)));
+      }
+      let mathD = `M ${mathPoints[0].x} ${mathPoints[0].y} ` + 
+                  mathPoints.slice(1).map(p => `L ${p.x} ${p.y}`).join(" ");
+      continuousPath.setAttribute("d", mathD);
+
+      // 3. Plot discretized polyline and nodes
+      let discretePoints = [];
+      for (let i = 0; i < N; i++) {
+        // For closed circle, ensure the last point wraps to close nicely, or just keep spacing.
+        let localT = i / (N - 1);
+        if (currentShape === 'circle') {
+          localT = i / N;
+        }
+        discretePoints.push(toSVG(pointAt(localT)));
+      }
+      
+      // If circle, close the path
+      let discreteD = `M ${discretePoints[0].x} ${discretePoints[0].y} ` + 
+                      discretePoints.slice(1).map(p => `L ${p.x} ${p.y}`).join(" ");
+      if (currentShape === 'circle') {
+        discreteD += ` Z`;
+      }
+      discretePath.setAttribute("d", discreteD);
+
+      // Draw node circles
+      let nodesHTML = "";
+      discretePoints.forEach(p => {
+        nodesHTML += `<circle cx="${p.x}" cy="${p.y}" r="4" fill="var(--shell)" stroke="white" stroke-width="1" />`;
+      });
+      discreteVerticesGroup.innerHTML = nodesHTML;
+
+      // 4. Plot current point P(t)
+      const pt = pointAt(t);
+      const svgPt = toSVG(pt);
+      pointTMarker.setAttribute("cx", svgPt.x);
+      pointTMarker.setAttribute("cy", svgPt.y);
+      infoCoords.textContent = `x = ${pt.x.toFixed(2)}, y = ${pt.y.toFixed(2)}`;
+
+      // 5. Plot tangent vector arrow at P(t)
+      const tan = tangentAt(t);
+      const arrowLength = 45; // length of visual arrow
+      const arrowEnd = {
+        x: svgPt.x + tan.dx * arrowLength,
+        y: svgPt.y - tan.dy * arrowLength // screen space Y scale matches math Y direction
+      };
+      
+      tangentArrow.setAttribute("x1", svgPt.x);
+      tangentArrow.setAttribute("y1", svgPt.y);
+      tangentArrow.setAttribute("x2", arrowEnd.x);
+      tangentArrow.setAttribute("y2", arrowEnd.y);
+      
+      infoTangent.textContent = `dx = ${tan.dx.toFixed(2)}, dy = ${tan.dy.toFixed(2)}`;
+    }
+
+    // Attach listeners
+    const allInputs = [
+      lineExSlider, lineEySlider, shapeRSlider, shapeCxSlider, shapeCySlider, 
+      arcStartSlider, arcEndSlider, samplingNSlider, paramTSlider
+    ];
+    allInputs.forEach(input => input.addEventListener("input", draw));
+
+    // Initial trigger
+    draw();
+  </script>
+</body>
+</html>

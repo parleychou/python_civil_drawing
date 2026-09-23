@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>05.01 基本几何数据的建立</title>
+  <style>
+    :root {
+      --sun-50: #fff8e6;
+      --sun-100: #fff1ca;
+      --sun-200: #ffe29a;
+      --citrus: #f7a928;
+      --coral: #ff6f61;
+      --ocean: #1178a6;
+      --deep-ocean: #0d3f5e;
+      --palm: #2f8f6b;
+      --ink: #1f2a32;
+      --muted: #65717a;
+      --paper: #fffdf7;
+      --line: #e8d9b9;
+      --shell: #10384e;
+      --shadow: 0 22px 60px rgba(13, 63, 94, 0.14);
+      --soft-shadow: 0 12px 30px rgba(13, 63, 94, 0.09);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 16% 10%, rgba(255, 226, 154, 0.72) 0 17%, transparent 18%),
+        linear-gradient(145deg, rgba(255, 248, 230, 0.98), rgba(232, 244, 247, 0.92) 68%, rgba(255, 253, 247, 0.98));
+      overflow: hidden;
+    }
+    .deck { width: 100vw; height: 100vh; position: relative; }
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 5vh 6vw 7vh;
+      opacity: 0;
+      transform: translateX(28px);
+      pointer-events: none;
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+    .slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+    .canvas {
+      width: min(1180px, 100%);
+      min-height: min(720px, 82vh);
+      position: relative;
+      padding: clamp(30px, 5vw, 64px);
+      border: 1px solid rgba(232, 217, 185, 0.92);
+      background: rgba(255, 253, 247, 0.91);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .canvas::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(17, 120, 166, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 120, 166, 0.07) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
+      pointer-events: none;
+    }
+    .canvas::after {
+      content: "";
+      position: absolute;
+      right: -110px;
+      bottom: -100px;
+      width: 360px;
+      height: 240px;
+      border-top: 2px solid rgba(17, 120, 166, 0.24);
+      border-radius: 50% 0 0 0;
+      transform: rotate(-8deg);
+      pointer-events: none;
+    }
+    .content { position: relative; z-index: 1; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      color: var(--ocean);
+      font-size: 17px;
+      font-weight: 800;
+    }
+    .eyebrow::before { content: ""; width: 34px; height: 4px; background: var(--citrus); }
+    .slide-title {
+      max-width: 980px;
+      margin: 0 0 24px;
+      color: var(--deep-ocean);
+      font-size: clamp(40px, 6.7vw, 82px);
+      line-height: 1.04;
+      font-weight: 850;
+    }
+    .section-title {
+      margin: 0 0 18px;
+      color: var(--deep-ocean);
+      font-size: clamp(32px, 4.2vw, 54px);
+      line-height: 1.12;
+    }
+    .lead {
+      max-width: 860px;
+      color: var(--muted);
+      font-size: clamp(20px, 2.25vw, 28px);
+      line-height: 1.55;
+    }
+    p, li { font-size: 20px; line-height: 1.62; }
+    ul, ol { margin: 0; padding-left: 1.25em; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.04fr 0.96fr;
+      gap: 32px;
+      align-items: stretch;
+    }
+    .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .panel, .concept-card, .practice-box {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.76);
+      padding: 22px;
+      box-shadow: var(--soft-shadow);
+    }
+    .panel h2, .concept-card h2, .practice-box h2 {
+      margin: 0 0 12px;
+      color: var(--deep-ocean);
+      font-size: 27px;
+      line-height: 1.18;
+    }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+    .tag {
+      border: 1px solid rgba(17, 120, 166, 0.24);
+      background: rgba(255, 248, 230, 0.92);
+      color: var(--deep-ocean);
+      padding: 10px 14px;
+      font-size: 18px;
+      font-weight: 750;
+    }
+    .takeaway {
+      display: inline-block;
+      margin-top: 22px;
+      padding: 14px 18px;
+      color: var(--deep-ocean);
+      background: #fff0bf;
+      border-left: 6px solid var(--coral);
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .code-panel {
+      margin: 0;
+      color: #f7fbff;
+      background: var(--shell);
+      border-left: 8px solid var(--citrus);
+      padding: 22px;
+      overflow: auto;
+      font-size: 16px;
+      line-height: 1.45;
+      box-shadow: var(--soft-shadow);
+      white-space: pre;
+    }
+    .diagram-stage {
+      position: relative;
+      min-height: 380px;
+      border: 1px solid rgba(17, 120, 166, 0.22);
+      background:
+        linear-gradient(rgba(17, 120, 166, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 120, 166, 0.08) 1px, transparent 1px),
+        rgba(255, 255, 255, 0.72);
+      background-size: 32px 32px;
+      box-shadow: var(--soft-shadow);
+      overflow: hidden;
+    }
+    .axis-x, .axis-y, .axis-z {
+      position: absolute;
+      left: 90px;
+      bottom: 84px;
+      height: 4px;
+      transform-origin: left center;
+      background: var(--deep-ocean);
+    }
+    .axis-x { width: 280px; }
+    .axis-y { width: 220px; transform: rotate(-35deg); background: var(--palm); }
+    .axis-z { width: 220px; transform: rotate(-90deg); background: var(--coral); }
+    .node {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: var(--coral);
+      border: 3px solid var(--paper);
+      box-shadow: 0 0 0 2px rgba(255, 111, 97, 0.25);
+    }
+    .node.a { left: 84px; bottom: 76px; }
+    .node.b { left: 306px; bottom: 154px; }
+    .line-demo {
+      position: absolute;
+      left: 102px;
+      bottom: 90px;
+      width: 245px;
+      height: 5px;
+      background: var(--ocean);
+      transform-origin: left center;
+      transform: rotate(-18deg);
+    }
+    .plane-demo {
+      position: absolute;
+      right: 70px;
+      bottom: 82px;
+      width: 190px;
+      height: 130px;
+      background: rgba(247, 169, 40, 0.32);
+      border: 2px solid rgba(247, 169, 40, 0.65);
+      transform: skewY(-12deg);
+    }
+    .circle-demo {
+      position: absolute;
+      right: 118px;
+      top: 64px;
+      width: 112px;
+      height: 112px;
+      border: 5px solid var(--palm);
+      border-radius: 50%;
+      background: rgba(47, 143, 107, 0.08);
+    }
+    .nav {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      z-index: 5;
+    }
+    .nav button {
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(13, 63, 94, 0.22);
+      background: var(--paper);
+      color: var(--deep-ocean);
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .nav button:hover { background: var(--sun-200); }
+    .counter { min-width: 76px; text-align: center; color: var(--deep-ocean); font-weight: 800; }
+    @media (max-width: 920px) {
+      body { overflow: auto; }
+      .deck { height: auto; min-height: 100vh; }
+      .slide { position: relative; min-height: 100vh; display: none; padding: 24px 16px 76px; }
+      .slide.active { display: grid; }
+      .canvas { min-height: 78vh; padding: 28px; }
+      .grid, .three { grid-template-columns: 1fr; }
+      .slide-title { font-size: 40px; }
+      .section-title { font-size: 34px; }
+      p, li { font-size: 18px; }
+      .diagram-stage { min-height: 360px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" aria-live="polite">
+    <section class="slide active">
+      <div class="canvas">
+        <div class="content">
+          <div class="eyebrow">05.01 基本几何概念</div>
+          <h1 class="slide-title">先自己建立点、线、圆弧、向量和平面</h1>
+          <p class="lead">本章先不用 CAD 内核，直接用 Python 类表达基础几何。学生先看清数据结构、父类和子类，再把对象交给上一章 `RenderEngine` 渲染。</p>
+          <div class="tag-row">
+            <span class="tag">参数化</span>
+            <span class="tag">基类</span>
+            <span class="tag">点与向量</span>
+            <span class="tag">坐标系</span>
+            <span class="tag">RenderEngine</span>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">讲解顺序</div>
+            <h2 class="section-title">先讲自定义对象，再讲外部建模库</h2>
+            <p class="lead">课堂从 `Point3D`、`Vector3D`、`Line3D`、`Circle3D`、`Arc3D`、`Plane3D` 开始。每个对象都回答三件事：它存什么参数、它继承谁、它怎样变成可渲染数据。</p>
+            <div class="takeaway">几何对象不是零散变量，而是一组有父类、有参数、有渲染接口的数据类型。</div>
+          </div>
+          <div class="diagram-stage">
+            <div class="axis-x"></div><div class="axis-y"></div><div class="axis-z"></div>
+            <div class="line-demo"></div><div class="node a"></div><div class="node b"></div>
+            <div class="plane-demo"></div><div class="circle-demo"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="slide">
+      <div class="canvas"><div class="content grid"><div>
+        <div class="eyebrow">参数化图形</div>
+        <h2 class="section-title">图形由参数生成，而不是固定画死</h2>
+        <p class="lead">点由坐标决定，向量由分量决定，线由两个点决定，圆由圆心和半径决定，圆弧由圆心、半径和角度决定。修改参数，图形自动更新。</p>
+      </div><pre class="code-panel"><code>Point3D(6000, 3000, 0)
+Line3D(Point3D(0, 0, 0), Point3D(6000, 0, 0))
+Circle3D(Point3D(0, 0, 0), radius=500)
+Arc3D(Point3D(0, 0, 0), radius=3000,
+      start_angle=0, end_angle=math.pi / 2)
+Plane3D(Point3D(0, 0, 0), Vector3D(0, 0, 1))</code></pre></div></div>
+    </section>
+    <section class="slide">
+      <div class="canvas"><div class="content grid"><div>
+        <div class="eyebrow">统一基类</div>
+        <h2 class="section-title">GeometryData 说明父类和子类的关系</h2>
+        <p class="lead">`GeometryData` 是父类，点、线、圆、圆弧、向量和平面是子类。父类规定统一能力：能解释自己的数据结构，能转换为 PyVista 数据，能调用渲染引擎。</p>
+      </div><pre class="code-panel"><code>@dataclass(kw_only=True)
+class GeometryData(ABC):
+    name: str = ""
+
+    @abstractmethod
+    def to_pyvista(self) -> pv.DataSet:
+        ...
+
+    def render(self, engine, color="steelblue") -> None:
+        engine.add_mesh(self.to_pyvista(), color=color)
+
+    def data_structure(self) -> dict[str, object]:
+        ...</code></pre></div></div>
+    </section>
+    <section class="slide">
+      <div class="canvas"><div class="content grid"><div>
+        <div class="eyebrow">面向对象编程</div>
+        <h2 class="section-title">类的继承：父类与子类</h2>
+        <p class="lead">继承（Inheritance）是面向对象的核心。子类自动获取父类的属性和方法，同时可以添加特有属性或重写父类行为，避免重复造轮子。</p>
+        <div class="takeaway">继承关系演示：Student 和 Teacher 类继承自 Person 父类。</div>
+      </div><pre class="code-panel"><code>class Person:
+    def __init__(self, name: str, age: int):
+        self.name = name
+        self.age = age
+    def introduce(self) -> str:
+        return f"我是 {self.name}，今年 {self.age} 岁。"
+
+class Student(Person):
+    def __init__(self, name: str, age: int, student_id: str):
+        super().__init__(name, age) # 继承并初始化父类属性
+        self.student_id = student_id
+    def introduce(self) -> str:
+        base = super().introduce()  # 扩展父类自我介绍
+        return base + f" 学号: {self.student_id}"</code></pre></div></div>
+    </section>
+    <section class="slide">
+      <div class="canvas"><div class="content grid"><div>
+        <div class="eyebrow">行为动态扩展</div>
+        <h2 class="section-title">面向切面：Python 装饰器</h2>
+        <p class="lead">装饰器（Decorator）是包装函数或方法的工具。在不修改被装饰对象源码的情况下，动态地为它添加诸如“日志拦截”、“性能计时”等横切逻辑。</p>
+        <div class="takeaway">语法糖：通过 @decorator 简写，实现零侵入的代码监控与性能统计。</div>
+      </div><pre class="code-panel"><code>def time_spent(func):
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        res = func(*args, **kwargs) # 执行原方法
+        elapsed = time.perf_counter() - start
+        print(f"执行耗时: {elapsed:.4f} 秒")
+        return res
+    return wrapper
+
+class Student(Person):
+    @time_spent # 使用计时装饰器监控行为耗时
+    def study(self, course_name):
+        time.sleep(0.5)</code></pre></div></div>
+    </section>
+    <section class="slide">
+      <div class="canvas"><div class="content grid"><div>
+        <div class="eyebrow">特殊方法 / 运算符重载</div>
+        <h2 class="section-title">认识 Python 的“魔法方法”</h2>
+        <p class="lead">以双下划线开头的特殊方法（又称 Dunder Methods）是 Python 的特殊接口，它们允许自定义类型与 Python 的内置语法、运算符（如 <code>+</code>、<code>-</code>、<code>print</code>）无缝衔接。</p>
+        <div class="takeaway">魔力所在：重载运算符能让三维几何对象的数学运算写起来和手写公式一样直观！</div>
+      </div><pre class="code-panel"><code># 1. 构造与表达
+__init__(self, ...) : 实例化时的构造函数，用于初始化属性
+__repr__(self)      : 开发者友好的对象描述（在控制台/调试时显示）
+__str__(self)       : 面向用户的可读描述（print 打印时自动触发）
+
+# 2. 运算符重载（几何对象极其常用）
+__sub__(self, other): 重载减号 (-) -> Point3D - Point3D 得到 Vector3D
+__add__(self, other): 重载加号 (+) -> Point3D + Vector3D 得到 Point3D
+__mul__(self, val)  : 重载乘号 (*) -> 向量与标量缩放
+
+# 3. 比较与通用方法
+__eq__(self, other) : 重载 == 号 -> 判定两点是否重合（空间冲突检测）
+__len__(self)       : 支持 len() 函数 -> 如返回折线采样的段数</code></pre></div></div>
+    </section>
+    <section class="slide">
+      <div class="canvas"><div class="content grid"><div>
+        <div class="eyebrow">点与向量</div>
+        <h2 class="section-title">点表示位置，向量表示方向和长度</h2>
+        <p class="lead">两个点相减得到向量。向量可以计算长度、归一化和缩放，是坐标变换、构件方向和法向量的基础。</p>
+      </div><pre class="code-panel"><code>start = Point3D(0, 0, 0)
+end = Point3D(3, 4, 0)
+
+vector = end - start
+print(vector)          # Vector3D(3, 4, 0)
+print(vector.length()) # 5.0
+print(start.data_structure())</code></pre></div></div>
+    </section>
+    <section class="slide">
+      <div class="canvas"><div class="content grid"><div>
+        <div class="eyebrow">坐标系</div>
+        <h2 class="section-title">坐标系是局部几何的参照</h2>
+        <p class="lead">工程中常有全局坐标系和构件局部坐标系。坐标系由原点和三个轴向量组成，可渲染为三条彩色轴线。</p>
+      </div><pre class="code-panel"><code>local = CoordinateSystem3D(
+    origin=Point3D(6000, 3000, 0),
+    axis_length=1500,
+    name="Column local system",
+)
+
+for axis in local.axes():
+    print(axis.name, axis.start, axis.end)</code></pre></div></div>
+    </section>
+    <section class="slide">
+      <div class="canvas"><div class="content grid"><div>
+        <div class="eyebrow">线与面</div>
+        <h2 class="section-title">线表达轴线，面表达边界或剖切面</h2>
+        <p class="lead">梁轴线、管线中心线可以用 `Line3D` 表达；楼板面、墙面、剖切面可以用 `Plane3D` 表达。</p>
+      </div><pre class="code-panel"><code>beam_axis = Line3D(
+    Point3D(0, 0, 3300),
+    Point3D(6000, 0, 3300),
+)
+floor = Plane3D(
+    center=Point3D(3000, 0, 0),
+    normal=Vector3D(0, 0, 1),
+    size=7000,
+)</code></pre></div></div>
+    </section>
+    <section class="slide">
+      <div class="canvas"><div class="content grid"><div>
+        <div class="eyebrow">圆和圆弧</div>
+        <h2 class="section-title">曲线可以通过采样点近似渲染</h2>
+        <p class="lead">渲染引擎更容易显示点列和折线，所以圆和圆弧先采样为一组点，再转换为 PolyData 曲线。</p>
+      </div><pre class="code-panel"><code>pipe = Circle3D(Point3D(0, 0, 0), radius=500)
+road = Arc3D(
+    Point3D(0, 0, 0),
+    radius=3000,
+    start_angle=0,
+    end_angle=math.pi / 2,
+)
+
+print(road.sample_points(count=5))</code></pre></div></div>
+    </section>
+    <section class="slide">
+      <div class="canvas"><div class="content grid"><div>
+        <div class="eyebrow">与引擎交互</div>
+        <h2 class="section-title">对象自己知道如何进入视口</h2>
+        <p class="lead">每个几何对象都提供 `render(engine)`。调用时不需要关心内部是点、线、面还是曲线。</p>
+      </div><pre class="code-panel"><code>engine = RenderEngine()
+objects = [
+    CoordinateSystem3D(axis_length=1500),
+    Point3D(6000, 3000, 0, name="Column center"),
+    Line3D(Point3D(0, 0, 3300), Point3D(6000, 0, 3300)),
+]
+
+for item in objects:
+    item.render(engine)
+
+engine.show()</code></pre></div></div>
+    </section>
+    <section class="slide">
+      <div class="canvas"><div class="content">
+        <div class="eyebrow">脚本目录</div>
+        <h2 class="section-title">本章代码全部放在 scripts 下</h2>
+        <div class="three">
+          <div class="panel"><h2>核心类型</h2><p>`geometry_data.py`<br>`test_geometry_data.py`</p></div>
+          <div class="panel"><h2>基础演示</h2><p>`person.py`<br>`person_decoration.py`<br>`01_point_vector.py`<br>`02_coordinate_system.py`</p></div>
+          <div class="panel"><h2>曲线与渲染</h2><p>`03_line_plane.py`<br>`04_circle_arc.py`<br>`05_render_geometry_scene.py`</p></div>
+        </div>
+      </div></div>
+    </section>
+    <section class="slide">
+      <div class="canvas"><div class="content grid"><div>
+        <div class="eyebrow">本节收束</div>
+        <h2 class="section-title">先统一数据，再进入 build123d</h2>
+        <p class="lead">点、向量、坐标系、线、面、圆和圆弧是后续 build123d、B-Rep、Mesh、变换、投影、相交、布尔和碰撞检测的基础。基类让它们具备统一的工程接口。</p>
+        <div class="takeaway">课堂练习：新增一个 `Rectangle3D`，继承 `GeometryData` 并能通过 `RenderEngine` 渲染。</div>
+      </div><div class="practice-box"><h2>验收标准</h2><ul>
+        <li>测试脚本通过。</li>
+        <li>所有几何对象继承 `GeometryData`。</li>
+        <li>每个对象实现 `to_pyvista()`。</li>
+        <li>渲染脚本可调用 `RenderEngine`。</li>
+      </ul></div></div></div>
+    </section>
+  </main>
+  <nav class="nav" aria-label="Slide navigation">
+    <button type="button" id="prev" aria-label="上一页">&lt;</button>
+    <div class="counter"><span id="current">1</span>/<span id="total">14</span></div>
+    <button type="button" id="next" aria-label="下一页">&gt;</button>
+  </nav>
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const current = document.querySelector("#current");
+    const total = document.querySelector("#total");
+    let index = 0;
+    total.textContent = slides.length;
+    function show(nextIndex) {
+      index = Math.max(0, Math.min(slides.length - 1, nextIndex));
+      slides.forEach((slide, slideIndex) => {
+        slide.classList.toggle("active", slideIndex === index);
+      });
+      current.textContent = index + 1;
+      document.title = `05.01 基本几何数据的建立 - ${index + 1}/${slides.length}`;
+    }
+    document.querySelector("#prev").addEventListener("click", () => show(index - 1));
+    document.querySelector("#next").addEventListener("click", () => show(index + 1));
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") {
+        event.preventDefault();
+        show(index + 1);
+      }
+      if (event.key === "ArrowLeft" || event.key === "PageUp") {
+        event.preventDefault();
+        show(index - 1);
+      }
+      if (event.key === "Home") {
+        event.preventDefault();
+        show(0);
+      }
+      if (event.key === "End") {
+        event.preventDefault();
+        show(slides.length - 1);
+      }
+    });
+  </script>
+</body>
+</html>

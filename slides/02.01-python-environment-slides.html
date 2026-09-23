@@ -1,0 +1,1219 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>02.01 Python 安装环境的配置</title>
+  <style>
+    :root {
+      --sun-50: #fff8e6;
+      --sun-100: #fff1ca;
+      --sun-200: #ffe29a;
+      --citrus: #f7a928;
+      --coral: #ff6f61;
+      --ocean: #1178a6;
+      --deep-ocean: #0d3f5e;
+      --palm: #2f8f6b;
+      --ink: #1f2a32;
+      --muted: #65717a;
+      --paper: #fffdf7;
+      --line: #e8d9b9;
+      --shell: #10384e;
+      --shadow: 0 22px 60px rgba(13, 63, 94, 0.14);
+      --soft-shadow: 0 12px 30px rgba(13, 63, 94, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(255, 226, 154, 0.72) 0 17%, transparent 18%),
+        linear-gradient(145deg, rgba(255, 248, 230, 0.98), rgba(232, 244, 247, 0.92) 68%, rgba(255, 253, 247, 0.98));
+      overflow: hidden;
+    }
+
+    .deck { width: 100vw; height: 100vh; position: relative; }
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 5vh 6vw 7vh;
+      opacity: 0;
+      transform: translateX(28px);
+      pointer-events: none;
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .canvas {
+      width: min(1180px, 100%);
+      min-height: min(720px, 82vh);
+      position: relative;
+      padding: clamp(30px, 5vw, 66px);
+      border: 1px solid rgba(232, 217, 185, 0.92);
+      background: rgba(255, 253, 247, 0.91);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .canvas::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(17, 120, 166, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 120, 166, 0.07) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
+      pointer-events: none;
+    }
+    .canvas::after {
+      content: "";
+      position: absolute;
+      right: -110px;
+      bottom: -100px;
+      width: 360px;
+      height: 240px;
+      border-top: 2px solid rgba(17, 120, 166, 0.24);
+      border-radius: 50% 0 0 0;
+      transform: rotate(-8deg);
+      pointer-events: none;
+    }
+    .content { position: relative; z-index: 1; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      color: var(--ocean);
+      font-size: 17px;
+      font-weight: 800;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 34px;
+      height: 4px;
+      background: var(--citrus);
+    }
+    .slide-title {
+      max-width: 980px;
+      margin: 0 0 24px;
+      color: var(--deep-ocean);
+      font-size: clamp(40px, 6.7vw, 82px);
+      line-height: 1.04;
+      font-weight: 850;
+    }
+    .section-title {
+      margin: 0 0 18px;
+      color: var(--deep-ocean);
+      font-size: clamp(32px, 4.4vw, 56px);
+      line-height: 1.12;
+    }
+    .lead {
+      max-width: 840px;
+      color: var(--muted);
+      font-size: clamp(20px, 2.3vw, 29px);
+      line-height: 1.55;
+    }
+    p, li {
+      font-size: 20px;
+      line-height: 1.62;
+    }
+    ul, ol {
+      margin: 0;
+      padding-left: 1.25em;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 34px;
+      align-items: stretch;
+    }
+    .three {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .panel, .concept-card, .practice-box {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.76);
+      padding: 24px;
+      box-shadow: var(--soft-shadow);
+    }
+    .panel h2, .concept-card h2, .practice-box h2 {
+      margin: 0 0 14px;
+      color: var(--deep-ocean);
+      font-size: 28px;
+      line-height: 1.18;
+    }
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .tag {
+      border: 1px solid rgba(17, 120, 166, 0.24);
+      background: rgba(255, 248, 230, 0.92);
+      color: var(--deep-ocean);
+      padding: 10px 14px;
+      font-size: 18px;
+      font-weight: 750;
+    }
+    .takeaway {
+      display: inline-block;
+      margin-top: 24px;
+      padding: 14px 18px;
+      color: var(--deep-ocean);
+      background: #fff0bf;
+      border-left: 6px solid var(--coral);
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .code-panel {
+      margin: 0;
+      color: #f7fbff;
+      background: var(--shell);
+      border-left: 8px solid var(--citrus);
+      padding: 22px;
+      overflow: auto;
+      font-size: 18px;
+      line-height: 1.55;
+      box-shadow: var(--soft-shadow);
+    }
+    .code-panel .comment { color: #9fd7c4; }
+    .code-panel .accent { color: #ffe29a; }
+
+    .workflow {
+      display: grid;
+      gap: 14px;
+    }
+    .flow-step {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 15px 17px;
+      border: 1px solid rgba(17, 120, 166, 0.2);
+      background: rgba(255, 255, 255, 0.78);
+    }
+    .flow-step strong {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      color: var(--paper);
+      background: var(--ocean);
+      font-size: 20px;
+    }
+    .flow-step span {
+      color: var(--deep-ocean);
+      font-size: 21px;
+      font-weight: 760;
+    }
+
+    .terminal {
+      border: 1px solid rgba(13, 63, 94, 0.24);
+      background: #0f3044;
+      box-shadow: var(--soft-shadow);
+      overflow: hidden;
+    }
+    .terminal-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 12px 14px;
+      background: #17485e;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--coral);
+    }
+    .dot:nth-child(2) { background: var(--citrus); }
+    .dot:nth-child(3) { background: var(--palm); }
+    .terminal pre {
+      margin: 0;
+      padding: 22px;
+      color: #f7fbff;
+      font-size: 18px;
+      line-height: 1.58;
+      overflow: auto;
+    }
+
+    .diagram-stage {
+      position: relative;
+      min-height: 360px;
+      border: 1px solid rgba(17, 120, 166, 0.22);
+      background:
+        linear-gradient(rgba(17, 120, 166, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 120, 166, 0.08) 1px, transparent 1px),
+        rgba(255, 255, 255, 0.72);
+      background-size: 32px 32px;
+      box-shadow: var(--soft-shadow);
+      overflow: hidden;
+    }
+    .sun {
+      position: absolute;
+      left: 52px;
+      top: 42px;
+      width: 92px;
+      height: 92px;
+      border-radius: 50%;
+      background: var(--sun-200);
+      box-shadow: 0 0 0 22px rgba(255, 226, 154, 0.22);
+    }
+    .path-line {
+      position: absolute;
+      left: 90px;
+      right: 70px;
+      bottom: 88px;
+      height: 5px;
+      background: var(--ocean);
+    }
+    .path-line::before,
+    .path-line::after {
+      content: "";
+      position: absolute;
+      top: -9px;
+      width: 22px;
+      height: 22px;
+      background: var(--coral);
+      border: 4px solid var(--paper);
+      box-shadow: 0 0 0 2px rgba(255, 111, 97, 0.28);
+    }
+    .path-line::before { left: 0; }
+    .path-line::after { right: 0; }
+    .tool-card {
+      position: absolute;
+      width: 176px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 253, 247, 0.92);
+      color: var(--deep-ocean);
+      font-weight: 800;
+      box-shadow: var(--soft-shadow);
+    }
+    .tool-card.a { left: 58px; bottom: 124px; }
+    .tool-card.b { left: 260px; top: 76px; }
+    .tool-card.c { right: 62px; bottom: 124px; }
+
+    .check-list li {
+      margin: 10px 0;
+    }
+    .check-list li::marker {
+      color: var(--palm);
+      font-weight: 900;
+    }
+    .warning {
+      border-left: 8px solid var(--coral);
+      background: rgba(255, 240, 191, 0.8);
+    }
+
+    .nav {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      z-index: 5;
+    }
+    .nav button {
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(13, 63, 94, 0.22);
+      background: var(--paper);
+      color: var(--deep-ocean);
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .nav button:hover { background: var(--sun-200); }
+    .counter {
+      min-width: 76px;
+      text-align: center;
+      color: var(--deep-ocean);
+      font-weight: 800;
+    }
+
+    @media (max-width: 920px) {
+      body { overflow: auto; }
+      .deck { height: auto; min-height: 100vh; }
+      .slide {
+        position: relative;
+        min-height: 100vh;
+        display: none;
+        padding: 24px 16px 76px;
+      }
+      .slide.active { display: grid; }
+      .canvas {
+        min-height: 78vh;
+        padding: 28px;
+      }
+      .grid, .three {
+        grid-template-columns: 1fr;
+      }
+      .slide-title { font-size: 40px; }
+      .section-title { font-size: 34px; }
+      p, li { font-size: 18px; }
+      .diagram-stage { min-height: 420px; }
+      .tool-card {
+        position: relative;
+        left: auto !important;
+        right: auto !important;
+        top: auto !important;
+        bottom: auto !important;
+        width: auto;
+        margin: 14px;
+      }
+    }
+      /* Slide Logo Styles */
+    .slide-logo {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      height: 28px;
+      width: auto;
+      opacity: 0.75;
+      z-index: 10;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .slide-logo:hover {
+      opacity: 1;
+    }
+    @media (max-width: 920px) {
+      .slide-logo {
+        top: 16px;
+        right: 18px;
+        height: 20px;
+      }
+    }
+  
+    /* Cover Slide Styles */
+    .cover-canvas {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      background: radial-gradient(circle at 80% 20%, rgba(17, 120, 166, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 20% 80%, rgba(247, 169, 40, 0.15) 0%, transparent 50%),
+                  rgba(255, 253, 247, 0.95);
+    }
+
+    .cover-canvas::after {
+      content: "";
+      position: absolute;
+      right: -50px;
+      bottom: -50px;
+      width: 450px;
+      height: 450px;
+      border: 2px dashed rgba(17, 120, 166, 0.15);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .cover-canvas::before {
+      content: "";
+      position: absolute;
+      left: 10%;
+      top: 15%;
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, rgba(255, 111, 97, 0.1), rgba(247, 169, 40, 0.1));
+      clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+      animation: rotateSlow 20s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes rotateSlow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .cover-content {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      justify-content: center;
+      max-width: 62%;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cover-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      color: var(--ocean);
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+
+    .cover-eyebrow::before {
+      content: "";
+      width: 40px;
+      height: 4px;
+      background: var(--coral);
+    }
+
+    .cover-title {
+      margin: 0 0 20px;
+      color: var(--deep-ocean);
+      font-size: clamp(38px, 5.2vw, 68px);
+      line-height: 1.25;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--deep-ocean) 30%, var(--ocean));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .cover-subtitle {
+      color: var(--muted);
+      font-size: clamp(22px, 3vw, 32px);
+      line-height: 1.4;
+      font-weight: 400;
+      margin-bottom: 60px;
+    }
+
+    .cover-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: auto;
+      border-top: 1px solid rgba(13, 63, 94, 0.15);
+      padding-top: 32px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .meta-line {
+      color: var(--deep-ocean);
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    /* Truss Graphic Styles & Animations */
+    .cover-graphic {
+      position: absolute;
+      right: 2%;
+      top: 45%;
+      transform: translateY(-50%);
+      width: clamp(300px, 40vw, 520px);
+      height: auto;
+      z-index: 1;
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    .struct-line {
+      stroke-linecap: round;
+    }
+
+    .struct-node {
+      stroke: var(--paper);
+      stroke-width: 2;
+    }
+
+    .axis-line {
+      stroke-linecap: round;
+    }
+
+    /* Python Card Style */
+    .python-card {
+      position: absolute;
+      right: 4%;
+      bottom: 12%;
+      width: clamp(260px, 25vw, 360px);
+      background: rgba(16, 56, 78, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+      border-radius: 8px;
+      font-family: "Fira Code", Consolas, Monaco, monospace;
+      color: #f7fbff;
+      z-index: 3;
+      padding: 12px 14px;
+      animation: floatCard 6s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatCard {
+      from { transform: translateY(0px) rotate(1deg); }
+      to { transform: translateY(-12px) rotate(-1deg); }
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot.red { background: #ff5f56; }
+    .dot.yellow { background: #ffbd2e; }
+    .dot.green { background: #27c93f; }
+
+    .card-title {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.45);
+      margin-left: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .card-body {
+      font-size: 12px;
+      line-height: 1.6;
+      text-align: left;
+      height: 112px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .code-line {
+      margin: 2px 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .keyword { color: #ff6f61; font-weight: 700; }
+    .comment { color: #65717a; font-style: italic; }
+    .number { color: #f7a928; }
+    .string { color: #2f8f6b; }
+
+    @media (max-width: 920px) {
+      .cover-title {
+        font-size: 44px;
+      }
+
+      .cover-subtitle {
+        font-size: 20px;
+        margin-bottom: 30px;
+      }
+
+      .cover-meta {
+        gap: 8px;
+        flex-direction: column;
+      }
+
+      .cover-graphic {
+        position: relative;
+        right: auto;
+        top: auto;
+        transform: none;
+        width: 90%;
+        margin: 20px auto 0;
+      }
+
+      .python-card {
+        position: relative;
+        right: auto;
+        bottom: auto;
+        width: 90%;
+        margin: 15px auto 0;
+        animation: none;
+      }
+    }
+
+
+    /* QR Code Container and Cards */
+    .qr-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 30px;
+      align-items: stretch;
+    }
+
+    .qr-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 20px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.85);
+      padding: 24px;
+      box-shadow: var(--soft-shadow);
+      border-radius: 12px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .qr-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--ocean);
+    }
+
+    .qr-card.group::before {
+      background: var(--palm);
+    }
+
+    .qr-card.company::before {
+      background: var(--citrus);
+    }
+
+    .qr-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow);
+    }
+
+    .qr-img-wrapper {
+      flex-shrink: 0;
+      width: 140px;
+      height: 140px;
+      border: 1px solid rgba(13, 63, 94, 0.12);
+      padding: 8px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(13, 63, 94, 0.05);
+      overflow: hidden; /* Prevent scaled image overflow */
+    }
+
+    .qr-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+    }
+
+    /* Scale Group QR code slightly and anchor to top to hide footer while keeping avatar logo visible */
+    .qr-card.group .qr-img {
+      transform: scale(1.25);
+      transform-origin: center top;
+    }
+
+    .qr-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+    }
+
+    .qr-title {
+      margin: 0 0 10px;
+      color: var(--deep-ocean);
+      font-size: 22px;
+      font-weight: 850;
+      line-height: 1.2;
+    }
+
+    .qr-desc {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .qr-tag-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-top: auto;
+    }
+
+    .qr-tag {
+      border: 1px solid rgba(17, 120, 166, 0.18);
+      background: rgba(17, 120, 166, 0.05);
+      color: var(--deep-ocean);
+      padding: 3px 8px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 4px;
+    }
+
+    .qr-card.group .qr-tag {
+      border-color: rgba(47, 143, 107, 0.28);
+      background: rgba(47, 143, 107, 0.06);
+      color: var(--palm);
+    }
+
+    .qr-card.company .qr-tag {
+      border-color: rgba(247, 169, 40, 0.28);
+      background: rgba(247, 169, 40, 0.06);
+      color: #b27512;
+    }
+
+    @media (max-width: 920px) {
+      .qr-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .qr-card {
+        padding: 20px;
+      }
+    }
+
+</style>
+</head>
+<body>
+  <main class="deck" aria-live="polite">
+    <section class="slide active">
+      <div class="canvas cover-canvas">
+        <!-- SVG structural graphic (Civil + Graphics: 3D Beam & Column) -->
+        <svg class="cover-graphic" viewBox="0 0 500 400" width="500" height="400">
+          <defs>
+            <pattern id="grid-pattern" width="25" height="25" patternUnits="userSpaceOnUse">
+              <path d="M 25 0 L 0 0 0 25" fill="none" stroke="rgba(17, 120, 166, 0.05)" stroke-width="1"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid-pattern)" />
+
+          <!-- 3D Axes -->
+          <g class="axes-3d" transform="translate(140, 240)">
+            <line id="axis-x" x1="0" y1="0" x2="160" y2="80" class="axis-line" stroke="var(--coral)" stroke-width="2" style="opacity: 0; transition: opacity 0.5s;" />
+            <text id="axis-x-lbl" x="170" y="90" fill="var(--coral)" font-size="12" font-weight="bold" style="opacity: 0; transition: opacity 0.5s;">X (梁轴线)</text>
+            
+            <line id="axis-y" x1="0" y1="0" x2="-100" y2="50" class="axis-line" stroke="var(--palm)" stroke-width="2" style="opacity: 0; transition: opacity 0.5s;" />
+            <text id="axis-y-lbl" x="-125" y="65" fill="var(--palm)" font-size="12" font-weight="bold" style="opacity: 0; transition: opacity 0.5s;">Y (跨宽)</text>
+            
+            <line id="axis-z" x1="0" y1="0" x2="0" y2="-160" class="axis-line" stroke="var(--ocean)" stroke-width="2" style="opacity: 0; transition: opacity 0.5s;" />
+            <text id="axis-z-lbl" x="-15" y="-175" fill="var(--ocean)" font-size="12" font-weight="bold" style="opacity: 0; transition: opacity 0.5s;">Z (高度)</text>
+          </g>
+
+          <!-- 3D Column and Beam Elements -->
+          <g class="structure-3d">
+            <!-- Column 3D Solid Faces -->
+            <polygon id="col-face-l" points="160,300 210,325 210,125 160,100" fill="rgba(17, 120, 166, 0.15)" stroke="var(--ocean)" stroke-width="1" style="opacity: 0; transition: opacity 0.8s;" />
+            <polygon id="col-face-r" points="210,325 260,300 260,100 210,125" fill="rgba(17, 120, 166, 0.2)" stroke="var(--ocean)" stroke-width="1" style="opacity: 0; transition: opacity 0.8s;" />
+            <polygon id="col-face-t" points="160,100 210,125 260,100 210,75" fill="rgba(17, 120, 166, 0.25)" stroke="var(--ocean)" stroke-width="1" style="opacity: 0; transition: opacity 0.8s;" />
+            
+            <!-- Column Wireframe Edges -->
+            <g id="col-wire" stroke="var(--deep-ocean)" stroke-width="2" stroke-linecap="round" fill="none" style="opacity: 0; transition: opacity 0.5s;">
+              <line x1="160" y1="300" x2="160" y2="100" />
+              <line x1="210" y1="325" x2="210" y2="125" />
+              <line x1="260" y1="300" x2="260" y2="100" />
+              <line x1="160" y1="100" x2="210" y2="125" />
+              <line x1="210" y1="125" x2="260" y2="100" />
+              <line x1="160" y1="100" x2="210" y2="75" />
+              <line x1="210" y1="75" x2="260" y2="100" />
+            </g>
+
+            <!-- Beam 3D Solid Faces -->
+            <polygon id="beam-face-t" points="220,165 250,150 370,210 340,225" fill="rgba(247, 169, 40, 0.2)" stroke="var(--citrus)" stroke-width="1" style="opacity: 0; transition: opacity 0.8s;" />
+            <polygon id="beam-face-fl" points="220,165 340,225 340,270 220,210" fill="rgba(247, 169, 40, 0.25)" stroke="var(--citrus)" stroke-width="1" style="opacity: 0; transition: opacity 0.8s;" />
+            
+            <!-- Beam Wireframe Edges -->
+            <g id="beam-wire" stroke="var(--citrus)" stroke-width="2" stroke-linecap="round" fill="none" style="opacity: 0; transition: opacity 0.5s;">
+              <line x1="220" y1="165" x2="340" y2="225" />
+              <line x1="250" y1="150" x2="370" y2="210" />
+              <line x1="220" y1="210" x2="340" y2="270" />
+              <line x1="250" y1="195" x2="370" y2="255" />
+              <line x1="340" y1="225" x2="370" y2="210" />
+              <line x1="370" y1="210" x2="370" y2="255" />
+              <line x1="370" y1="255" x2="340" y2="270" />
+              <line x1="340" y1="270" x2="340" y2="225" />
+            </g>
+
+            <!-- Connection Highlight (Junction) -->
+            <polygon id="junction-face" points="220,165 250,150 250,195 220,210" fill="rgba(255, 111, 97, 0.4)" stroke="var(--coral)" stroke-width="2.5" style="opacity: 0; transition: opacity 0.8s;" />
+            <circle id="junction-node" cx="235" cy="180" r="8" fill="var(--coral)" stroke="var(--paper)" stroke-width="2" style="opacity: 0; transform: scale(0); transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);" />
+          </g>
+        </svg>
+
+        <!-- Python Terminal Card (Python Theme) -->
+        <div class="python-card">
+          <div class="card-header">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span class="card-title">beam_column_model.py</span>
+          </div>
+          <div class="card-body" id="py-code-body">
+            <!-- Typewriter will dynamically insert highlighted lines here -->
+          </div>
+        </div>
+
+        <div class="content cover-content">
+          <div class="cover-eyebrow">土木人的Python课系列课程</div>
+          <h1 class="cover-title">数字化土木工程的<br>图形学表达</h1>
+          <div class="cover-meta">
+            <div class="meta-line">周文琪</div>
+            <div class="meta-line">上海非解构数字科技有限公司</div>
+            <div class="meta-line">2026.06.09</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+<section class="slide">
+      <div class="canvas">
+        <div class="content">
+          <div class="eyebrow">01.01 课程综述</div>
+          <h1 class="slide-title">联系与答疑</h1>
+          <p class="lead">本课程由周文琪主讲，上海非解构数字科技提供学术与技术支持。欢迎通过以下方式取得联系，进行技术交流与课程答疑。</p>
+          
+          <div class="qr-container">
+            <!-- Lecturer WeChat -->
+            <div class="qr-card lecturer">
+              <div class="qr-img-wrapper">
+                <img src="qr_zhou.png" class="qr-img" alt="周文琪微信二维码">
+              </div>
+              <div class="qr-info">
+                <h2 class="qr-title">周文琪</h2>
+                <p class="qr-desc">上海非解构数字科技有限公司联合创始人，一级注册结构工程师，高级工程师。欢迎扫码添加微信进行答疑交流，获取课程源码与资料。</p>
+                <div class="qr-tag-group">
+                  <span class="qr-tag">微信答疑</span>
+                  <span class="qr-tag">课程交流</span>
+                  <span class="qr-tag">源码获取</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- WeChat Group Chat -->
+            <div class="qr-card group">
+              <div class="qr-img-wrapper">
+                <img src="29ec2c81edd35040ad120b75f4ad22b8.jpg" class="qr-img" alt="微信交流群二维码">
+              </div>
+              <div class="qr-info">
+                <h2 class="qr-title">图形算法交流群</h2>
+                <p class="qr-desc">非解构数智土木图形算法交流群。扫码加入微信群聊，与同行及专家探讨数字化土木工程、图形学表达、BIM/CAD 算法等技术前沿。</p>
+                <div class="qr-tag-group">
+                  <span class="qr-tag">技术交流</span>
+                  <span class="qr-tag">微信群聊</span>
+                  <span class="qr-tag">前沿探讨</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Company WeChat Official Account -->
+            <div class="qr-card company">
+              <div class="qr-img-wrapper">
+                <img src="qr_company.png" class="qr-img" alt="上海非解构数字科技二维码">
+              </div>
+              <div class="qr-info">
+                <h2 class="qr-title">非解构数字科技</h2>
+                <p class="qr-desc">上海非解构数字科技有限公司官方微信公众号。关注我们，获取数字化土木工程前沿技术、自研产品动态与技术专栏。</p>
+                <div class="qr-tag-group">
+                  <span class="qr-tag">官方公众号</span>
+                  <span class="qr-tag">技术专栏</span>
+                  <span class="qr-tag">自研产品</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+<section class="slide">
+      <div class="canvas">
+        <div class="content">
+          <div class="eyebrow">02.01 Python 基本环境</div>
+          <h1 class="slide-title">把 Python 安装成一个可靠的工程工具</h1>
+          <p class="lead">本节目标不是“装完就算”，而是让每位同学拥有一个可验证、可隔离、可继续扩展的 Python 学习环境。</p>
+          <div class="tag-row">
+            <span class="tag">Python 安装包</span>
+            <span class="tag">环境变量</span>
+            <span class="tag">虚拟环境</span>
+            <span class="tag">IDE 配置</span>
+            <span class="tag">Hello World</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">为什么先讲环境</div>
+            <h2 class="section-title">环境配置决定后面代码能否稳定运行</h2>
+            <p class="lead">土木工程的 Python 项目会同时用到计算、绘图、三维渲染、CAD 建模和文件输出。环境混乱，后面的错误就会变成“代码没错，但就是跑不起来”。</p>
+            <div class="takeaway">先建立清晰环境，再进入工程制图与几何建模。</div>
+          </div>
+          <div class="diagram-stage" aria-label="Python 环境路线图">
+            <div class="sun"></div>
+            <div class="path-line"></div>
+            <div class="tool-card a">安装 Python</div>
+            <div class="tool-card b">创建虚拟环境</div>
+            <div class="tool-card c">配置 IDE 并验证</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="canvas">
+        <div class="content">
+          <div class="eyebrow">安装 Python</div>
+          <h2 class="section-title">先安装解释器，再考虑写代码</h2>
+          <div class="three">
+            <div class="concept-card">
+              <h2>下载</h2>
+              <p>从 Python 官网下载安装包。课程建议使用 Python 3.11 或 3.12，避免过旧版本造成库兼容问题。</p>
+            </div>
+            <div class="concept-card">
+              <h2>路径</h2>
+              <p>Windows 安装时勾选 <strong>Add python.exe to PATH</strong>，让终端能直接识别 `python` 命令。</p>
+            </div>
+            <div class="concept-card">
+              <h2>验证</h2>
+              <p>安装后不要急着写程序，先在终端确认 Python 和 pip 都能正常调用。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">终端验证</div>
+            <h2 class="section-title">判断环境是否装好，只看三条命令</h2>
+            <p class="lead">能看到版本号，说明解释器和包管理工具已经进入系统路径。后续安装库、运行脚本、创建虚拟环境都依赖这里。</p>
+          </div>
+          <div class="terminal">
+            <div class="terminal-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+            <pre><code>python --version
+pip --version
+where python
+
+# macOS / Linux 可使用：
+which python3</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">环境变量 PATH</div>
+            <h2 class="section-title">PATH 的作用：让系统找到 Python</h2>
+            <p class="lead">当你在终端输入 `python`，系统会在 PATH 记录的目录里寻找可执行程序。如果 PATH 没配置好，就会出现“不是内部或外部命令”。</p>
+            <div class="takeaway">环境变量不是 Python 语法问题，而是操作系统能否找到工具的问题。</div>
+          </div>
+          <div class="panel warning">
+            <h2>常见现象</h2>
+            <ul>
+              <li>`python` 没反应或进入 Microsoft Store</li>
+              <li>`pip` 不能识别</li>
+              <li>PyCharm 和终端显示的 Python 版本不一致</li>
+              <li>安装库成功，但运行代码仍提示找不到库</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">虚拟环境</div>
+            <h2 class="section-title">每个课程项目，应该有自己的环境</h2>
+            <p class="lead">虚拟环境可以把本课程需要的库和其他项目隔离开。这样安装 `pyvista`、`build123d`、`ezdxf` 等库时，不会影响系统 Python 或其他课程项目。</p>
+          </div>
+          <div class="workflow">
+            <div class="flow-step"><strong>1</strong><span>项目目录内创建 `.venv`</span></div>
+            <div class="flow-step"><strong>2</strong><span>激活虚拟环境</span></div>
+            <div class="flow-step"><strong>3</strong><span>安装课程需要的库</span></div>
+            <div class="flow-step"><strong>4</strong><span>在 IDE 中选择这个解释器</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">venv 命令</div>
+            <h2 class="section-title">用 Python 自带工具创建虚拟环境</h2>
+            <p class="lead">`venv` 是 Python 自带的虚拟环境工具，适合作为初学阶段的默认方案。后续如果涉及复杂科学计算环境，也可以再引入 Conda。</p>
+          </div>
+          <pre class="code-panel"><code><span class="comment"># 在项目根目录执行</span>
+python -m venv .venv
+
+<span class="comment"># Windows PowerShell 激活</span>
+.\.venv\Scripts\Activate.ps1
+
+<span class="comment"># Windows CMD 激活</span>
+.\.venv\Scripts\activate.bat
+
+<span class="comment"># macOS / Linux 激活</span>
+source .venv/bin/activate</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">PyCharm 配置</div>
+            <h2 class="section-title">让 IDE 使用正确的解释器</h2>
+            <p class="lead">PyCharm 能写代码，也能管理解释器。关键是确认项目解释器指向当前项目的 `.venv`，否则库可能装到别的 Python 里。</p>
+          </div>
+          <div class="panel">
+            <h2>配置路径</h2>
+            <ol>
+              <li>打开 `File` → `Settings`。</li>
+              <li>进入 `Project` → `Python Interpreter`。</li>
+              <li>选择当前项目的 `.venv` 解释器。</li>
+              <li>通过 `+` 搜索并安装需要的库。</li>
+              <li>运行 `hello.py` 验证配置。</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">VS Code 配置</div>
+            <h2 class="section-title">轻量编辑器也要选对 Python 环境</h2>
+            <p class="lead">VS Code 的核心动作是安装 Python 插件，然后选择解释器。状态栏显示的解释器路径，应当指向课程项目的 `.venv`。</p>
+          </div>
+          <div class="terminal">
+            <div class="terminal-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+            <pre><code>Ctrl + Shift + P
+Python: Select Interpreter
+选择：
+.venv\Scripts\python.exe
+
+然后新建终端：
+Terminal → New Terminal</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">Hello World</div>
+            <h2 class="section-title">第一段代码：确认编辑器、解释器、终端连通</h2>
+            <p class="lead">这个例子本身很简单，但它证明三件事：文件能保存、解释器能运行、终端能输出结果。</p>
+            <div class="takeaway">后续所有工程脚本，都从这个最小闭环开始。</div>
+          </div>
+          <pre class="code-panel"><code><span class="comment"># hello.py</span>
+print("Hello, civil Python!")
+
+length = 6.0
+width = 0.3
+height = 0.6
+volume = length * width * height
+
+print("beam volume =", volume, "m^3")</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">本节检查清单</div>
+            <h2 class="section-title">配置完成的判断标准</h2>
+            <p class="lead">不要凭感觉判断环境是否完成。只要下面几项都通过，就可以进入下一节：安装课程常用库。</p>
+          </div>
+          <div class="practice-box">
+            <h2>课堂练习</h2>
+            <ul class="check-list">
+              <li>终端能输出 `python --version`。</li>
+              <li>项目目录中存在 `.venv`。</li>
+              <li>终端前缀显示虚拟环境已激活。</li>
+              <li>PyCharm 或 VS Code 指向 `.venv` 解释器。</li>
+              <li>`hello.py` 能正常运行并输出梁体积。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="nav" aria-label="Slide navigation">
+    <button type="button" id="prev" aria-label="上一页">&lt;</button>
+    <div class="counter"><span id="current">1</span>/<span id="total">11</span></div>
+    <button type="button" id="next" aria-label="下一页">&gt;</button>
+  </nav>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const current = document.querySelector("#current");
+    const total = document.querySelector("#total");
+    let index = 0;
+
+    total.textContent = slides.length;
+
+    function show(nextIndex) {
+      index = Math.max(0, Math.min(slides.length - 1, nextIndex));
+      slides.forEach((slide, slideIndex) => {
+        slide.classList.toggle("active", slideIndex === index);
+      });
+      if (typeof checkSlideAnimation === 'function') {
+        checkSlideAnimation();
+      }
+      current.textContent = index + 1;
+      document.title = `02.01 Python 安装环境的配置 - ${index + 1}/${slides.length}`;
+    }
+
+    document.querySelector("#prev").addEventListener("click", () => show(index - 1));
+    document.querySelector("#next").addEventListener("click", () => show(index + 1));
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") {
+        event.preventDefault();
+        show(index + 1);
+      }
+      if (event.key === "ArrowLeft" || event.key === "PageUp") {
+        event.preventDefault();
+        show(index - 1);
+      }
+      if (event.key === "Home") {
+        event.preventDefault();
+        show(0);
+      }
+      if (event.key === "End") {
+        event.preventDefault();
+        show(slides.length - 1);
+      }
+    });
+      // Dynamic logo injection
+    document.querySelectorAll('.canvas').forEach(canvas => {
+      if (!canvas.querySelector('.slide-logo')) {
+        const logo = document.createElement('img');
+        logo.src = 'logo.png';
+        logo.className = 'slide-logo';
+        logo.alt = 'Logo';
+        canvas.appendChild(logo);
+      }
+    });
+  </script>
+</body>
+</html>

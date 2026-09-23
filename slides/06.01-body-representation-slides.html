@@ -1,0 +1,2494 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>06.01 面和体的表达方式 - 土木人的 Python 课</title>
+  <!-- Three.js 本地优先与 CDN 降级兜底 -->
+  <script src="./three.min.js"></script>
+  <script>
+    if (!window.THREE) {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+    }
+  </script>
+  <style>
+    :root {
+      --sun-50: #fff8e6;
+      --sun-100: #fff1ca;
+      --sun-200: #ffe29a;
+      --citrus: #f7a928;
+      --coral: #ff6f61;
+      --ocean: #1178a6;
+      --deep-ocean: #0d3f5e;
+      --palm: #2f8f6b;
+      --ink: #1f2a32;
+      --muted: #65717a;
+      --paper: #fffdf7;
+      --line: #e8d9b9;
+      --shell: #10384e;
+      --cloud: #f7fbf8;
+      --shadow: 0 22px 60px rgba(13, 63, 94, 0.14);
+      --soft-shadow: 0 12px 30px rgba(13, 63, 94, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255, 226, 154, 0.72) 0 18%, transparent 19%),
+        linear-gradient(145deg, rgba(255, 248, 230, 0.96), rgba(232, 244, 247, 0.92) 68%, rgba(255, 253, 247, 0.98));
+      overflow: hidden;
+    }
+
+    .deck {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 4.5vh 5.5vw 6.5vh;
+      opacity: 0;
+      transform: translateX(28px);
+      pointer-events: none;
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .canvas {
+      width: min(1200px, 100%);
+      min-height: min(730px, 84vh);
+      position: relative;
+      padding: clamp(26px, 4vw, 54px);
+      border: 1px solid rgba(232, 217, 185, 0.92);
+      background: rgba(255, 253, 247, 0.93);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .canvas::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(17, 120, 166, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 120, 166, 0.07) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
+      pointer-events: none;
+    }
+
+    .canvas::after {
+      content: "";
+      position: absolute;
+      right: -120px;
+      bottom: -110px;
+      width: 380px;
+      height: 260px;
+      border-top: 2px solid rgba(17, 120, 166, 0.24);
+      border-radius: 50% 0 0 0;
+      transform: rotate(-8deg);
+      pointer-events: none;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      color: var(--ocean);
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 34px;
+      height: 4px;
+      background: var(--citrus);
+    }
+
+    .slide-title {
+      max-width: 980px;
+      margin: 0 0 18px;
+      color: var(--deep-ocean);
+      font-size: clamp(34px, 5vw, 62px);
+      line-height: 1.08;
+      font-weight: 850;
+    }
+
+    .section-title {
+      margin: 0 0 14px;
+      color: var(--deep-ocean);
+      font-size: clamp(28px, 3.6vw, 44px);
+      line-height: 1.15;
+      font-weight: 800;
+    }
+
+    .lead {
+      max-width: 920px;
+      color: var(--muted);
+      font-size: clamp(17px, 1.9vw, 22px);
+      line-height: 1.55;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 30px;
+      align-items: stretch;
+    }
+
+    .grid-3d {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .three {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .panel, .concept-card, .practice-box {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.82);
+      padding: 20px;
+      box-shadow: var(--soft-shadow);
+      border-radius: 4px;
+    }
+
+    .panel h2, .concept-card h2, .practice-box h2 {
+      margin: 0 0 10px;
+      color: var(--deep-ocean);
+      font-size: 22px;
+      line-height: 1.2;
+      font-weight: 800;
+    }
+
+    p, li {
+      font-size: 18px;
+      line-height: 1.58;
+    }
+
+    ul, ol {
+      margin: 0;
+      padding-left: 1.25em;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .tag {
+      border: 1px solid rgba(17, 120, 166, 0.24);
+      background: rgba(255, 248, 230, 0.92);
+      color: var(--deep-ocean);
+      padding: 6px 12px;
+      font-size: 15px;
+      font-weight: 750;
+    }
+
+    .takeaway {
+      display: inline-block;
+      margin-top: 18px;
+      padding: 12px 18px;
+      color: var(--deep-ocean);
+      background: #fff0bf;
+      border-left: 6px solid var(--coral);
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .code-panel {
+      margin: 0;
+      color: #f7fbff;
+      background: var(--shell);
+      border-left: 8px solid var(--citrus);
+      padding: 18px;
+      overflow: auto;
+      font-size: 14px;
+      line-height: 1.48;
+      box-shadow: var(--soft-shadow);
+      font-family: "Fira Code", Consolas, Monaco, monospace;
+      white-space: pre;
+    }
+
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .flow-step {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 12px 16px;
+      border: 1px solid rgba(17, 120, 166, 0.2);
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: var(--soft-shadow);
+    }
+
+    .flow-step strong {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      color: var(--paper);
+      background: var(--ocean);
+      font-size: 17px;
+      border-radius: 4px;
+    }
+
+    .flow-step span {
+      color: var(--deep-ocean);
+      font-size: 17px;
+      font-weight: 760;
+      line-height: 1.4;
+    }
+
+    /* Three.js Interactive 3D Card */
+    .three-box-card {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .three-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(17, 120, 166, 0.1);
+    }
+
+    .step-badge {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: var(--sun-100);
+      color: var(--deep-ocean);
+      border: 1px solid var(--citrus);
+    }
+
+    .three-stage {
+      width: 100%;
+      height: 340px;
+      background: radial-gradient(circle at 50% 50%, #faf8f5 0%, #ede6db 100%);
+      border: 1px solid rgba(13, 63, 94, 0.12);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .three-stage:active {
+      cursor: grabbing;
+    }
+
+    .three-stage canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    .badge-3d {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--deep-ocean);
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid var(--line);
+      padding: 3px 8px;
+      border-radius: 4px;
+      pointer-events: none;
+      z-index: 2;
+      backdrop-filter: blur(4px);
+    }
+
+    .three-hint {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* Comparison Table Styles */
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid var(--line);
+      box-shadow: var(--soft-shadow);
+      font-size: 15px;
+    }
+
+    .compare-table th {
+      background: #eef6f9;
+      color: var(--deep-ocean);
+      font-weight: 850;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      text-align: left;
+    }
+
+    .compare-table td {
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      line-height: 1.42;
+      vertical-align: middle;
+    }
+
+    .compare-table tr:nth-child(even) td {
+      background: rgba(255, 248, 230, 0.35);
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 7px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    .pill-surf { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .pill-brep { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .pill-mesh { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .nav button {
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(13, 63, 94, 0.22);
+      background: var(--paper);
+      color: var(--deep-ocean);
+      font-size: 22px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 150ms;
+    }
+
+    .nav button:hover { background: var(--sun-200); }
+
+    .counter {
+      min-width: 80px;
+      text-align: center;
+      color: var(--deep-ocean);
+      font-weight: 800;
+      font-size: 17px;
+    }
+
+    /* Cover Slide Styles */
+    .cover-canvas {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      background: radial-gradient(circle at 80% 20%, rgba(17, 120, 166, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 20% 80%, rgba(247, 169, 40, 0.15) 0%, transparent 50%),
+                  rgba(255, 253, 247, 0.95);
+    }
+
+    .cover-canvas::after {
+      content: "";
+      position: absolute;
+      right: -50px;
+      bottom: -50px;
+      width: 450px;
+      height: 450px;
+      border: 2px dashed rgba(17, 120, 166, 0.15);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .cover-canvas::before {
+      content: "";
+      position: absolute;
+      left: 10%;
+      top: 15%;
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, rgba(255, 111, 97, 0.1), rgba(247, 169, 40, 0.1));
+      clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+      animation: rotateSlow 20s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes rotateSlow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .cover-content {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      justify-content: center;
+      max-width: 60%;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cover-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      color: var(--ocean);
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+
+    .cover-eyebrow::before {
+      content: "";
+      width: 40px;
+      height: 4px;
+      background: var(--coral);
+    }
+
+    .cover-title {
+      margin: 0 0 16px;
+      color: var(--deep-ocean);
+      font-size: clamp(38px, 5.2vw, 68px);
+      line-height: 1.2;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--deep-ocean) 30%, var(--ocean));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .cover-subtitle {
+      color: var(--muted);
+      font-size: clamp(20px, 2.5vw, 27px);
+      line-height: 1.45;
+      font-weight: 500;
+      margin-bottom: 40px;
+    }
+
+    .cover-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      margin-top: auto;
+      border-top: 1px solid rgba(13, 63, 94, 0.15);
+      padding-top: 26px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .meta-line {
+      color: var(--deep-ocean);
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .cover-graphic {
+      position: absolute;
+      right: 2%;
+      top: 45%;
+      transform: translateY(-50%);
+      width: clamp(320px, 42vw, 540px);
+      height: auto;
+      z-index: 1;
+      opacity: 0.88;
+      pointer-events: none;
+    }
+
+    .axis-line { stroke-linecap: round; }
+
+    .python-card {
+      position: absolute;
+      right: 4%;
+      bottom: 11%;
+      width: clamp(280px, 27vw, 390px);
+      background: rgba(16, 56, 78, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+      border-radius: 8px;
+      font-family: "Fira Code", Consolas, Monaco, monospace;
+      color: #f7fbff;
+      z-index: 3;
+      padding: 12px 14px;
+      animation: floatCard 6s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatCard {
+      from { transform: translateY(0px) rotate(0.8deg); }
+      to { transform: translateY(-10px) rotate(-0.8deg); }
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot.red { background: #ff5f56; }
+    .dot.yellow { background: #ffbd2e; }
+    .dot.green { background: #27c93f; }
+
+    .card-title {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-left: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .card-body {
+      font-size: 12px;
+      line-height: 1.55;
+      text-align: left;
+      height: 118px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .code-line { margin: 2px 0; white-space: pre-wrap; word-break: break-all; }
+    .keyword { color: #ff6f61; font-weight: 700; }
+    .comment { color: #82929e; font-style: italic; }
+    .number { color: #f7a928; }
+    .string { color: #2f8f6b; }
+
+    .slide-logo {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      height: 28px;
+      width: auto;
+      opacity: 0.75;
+      z-index: 10;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    /* QR Code Container and Cards */
+    .qr-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 26px;
+      align-items: stretch;
+    }
+
+    .qr-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.86);
+      padding: 22px;
+      box-shadow: var(--soft-shadow);
+      border-radius: 12px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .qr-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 4px;
+      background: var(--ocean);
+    }
+    .qr-card.group::before { background: var(--palm); }
+    .qr-card.company::before { background: var(--citrus); }
+
+    .qr-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow);
+    }
+
+    .qr-img-wrapper {
+      flex-shrink: 0;
+      width: 132px;
+      height: 132px;
+      border: 1px solid rgba(13, 63, 94, 0.12);
+      padding: 8px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(13, 63, 94, 0.05);
+      overflow: hidden;
+    }
+
+    .qr-img { width: 100%; height: 100%; object-fit: contain; }
+    .qr-card.group .qr-img { transform: scale(1.22); transform-origin: center top; }
+
+    .qr-info { display: flex; flex-direction: column; align-items: center; height: 100%; }
+    .qr-title { margin: 0 0 8px; color: var(--deep-ocean); font-size: 21px; font-weight: 850; line-height: 1.2; }
+    .qr-desc { margin: 0 0 12px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .qr-tag-group { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: auto; }
+    .qr-tag {
+      border: 1px solid rgba(17, 120, 166, 0.18);
+      background: rgba(17, 120, 166, 0.05);
+      color: var(--deep-ocean);
+      padding: 3px 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      border-radius: 4px;
+    }
+    .qr-card.group .qr-tag { border-color: rgba(47, 143, 107, 0.28); background: rgba(47, 143, 107, 0.06); color: var(--palm); }
+    .qr-card.company .qr-tag { border-color: rgba(247, 169, 40, 0.28); background: rgba(247, 169, 40, 0.06); color: #b27512; }
+
+    @media (max-width: 920px) {
+      body { overflow: auto; }
+      .deck { height: auto; min-height: 100vh; }
+      .slide { position: relative; min-height: 100vh; display: none; padding: 24px 16px 76px; }
+      .slide.active { display: grid; }
+      .canvas { min-height: 78vh; padding: 22px; }
+      .grid, .grid-3d, .three, .qr-container { grid-template-columns: 1fr; }
+      .slide-title { font-size: 34px; }
+      .section-title { font-size: 28px; }
+      p, li { font-size: 16px; }
+      .cover-content { max-width: 100%; }
+      .cover-graphic, .python-card { position: relative; right: auto; top: auto; bottom: auto; width: 100%; margin-top: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" aria-live="polite">
+
+    <!-- ==================== Slide 1: Cover (首页) ==================== -->
+    <section class="slide active">
+      <div class="canvas cover-canvas">
+        <svg class="cover-graphic" viewBox="0 0 520 400" width="520" height="400">
+          <defs>
+            <pattern id="grid-pattern" width="25" height="25" patternUnits="userSpaceOnUse">
+              <path d="M 25 0 L 0 0 0 25" fill="none" stroke="rgba(17, 120, 166, 0.05)" stroke-width="1"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid-pattern)" />
+
+          <!-- 3D Axes -->
+          <g class="axes-3d" transform="translate(130, 250)">
+            <line id="axis-x" x1="0" y1="0" x2="160" y2="80" class="axis-line" stroke="var(--coral)" stroke-width="2" style="opacity: 0; transition: opacity 0.5s;" />
+            <text id="axis-x-lbl" x="170" y="90" fill="var(--coral)" font-size="12" font-weight="bold" style="opacity: 0; transition: opacity 0.5s;">X (主轴)</text>
+            <line id="axis-y" x1="0" y1="0" x2="-90" y2="45" class="axis-line" stroke="var(--palm)" stroke-width="2" style="opacity: 0; transition: opacity 0.5s;" />
+            <text id="axis-y-lbl" x="-115" y="60" fill="var(--palm)" font-size="12" font-weight="bold" style="opacity: 0; transition: opacity 0.5s;">Y (跨度)</text>
+            <line id="axis-z" x1="0" y1="0" x2="0" y2="-170" class="axis-line" stroke="var(--ocean)" stroke-width="2" style="opacity: 0; transition: opacity 0.5s;" />
+            <text id="axis-z-lbl" x="-15" y="-185" fill="var(--ocean)" font-size="12" font-weight="bold" style="opacity: 0; transition: opacity 0.5s;">Z (标高)</text>
+          </g>
+
+          <!-- 3D Geometry Paradigm Representations -->
+          <g class="models-3d">
+            <!-- 1. Surface -->
+            <g id="surf-shape" style="opacity: 0; transition: opacity 0.8s;">
+              <path d="M 60,150 Q 110,120 170,140 Q 220,165 240,130 Q 190,105 130,115 Z" fill="rgba(32, 178, 170, 0.28)" stroke="#20b2aa" stroke-width="1.5" />
+              <path d="M 80,142 Q 130,112 195,133" fill="none" stroke="#008080" stroke-width="1.2" stroke-dasharray="3,3" />
+              <path d="M 100,135 Q 150,108 220,128" fill="none" stroke="#008080" stroke-width="1.2" stroke-dasharray="3,3" />
+              <text id="surf-lbl" x="65" y="105" fill="#0d9488" font-size="11" font-weight="bold" style="opacity: 0; transition: opacity 0.6s;">① Surface (连续曲面)</text>
+            </g>
+
+            <!-- 2. B-Rep -->
+            <g id="brep-group">
+              <g id="brep-faces" style="opacity: 0; transition: opacity 0.8s;">
+                <polygon points="160,290 210,315 210,145 160,120" fill="rgba(17, 120, 166, 0.18)" stroke="var(--ocean)" stroke-width="1" />
+                <polygon points="210,315 265,285 265,115 210,145" fill="rgba(17, 120, 166, 0.25)" stroke="var(--ocean)" stroke-width="1" />
+                <polygon points="160,120 210,145 265,115 215,90" fill="rgba(17, 120, 166, 0.3)" stroke="var(--ocean)" stroke-width="1" />
+              </g>
+              <g id="brep-wire" stroke="var(--deep-ocean)" stroke-width="2" stroke-linecap="round" fill="none" style="opacity: 0; transition: opacity 0.5s;">
+                <line x1="160" y1="290" x2="160" y2="120" />
+                <line x1="210" y1="315" x2="210" y2="145" />
+                <line x1="265" y1="285" x2="265" y2="115" />
+                <line x1="160" y1="120" x2="210" y2="145" />
+                <line x1="210" y1="145" x2="265" y2="115" />
+                <line x1="265" y1="115" x2="215" y2="90" />
+                <line x1="215" y1="90" x2="160" y2="120" />
+              </g>
+              <g id="brep-nodes" fill="var(--coral)" stroke="#fff" stroke-width="1.5" style="opacity: 0; transition: opacity 0.5s;">
+                <circle cx="160" cy="120" r="4.5" />
+                <circle cx="210" cy="145" r="4.5" />
+                <circle cx="265" cy="115" r="4.5" />
+                <circle cx="215" cy="90" r="4.5" />
+                <circle cx="210" cy="315" r="4.5" />
+              </g>
+              <text id="brep-lbl" x="180" y="75" fill="var(--deep-ocean)" font-size="11" font-weight="bold" style="opacity: 0; transition: opacity 0.6s;">② B-Rep (拓扑边界)</text>
+            </g>
+
+            <!-- 3. Mesh -->
+            <g id="mesh-group">
+              <g id="mesh-faces" style="opacity: 0; transition: opacity 0.8s;">
+                <polygon points="280,240 330,265 340,140" fill="rgba(245, 222, 179, 0.45)" stroke="#b45309" stroke-width="1.2" />
+                <polygon points="330,265 390,230 340,140" fill="rgba(247, 169, 40, 0.3)" stroke="#b45309" stroke-width="1.2" />
+              </g>
+              <g id="mesh-wire" stroke="#b45309" stroke-width="1.8" stroke-linecap="round" fill="none" style="opacity: 0; transition: opacity 0.5s;">
+                <line x1="280" y1="240" x2="330" y2="265" />
+                <line x1="330" y1="265" x2="390" y2="230" />
+                <line x1="280" y1="240" x2="340" y2="140" />
+                <line x1="330" y1="265" x2="340" y2="140" />
+                <line x1="390" y1="230" x2="340" y2="140" />
+              </g>
+              <g id="mesh-nodes" fill="var(--palm)" stroke="#fff" stroke-width="1.5" style="opacity: 0; transition: opacity 0.5s;">
+                <circle cx="340" cy="140" r="4.5" />
+                <circle cx="280" cy="240" r="3.5" />
+                <circle cx="330" cy="265" r="3.5" />
+                <circle cx="390" cy="230" r="3.5" />
+              </g>
+              <text id="mesh-lbl" x="330" y="125" fill="#b45309" font-size="11" font-weight="bold" style="opacity: 0; transition: opacity 0.6s;">③ Mesh (离散网格)</text>
+            </g>
+          </g>
+        </svg>
+
+        <!-- Python Terminal Card -->
+        <div class="python-card">
+          <div class="card-header">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span class="card-title">geometry_body_representation.py</span>
+          </div>
+          <div class="card-body" id="py-code-body"></div>
+        </div>
+
+        <div class="content cover-content">
+          <div class="cover-eyebrow">土木人的Python课系列课程 · 第06讲</div>
+          <h1 class="cover-title">面和体的表达方式</h1>
+          <div class="cover-subtitle">连续曲面 (Surface) · 边界表示 (B-Rep) · 多边形网格 (Mesh)</div>
+          <div class="cover-meta">
+            <div class="meta-line">主讲人：周文琪</div>
+            <div class="meta-line">上海非解构数字科技有限公司</div>
+            <div class="meta-line">2026.09.24</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 2: Contact & Q&A ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content">
+          <div class="eyebrow">交流答疑</div>
+          <h1 class="slide-title">联系主讲与技术交流</h1>
+          <p class="lead">本课程由周文琪主讲，上海非解构数字科技提供算法与工程支持。欢迎通过以下方式加入技术交流群，获取配套课件、脚本源码与答疑指导。</p>
+          <div class="qr-container">
+            <div class="qr-card lecturer">
+              <div class="qr-img-wrapper"><img src="qr_zhou.png" class="qr-img" alt="周文琪微信二维码"></div>
+              <div class="qr-info">
+                <h2 class="qr-title">周文琪</h2>
+                <p class="qr-desc">上海非解构数字科技联合创始人，一级注册结构工程师，高级工程师。扫码添加主讲微信，交流数字化土木与算法内核。</p>
+                <div class="qr-tag-group">
+                  <span class="qr-tag">微信答疑</span>
+                  <span class="qr-tag">课程交流</span>
+                  <span class="qr-tag">源码获取</span>
+                </div>
+              </div>
+            </div>
+            <div class="qr-card group">
+              <div class="qr-img-wrapper"><img src="29ec2c81edd35040ad120b75f4ad22b8.jpg" class="qr-img" alt="微信交流群二维码"></div>
+              <div class="qr-info">
+                <h2 class="qr-title">图形算法交流群</h2>
+                <p class="qr-desc">非解构数智土木图形算法交流群。与同行共同探讨空间几何建模、B-Rep 拓扑内核、BIM/CAD 解析及有限元前处理。</p>
+                <div class="qr-tag-group">
+                  <span class="qr-tag">技术讨论</span>
+                  <span class="qr-tag">同行互动</span>
+                  <span class="qr-tag">前沿探讨</span>
+                </div>
+              </div>
+            </div>
+            <div class="qr-card company">
+              <div class="qr-img-wrapper"><img src="qr_company.png" class="qr-img" alt="上海非解构数字科技二维码"></div>
+              <div class="qr-info">
+                <h2 class="qr-title">非解构数字科技</h2>
+                <p class="qr-desc">官方微信公众号。定期发布自主 CAD/CAE 几何内核演进、BIM 数据深度解析、智能设计等专业技术深度长文。</p>
+                <div class="qr-tag-group">
+                  <span class="qr-tag">官方公众号</span>
+                  <span class="qr-tag">技术专栏</span>
+                  <span class="qr-tag">自研产品</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 3: Motivation ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">问题导入</div>
+            <h2 class="section-title">从“点线面”到“体”的本质飞跃</h2>
+            <p class="lead">前一章我们建立了基础图元（Point、Line、Plane）。但当工程进入真实结构世界时，单纯的坐标与向量已无法支撑实体建模：</p>
+            <ul>
+              <li><strong>“体”究竟是什么？</strong> 计算机中没有任何原生的“实心原子”，体必须通过边界或离散单元在数学上严格定义。</li>
+              <li><strong>多元场景的诉求冲突</strong>：大跨屋盖需要无限光滑的连续曲面；BIM施工图需要严密封闭的实体来支持打洞开槽；有限元受力与GPU渲染则必须切碎成面片。</li>
+            </ul>
+            <div class="takeaway">没有一种单一数据结构能统领全部场景。必须根据精度、拓扑、运算与显示需求采用不同的几何表达范式！</div>
+          </div>
+          <div class="flow">
+            <div class="flow-step">
+              <strong>1D</strong>
+              <span>线框模型 (Wireframe)：仅有棱边，内部中空无面，产生多义性二义性</span>
+            </div>
+            <div class="flow-step">
+              <strong>2D</strong>
+              <span>曲面模型 (Surface)：具备空间形状与连续切向，但无封闭厚度与体腔</span>
+            </div>
+            <div class="flow-step">
+              <strong>3D</strong>
+              <span>拓扑实体 (B-Rep)：利用封闭边界环与面严格划分实体内部与外部</span>
+            </div>
+            <div class="flow-step">
+              <strong>离散</strong>
+              <span>网格模型 (Mesh)：抛弃复杂指针，以极简数组拼合逼近，专供GPU高速光栅化与FEA</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 4: Three Paradigms Overview ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content">
+          <div class="eyebrow">三大范式</div>
+          <h2 class="section-title">现代计算几何三大几何体表达方式全景</h2>
+          <div class="three">
+            <div class="panel" style="border-top: 6px solid var(--ocean);">
+              <span class="pill pill-surf">PARADIGM 01</span>
+              <h2 style="margin-top:10px;">参数化曲面 (Surface)</h2>
+              <p><strong>底层本质</strong>：连续数学解析映射。</p>
+              <p>通过双变量参数坐标 $(u, v)$ 输入解析方程，求出空间 $(x, y, z)$ 坐标。具备<strong>无限数学精度</strong>，是空间异形屋盖与幕墙形态设计之源。</p>
+              <div class="tag-row" style="margin-top:12px;">
+                <span class="tag" style="font-size:14px; padding:4px 8px;">解析映射</span>
+                <span class="tag" style="font-size:14px; padding:4px 8px;">双参数域 (u,v)</span>
+              </div>
+            </div>
+
+            <div class="panel" style="border-top: 6px solid var(--coral);">
+              <span class="pill pill-brep">PARADIGM 02</span>
+              <h2 style="margin-top:10px;">边界表示法 (B-Rep)</h2>
+              <p><strong>底层本质</strong>：几何与严密拓扑解耦。</p>
+              <p>“体由闭合边界曲面围合而成”。以顶点、有向边、环、面层级连通严格界定<strong>实体内部与外部</strong>，是工业 CAD/BIM 实体布尔运算的基石。</p>
+              <div class="tag-row" style="margin-top:12px;">
+                <span class="tag" style="font-size:14px; padding:4px 8px;">欧拉公式</span>
+                <span class="tag" style="font-size:14px; padding:4px 8px;">点-边-环-面拓扑</span>
+              </div>
+            </div>
+
+            <div class="panel" style="border-top: 6px solid var(--citrus);">
+              <span class="pill pill-mesh">PARADIGM 03</span>
+              <h2 style="margin-top:10px;">多边形网格 (Mesh)</h2>
+              <p><strong>底层本质</strong>：离散多边形面片拼合逼近。</p>
+              <p>仅保留顶点坐标缓冲区与多边形/三角形面片索引表。抛弃繁琐拓扑指针，内存连续线性，专供 <strong>GPU 硬件光栅化渲染与有限元剖分</strong>。</p>
+              <div class="tag-row" style="margin-top:12px;">
+                <span class="tag" style="font-size:14px; padding:4px 8px;">分面近似</span>
+                <span class="tag" style="font-size:14px; padding:4px 8px;">顶点与面片索引表</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 5: Unified OOP Architecture ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">统一架构</div>
+            <h2 class="section-title">基于 GeometryData 的面向对象设计</h2>
+            <p class="lead">为了深入底层的数学映射与拓扑指针，<strong>本讲不调用黑盒 CAD 库</strong>，纯手写 Python 数据类并继承自第 05 章的 <code>GeometryData</code> 基类：</p>
+            <ul>
+              <li><strong>抽象接口契约</strong>：强制实现 <code>to_pyvista()</code> 方法，实现多态转换。</li>
+              <li><strong>解耦内核与表现</strong>：几何对象只负责数学表达和拓扑存储，统一交由 <code>RenderEngine</code> 调用 PyVista 进行窗口渲染。</li>
+              <li><strong>零依赖纯粹性</strong>：让学生彻底看清数据结构本身，不迷失在庞大的商业类库调用中。</li>
+            </ul>
+          </div>
+          <pre class="code-panel"><code># 核心抽象架构 (brep_primitives)
+from abc import ABC, abstractmethod
+from core.geometry_data import GeometryData, Point3D
+import pyvista as pv
+
+class ParametricSurfaceData(GeometryData, ABC):
+    """参数曲面基类：持有参数区间与离散精度"""
+    u_range: tuple[float, float]
+    v_range: tuple[float, float]
+    u_res: int
+    v_res: int
+
+    @abstractmethod
+    def evaluate(self, u: float, v: float) -> Point3D:
+        """数学解析映射：S(u, v) -> Point3D"""
+        pass
+
+    def to_pyvista(self) -> pv.StructuredGrid: ...
+
+class BrepData(GeometryData):
+    """B-Rep 边界表示：顶点坐标 + 棱边索引 + 面环拓扑"""
+    vertices: tuple[Point3D, ...]
+    edges: tuple[tuple[int, int], ...]
+    faces: tuple[tuple[int, ...], ...]
+    def to_pyvista(self) -> pv.PolyData: ...
+
+class MeshData(GeometryData):
+    """Mesh 网格：顶点缓冲 + 面片索引列表"""
+    vertices: tuple[Point3D, ...]
+    faces: tuple[tuple[int, ...], ...]
+    def to_pyvista(self) -> pv.PolyData: ...</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 6: Surface Principles Overview ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">范式一：参数曲面</div>
+            <h2 class="section-title">原理：双参数连续映射与微分几何</h2>
+            <p class="lead">参数曲面通过二维参数域 $(u, v)$ 建立到三维空间的连续向量函数：</p>
+            <p style="font-size:22px; font-weight:700; color:var(--deep-ocean); margin: 8px 0;">
+              $$S(u, v) = \big( x(u,v), \; y(u,v), \; z(u,v) \big)$$
+            </p>
+            <ul>
+              <li><strong>无限数学分辨率</strong>：不存在多边形棱角锯齿，在理论上可在任意微小步长下进行解析求值。</li>
+              <li><strong>严密微分几何性质</strong>：
+                偏导向量 $\vec{T}_u = \frac{\partial S}{\partial u}, \; \vec{T}_v = \frac{\partial S}{\partial v}$ 决定切平面；<br>
+                单位法向量为叉积规范化：$\vec{n} = \frac{\vec{T}_u \times \vec{T}_v}{\|\vec{T}_u \times \vec{T}_v\|}$。
+              </li>
+              <li><strong>采样重构</strong>：在参数空间网格采样 $M \times N$ 点阵，送入 <code>StructuredGrid</code> 还原光滑表面。</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <h2>双曲抛物面 (马鞍面) 解析方程</h2>
+            <p>土木工程经典双曲马鞍面参数方程：</p>
+            <div style="background:#f0f8fa; padding:12px; border-left:4px solid var(--ocean); font-family:monospace; font-size:16px; margin:10px 0;">
+              x(u, v) = u<br>
+              y(u, v) = v<br>
+              z(u, v) = (u² / a²) - (v² / b²)
+            </div>
+            <p style="font-size:15px; color:var(--muted);">
+              • $a, b$ 控制沿主轴方向的抛物线开合曲率。<br>
+              • 负高斯曲率（鞍点），在两个正交方向上分别为上凸与下凹。<br>
+              • 下面三页将通过 Three.js 动画演示从参数点阵到光滑曲面的完整创建过程。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 7: Surface Step 1 (Three.js) ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid-3d">
+          <div>
+            <div class="eyebrow">Surface 创建流程 · 步骤 1/3</div>
+            <h2 class="section-title">参数域 $(u, v)$ 采样与空间点阵求值</h2>
+            <p class="lead">参数曲面的第一步是离散采样：在二维参数空间 $(u, v) \in [-L, L] \times [-L, L]$ 划分规则步长，输入解析函数评估出三维点阵：</p>
+            <ul>
+              <li><strong>解析求值</strong>：每个网格节点 $(u_i, v_j)$ 代入 $S(u, v)$ 独立算出 $(x, y, z)$ 坐标。</li>
+              <li><strong>空间鞍点阵列</strong>：右侧三维视图展示了由 $18 \times 18$ 采样点生成的双曲抛物面马鞍形离散点云。</li>
+              <li><strong>内存紧凑</strong>：在程序中仅需存储参数定义域与解析函数对象本身。</li>
+            </ul>
+            <div class="takeaway">点云虽然是离散的，但由于其源于解析方程，点与点之间具备严格的二维拓扑排列顺序。</div>
+          </div>
+          <div class="three-box-card">
+            <div class="three-box-header">
+              <span class="step-badge">步骤 1/3：离散点云采样</span>
+              <span style="font-size:12px; color:var(--muted);">S(u,v) 空间映射</span>
+            </div>
+            <div class="three-stage" id="stage-surf-step1">
+              <span class="badge-3d">3D · 拖拽旋转</span>
+            </div>
+            <div class="three-hint"><span>💡</span> 按住鼠标左键可 3D 旋转观察采样点在空间的马鞍面起伏</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 8: Surface Step 2 (Three.js) ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid-3d">
+          <div>
+            <div class="eyebrow">Surface 创建流程 · 步骤 2/3</div>
+            <h2 class="section-title">生成参数等值线网络 (Isocurves)</h2>
+            <p class="lead">建立点与点的连接骨架：沿着固定的 $u = u_i$ 与 $v = v_j$ 扫描线将相邻采样点依次连接：</p>
+            <ul>
+              <li><strong>U 向与 V 向正交等值线</strong>：深青色与石板灰曲线交织成网，精确刻画了曲率在两个正交方向的拉伸与下凹。</li>
+              <li><strong>空间找形线框</strong>：在索网或网壳工程中，这组等值线就是实际预应力拉索的排布轨迹。</li>
+              <li><strong>规避拓扑混淆</strong>：参数空间自带 $(i, j)$ 行列结构，无需搜索邻近点即可直接连线。</li>
+            </ul>
+            <div class="takeaway">等值线网络构成了曲面的三维骨架，清晰体现了双曲抛物面特有的直纹曲面性质！</div>
+          </div>
+          <div class="three-box-card">
+            <div class="three-box-header">
+              <span class="step-badge">步骤 2/3：等值线网络</span>
+              <span style="font-size:12px; color:var(--muted);">U/V 正交网格骨架</span>
+            </div>
+            <div class="three-stage" id="stage-surf-step2">
+              <span class="badge-3d">3D · 拖拽旋转</span>
+            </div>
+            <div class="three-hint"><span>💡</span> 拖拽观察双曲抛物面正交等值线在空间的扭转与曲率走向</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 9: Surface Step 3 (Three.js) ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid-3d">
+          <div>
+            <div class="eyebrow">Surface 创建流程 · 步骤 3/3</div>
+            <h2 class="section-title">四边形面片铺设与法向量光滑渲染</h2>
+            <p class="lead">最后一步：在等值线网格单元之间填充连续面片，并根据解析微分求出顶点法向量进行光照渲染：</p>
+            <ul>
+              <li><strong>法向量计算</strong>：通过偏导叉积 $\vec{n} = \vec{T}_u \times \vec{T}_v$ 获得精确解析法向（见视图中黄色法向量针）。</li>
+              <li><strong>光滑着色 (Smooth Shading)</strong>：GPU 在法向量辅助下进行高光插值，还原马鞍面光滑如镜的连续张力外观。</li>
+              <li><strong>生成 StructuredGrid</strong>：调用 <code>surf.to_pyvista()</code>，在 PyVista 中一键送入渲染引擎展示。</li>
+            </ul>
+            <div class="takeaway">最终生成的 Surface 是一个连续平滑的双曲壳体，展示出大跨度空间结构的优雅流线！</div>
+          </div>
+          <div class="three-box-card">
+            <div class="three-box-header">
+              <span class="step-badge">步骤 3/3：光滑曲面与法向</span>
+              <span style="font-size:12px; color:var(--muted);">StructuredGrid 渲染</span>
+            </div>
+            <div class="three-stage" id="stage-surf-step3">
+              <span class="badge-3d">3D · 拖拽旋转</span>
+            </div>
+            <div class="three-hint"><span>💡</span> 拖拽观察连续马鞍面在光照下的高光反射与黄色表面法向量</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 10: Surface Roles & Civil Apps ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content">
+          <div class="eyebrow">范式一：参数曲面</div>
+          <h2 class="section-title">作用：大跨度空间结构、异形幕墙与自由找形</h2>
+          <div class="three">
+            <div class="panel">
+              <h2>空间薄壳与索网屋盖</h2>
+              <p>双曲抛物面（鞍形）是大型体育场、航站楼常用的结构造型。负高斯曲率使索网在双向张拉时获得天然的自平衡与抗风颤刚度，无需额外重型梁柱支撑。</p>
+            </div>
+            <div class="panel">
+              <h2>连续建筑异形表皮</h2>
+              <p>扎哈、极值形态建筑幕墙设计要求曲面保持 $C^1$（切向连续）或 $C^2$（曲率连续），消除光影反光折痕。参数曲面是计算机辅助曲面造型（CAS）的源头。</p>
+            </div>
+            <div class="panel">
+              <h2>空间桥梁与箱梁放样</h2>
+              <p>变截面连续梁桥底板曲线、斜拉桥空间主塔与螺旋匝道，依托中心脊线配合截面参数方程进行空间沿路径连续放样（Lofting / Sweeping）。</p>
+            </div>
+          </div>
+          <div class="takeaway" style="width:100%;">
+            <strong>优势与局限</strong>：公式解析轻量（几百字节即可定义大型屋盖），解析法向完美；但只表达 2D 无厚度壳面，不具备实心内部体腔，无法直接执行 3D 实体布尔差集（开洞扣减）。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 11: B-Rep Principles Overview ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">范式二：边界表示法</div>
+            <h2 class="section-title">原理：欧拉公式与几何拓扑严格解耦</h2>
+            <p class="lead">B-Rep (Boundary Representation) 的根本公理：“三维实心体由包围它的封闭二维边界表面所唯一确定”。</p>
+            <ul>
+              <li><strong>欧拉-庞加莱公式</strong>：多面体顶点 $V$、边 $E$ 与面 $F$ 严格服从拓扑平衡：
+                <span style="font-weight:bold; color:var(--coral); font-size:20px;">$V - E + F = 2(1 - g)$</span>（简单体 $V - E + F = 2$）。
+              </li>
+              <li><strong>几何 (Geometry) vs 拓扑 (Topology)</strong>：
+                <br>• <strong>几何</strong>：点坐标 $(x,y,z)$、棱线方程、表面解析面（定义“在哪里、多大”）；
+                <br>• <strong>拓扑</strong>：Vertex $\to$ Edge $\to$ Loop (Wire) $\to$ Face $\to$ Shell $\to$ Solid（定义“谁与谁相接”）。
+              </li>
+              <li><strong>法向一致性</strong>：面外法向量严格背离实体内部朝外，赋予计算机判断“体内/体外”的绝对依据。</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <h2>以六面体 (长方体 Box) 为例</h2>
+            <p>长方体拥有标准的 B-Rep 拓扑元素结构：</p>
+            <div style="background:#f0f8fa; padding:12px; border-left:4px solid var(--ocean); font-size:16px; margin:10px 0;">
+              • <strong>8 个几何顶点 (Vertex)</strong>：三维角点坐标。<br>
+              • <strong>12 条拓扑棱边 (Edge)</strong>：连接角点的边界线。<br>
+              • <strong>6 个闭合表面 (Face)</strong>：各由 4 条边围合成环。<br>
+              • <strong>欧拉校验</strong>：8 - 12 + 6 = 2（严格守恒）。
+            </div>
+            <p style="font-size:15px; color:var(--muted);">下面三页将通过 Three.js 动画演示从角点到棱边再到封闭面的长方体创建全流程。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 12: B-Rep Step 1 (Three.js) ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid-3d">
+          <div>
+            <div class="eyebrow">B-Rep 创建流程 · 步骤 1/3</div>
+            <h2 class="section-title">声明 8 个几何顶点 (Vertices)</h2>
+            <p class="lead">B-Rep 的第一步是建立零维基础几何元素：在三维欧氏空间中确定长方体 8 个角点的绝对坐标：</p>
+            <ul>
+              <li><strong>几何独立性</strong>：此时 8 个点仅仅是空间中的独立坐标 <code>Point3D(x, y, z)</code>，尚未建立任何连通信息。</li>
+              <li><strong>底面 4 点与顶面 4 点</strong>：
+                <br>底面：$V0(0,0,0), V1(w,0,0), V2(w,d,0), V3(0,d,0)$；
+                <br>顶面：$V4(0,0,h), V5(w,0,h), V6(w,d,h), V7(0,d,h)$。
+              </li>
+              <li><strong>色彩规范</strong>：在工程渲染中采用珊瑚红（<code>coral</code>）球体与高亮标签进行醒目标识。</li>
+            </ul>
+            <div class="takeaway">几何点决定了实体的度量尺寸（长宽高），但无法回答“物体长什么样”，必须继续建立拓扑边！</div>
+          </div>
+          <div class="three-box-card">
+            <div class="three-box-header">
+              <span class="step-badge">步骤 1/3：8 个角点生成</span>
+              <span style="font-size:12px; color:var(--muted);">0D 几何顶点</span>
+            </div>
+            <div class="three-stage" id="stage-brep-step1">
+              <span class="badge-3d">3D · 拖拽旋转</span>
+            </div>
+            <div class="three-hint"><span>💡</span> 拖拽旋转可全视角观察 8 个空间角点 V0~V7 的三维悬浮分布</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 13: B-Rep Step 2 (Three.js) ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid-3d">
+          <div>
+            <div class="eyebrow">B-Rep 创建流程 · 步骤 2/3</div>
+            <h2 class="section-title">建立 12 条拓扑棱边 (Edges)</h2>
+            <p class="lead">第二步：建立一维边界连通拓扑。通过引用顶点索引对 <code>(start_idx, end_idx)</code> 定义长方体的 12 条棱边：</p>
+            <ul>
+              <li><strong>底面 4 条边</strong>：连接 $V0 \to V1 \to V2 \to V3 \to V0$；</li>
+              <li><strong>顶面 4 条边</strong>：连接 $V4 \to V5 \to V6 \to V7 \to V4$；</li>
+              <li><strong>侧向 4 条柱边</strong>：连接上下对应点 $(0,4), (1,5), (2,6), (3,7)$。</li>
+              <li><strong>骨架成型</strong>：钢青色（<code>steelblue</code>）棱边连接成严密的线框拓扑，消除了纯线框模型的二义性。</li>
+            </ul>
+            <div class="takeaway">边建立了一级拓扑结构。每条棱边精确知道自己的两个端点，为后续面的闭合打下基础。</div>
+          </div>
+          <div class="three-box-card">
+            <div class="three-box-header">
+              <span class="step-badge">步骤 2/3：12 条棱边连接</span>
+              <span style="font-size:12px; color:var(--muted);">1D 拓扑线框骨架</span>
+            </div>
+            <div class="three-stage" id="stage-brep-step2">
+              <span class="badge-3d">3D · 拖拽旋转</span>
+            </div>
+            <div class="three-hint"><span>💡</span> 拖拽观察钢青色拓扑棱线如何将 8 个角点牢固锁定为六面体骨架</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 14: B-Rep Step 3 (Three.js) ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid-3d">
+          <div>
+            <div class="eyebrow">B-Rep 创建流程 · 步骤 3/3</div>
+            <h2 class="section-title">闭合 6 个拓扑面并形成实体 (Faces & Solid)</h2>
+            <p class="lead">第三步：利用封闭有向环 (Loop/Wire) 构造二维表面，6 个面闭合成壳形成真正的“三维实体”：</p>
+            <ul>
+              <li><strong>外法向与右手法则</strong>：
+                顶点环顺序决定面法向朝向：底面 <code>(3,2,1,0)</code> 法向朝下，顶面 <code>(4,5,6,7)</code> 法向朝上，侧面依次朝外。
+              </li>
+              <li><strong>实体内部界定</strong>：
+                外法向一律朝外（见视图中黄色法向量），使算法能够严格判定任意点是在实体内部还是外部。
+              </li>
+              <li><strong>完成水密实体 (Watertight Solid)</strong>：
+                赋予淡蓝色（<code>lightblue</code>）半透明表面，支持布尔运算与体积计算。
+              </li>
+            </ul>
+            <div class="takeaway">至此，长方体完成了点 $\to$ 边 $\to$ 面的完整闭合，成为标准的 CAD/BIM B-Rep 实体！</div>
+          </div>
+          <div class="three-box-card">
+            <div class="three-box-header">
+              <span class="step-badge">步骤 3/3：表面围合成体</span>
+              <span style="font-size:12px; color:var(--muted);">2D 面 $\to$ 3D 实心体</span>
+            </div>
+            <div class="three-stage" id="stage-brep-step3">
+              <span class="badge-3d">3D · 拖拽旋转</span>
+            </div>
+            <div class="three-hint"><span>💡</span> 拖拽观察淡蓝色半透明表面与从各个面中心垂直向外的法向量</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 15: B-Rep Roles & Civil CAD/BIM ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content">
+          <div class="eyebrow">范式二：边界表示法</div>
+          <h2 class="section-title">作用：CAD/BIM 实体造型与高精度布尔运算</h2>
+          <div class="three">
+            <div class="panel">
+              <h2>工业 CAD/BIM 建模内核基石</h2>
+              <p>Revit、Tekla、AutoCAD、Rhino 及开源 OpenCASCADE (OCC)、Parasolid 底层均以 B-Rep 为唯一法定核心。IFC 工业基础类标准中绝大多数构件均为 B-Rep 描述。</p>
+            </div>
+            <div class="panel">
+              <h2>精确布尔运算 (Boolean CSG)</h2>
+              <p>柱与梁交汇剪切、梁贯通打螺栓孔、剪力墙开预留洞口。B-Rep 能精确求出相交交线并将面切割再拼合（交集 Intersect、并集 Union、差集 Cut），永不失真。</p>
+            </div>
+            <div class="panel">
+              <h2>特征倒角与工程量精算</h2>
+              <p>混凝土柱四角倒圆角 (Fillet)、钢结构边缘倒棱 (Chamfer)。因为完整记录了邻接面与公共边，可精确计算封闭体积、质量、净空与构件间物理碰撞 (Clash Detection)。</p>
+            </div>
+          </div>
+          <div class="takeaway" style="width:100%;">
+            <strong>优势与局限</strong>：尺寸绝对精确，支持实体加工；但数据结构庞大嵌套深、拓扑一致性校验严苛，且显卡无法直接硬件光栅化（必须通过细分网格才能显示）。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 16: Mesh Principles Overview ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">范式三：多边形网格</div>
+            <h2 class="section-title">原理：离散分面逼近与极简数组结构</h2>
+            <p class="lead">Mesh 网格将任何复杂的形体表皮切分为大量的微小平面多边形（三角面 Triangle 或四边形 Quad）。</p>
+            <ul>
+              <li><strong>彻底扁平化结构</strong>：
+                <br>• <strong>顶点缓冲区 (Vertex Buffer)</strong>：连续存储三维浮点坐标数组 <code>[(x0,y0,z0), (x1,y1,z1), ...]</code>；
+                <br>• <strong>面片索引表 (Face Index List)</strong>：记录每个面片引用的顶点序号 <code>[(0, 1, 4), (1, 2, 4), ...]</code>。
+              </li>
+              <li><strong>抛弃拓扑开销</strong>：不保存复杂的半边或双向连通指针，内存紧凑线性排列，对 CPU Cache 和 GPU 显存极为友好。</li>
+              <li><strong>分段线性近似</strong>：本质是“用折面逼近光滑曲面”。网格越密越逼真，但数据量线性激增。</li>
+            </ul>
+          </div>
+          <div class="panel">
+            <h2>以参数化四棱锥为例</h2>
+            <p>构建一个具有底面和尖顶的经典离散网格：</p>
+            <div style="background:#f0f8fa; padding:12px; border-left:4px solid var(--citrus); font-size:16px; margin:10px 0;">
+              • <strong>5 个顶点</strong>：底面 4 个角点 + 1 个空间锥尖顶点。<br>
+              • <strong>5 个面片</strong>：1 个四边形底面 + 4 个三角形侧面。<br>
+              • <strong>显卡读取方式</strong>：通过顶点缓冲区与面片索引直接批量送入显存。
+            </div>
+            <p style="font-size:15px; color:var(--muted);">下面三页将通过 Three.js 动画演示从顶点缓存到面片索引再到光栅化着色的 Mesh 创建过程。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 17: Mesh Step 1 (Three.js) ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid-3d">
+          <div>
+            <div class="eyebrow">Mesh 创建流程 · 步骤 1/3</div>
+            <h2 class="section-title">填充连续顶点缓冲区 (Vertex Buffer)</h2>
+            <p class="lead">网格表示的第一步是将所有独立几何特征点以扁平数组形式存入顶点缓冲区：</p>
+            <ul>
+              <li><strong>无拓扑归属性</strong>：与 B-Rep 的顶点不同，Mesh 顶点没有任何“属于哪条边”的复杂指针，仅仅是内存中的一串紧凑浮点数。</li>
+              <li><strong>四棱锥的 5 个顶点</strong>：
+                <br>底面 4 点：$MV0(0,0,0), MV1(w,0,0), MV2(w,d,0), MV3(0,d,0)$；
+                <br>锥顶点：$MV4(w/2, d/2, h)$ 位于中心高空。
+              </li>
+              <li><strong>色彩规范</strong>：以海绿色（<code>seagreen</code>）圆球展示顶点缓冲中的数据点。</li>
+            </ul>
+            <div class="takeaway">连续的顶点数组使得显卡 GPU 能够通过显存地址直接批量抓取顶点数据，吞吐速度极高。</div>
+          </div>
+          <div class="three-box-card">
+            <div class="three-box-header">
+              <span class="step-badge">步骤 1/3：顶点缓冲数组</span>
+              <span style="font-size:12px; color:var(--muted);">Vertex Buffer</span>
+            </div>
+            <div class="three-stage" id="stage-mesh-step1">
+              <span class="badge-3d">3D · 拖拽旋转</span>
+            </div>
+            <div class="three-hint"><span>💡</span> 拖拽观察海绿色顶点 MV0~MV4 在底面与锥顶的空间分布</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 18: Mesh Step 2 (Three.js) ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid-3d">
+          <div>
+            <div class="eyebrow">Mesh 创建流程 · 步骤 2/3</div>
+            <h2 class="section-title">组织面片拓扑索引表与三角剖分</h2>
+            <p class="lead">第二步：建立面片索引表。Mesh 抛弃了单独的“边”结构，直接用整数索引元组来声明多边形面片：</p>
+            <ul>
+              <li><strong>面片索引表结构</strong>：
+                <br>• 底面：<code>(3, 2, 1, 0)</code>（或剖分为两个三角形）；
+                <br>• 4 个侧三角面：<code>(0, 1, 4), (1, 2, 4), (2, 3, 4), (3, 0, 4)</code>。
+              </li>
+              <li><strong>隐式连线</strong>：显卡读取索引表时，自动将索引对连接为三角形轮廓线框（如金黄色网格线所示）。</li>
+              <li><strong>轻量级优势</strong>：无需指针解引用，面片顶点复用率高，极大地压缩了内存占用。</li>
+            </ul>
+            <div class="takeaway">面片索引表将独立的顶点组织成了具有几何外观的三角形外壳框架！</div>
+          </div>
+          <div class="three-box-card">
+            <div class="three-box-header">
+              <span class="step-badge">步骤 2/3：面片索引与剖分</span>
+              <span style="font-size:12px; color:var(--muted);">Index Buffer 连线</span>
+            </div>
+            <div class="three-stage" id="stage-mesh-step2">
+              <span class="badge-3d">3D · 拖拽旋转</span>
+            </div>
+            <div class="three-hint"><span>💡</span> 拖拽观察金黄色面片索引连线如何将 5 个顶点剖分为四棱锥骨架</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 19: Mesh Step 3 (Three.js) ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid-3d">
+          <div>
+            <div class="eyebrow">Mesh 创建流程 · 步骤 3/3</div>
+            <h2 class="section-title">GPU 光栅化面片填充与平面着色 (Flat Shading)</h2>
+            <p class="lead">第三步：GPU 硬件光栅化管线在三角形内部并行插值填充像素，并计算平面法向量进行着色：</p>
+            <ul>
+              <li><strong>平面着色 (Flat Shading)</strong>：
+                每个多边形面片拥有唯一的平面法向量，光照下呈现清晰明暗分明的折面效果，生动展现多边形网格的“分面离散逼近”本质。
+              </li>
+              <li><strong>色彩规范</strong>：
+                面片填充麦黄色（<code>wheat</code>），深色边框勾勒面片边界，节点保留海绿色。
+              </li>
+              <li><strong>生成 PolyData</strong>：
+                调用 <code>mesh.to_pyvista()</code> 生成顶点+面片 <code>PolyData</code>，完全兼容 VTK 与 WebGL 渲染管线。
+              </li>
+            </ul>
+            <div class="takeaway">这就是我们最终在屏幕上见到的离散网格模型，它是现代计算机图形渲染的核心基石！</div>
+          </div>
+          <div class="three-box-card">
+            <div class="three-box-header">
+              <span class="step-badge">步骤 3/3：面片光栅化着色</span>
+              <span style="font-size:12px; color:var(--muted);">PolyData 平面着色</span>
+            </div>
+            <div class="three-stage" id="stage-mesh-step3">
+              <span class="badge-3d">3D · 拖拽旋转</span>
+            </div>
+            <div class="three-hint"><span>💡</span> 拖拽旋转观察麦黄色三角面片在光源照射下的明暗分面几何感</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 20: Mesh Roles & Civil FEM ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content">
+          <div class="eyebrow">范式三：多边形网格</div>
+          <h2 class="section-title">作用：GPU 硬件光栅化渲染、有限元分析与扫描重建</h2>
+          <div class="three">
+            <div class="panel">
+              <h2>图形学与 GPU 渲染基石</h2>
+              <p>DirectX、OpenGL、WebGL、Three.js、PyVista/VTK 等底层图形流水线<strong>只识别三角形网格</strong>。GPU 芯片架构拥有成千上万个光栅化核心，可微秒级并发处理数百万面片。</p>
+            </div>
+            <div class="panel">
+              <h2>有限元受力分析 (FEM/FEA)</h2>
+              <p>结构弹塑性、应力集中、大坝与深基坑开挖，必须将连续体划分为四面体 (Tet) 或六面体 (Hex) 网格单元，在节点上建立刚度矩阵并求解有限元偏微分方程。</p>
+            </div>
+            <div class="panel">
+              <h2>点云重建与 3D 打印</h2>
+              <p>激光雷达扫描三维点云通过泊松重建生成表面网格；无人机倾斜摄影实景三维自动三角化；3D 打印标准 STL 格式完全基于无拓扑的离散三角面片。</p>
+            </div>
+          </div>
+          <div class="takeaway" style="width:100%;">
+            <strong>优势与局限</strong>：显卡渲染极速、通用跨平台；但只是分段线性近似有弦差，且缺乏拓扑约束，做布尔运算极其容易产生退化面 (Degenerate Faces)、自交缝隙和漏光漏风。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 21: In-Depth Comparison Matrix ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content">
+          <div class="eyebrow">横向对比</div>
+          <h2 class="section-title">三种几何体表达方式的核心对比矩阵</h2>
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th style="width:16%;">对比维度</th>
+                <th style="width:28%;">① 参数化曲面 (Surface)</th>
+                <th style="width:28%;">② 边界表示法 (B-Rep)</th>
+                <th style="width:28%;">③ 多边形网格 (Mesh)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>底层数学基础</strong></td>
+                <td>连续解析方程、NURBS 权值基函数</td>
+                <td>封闭流形表面 + 欧拉拓扑图</td>
+                <td>空间离散点集与面片顶点索引</td>
+              </tr>
+              <tr>
+                <td><strong>核心数据结构</strong></td>
+                <td><span class="pill pill-surf">U, V 参数域 / 映射函数</span></td>
+                <td><span class="pill pill-brep">点-边-环-面-体层级拓扑</span></td>
+                <td><span class="pill pill-mesh">顶点表 + 面片索引列表</span></td>
+              </tr>
+              <tr>
+                <td><strong>几何精确度</strong></td>
+                <td><strong>无限数学精度</strong>，可任意步长求值</td>
+                <td><strong>严格解析尺寸</strong>，工程加工级精度</td>
+                <td><strong>分段线性近似</strong>，存在弦差与折面</td>
+              </tr>
+              <tr>
+                <td><strong>实体内部判定</strong></td>
+                <td>无厚度零体腔壳面，无法判定内部</td>
+                <td>法向朝外，<strong>明确判定体内/体外</strong></td>
+                <td>仅表面闭合时具备近似水密体积</td>
+              </tr>
+              <tr>
+                <td><strong>实体布尔运算</strong></td>
+                <td>需先求解曲面交线，无法直接做体差集</td>
+                <td><strong>工业级黄金基石</strong>，支持复杂实体交并差</td>
+                <td>极易退化，易产生非流形缝隙与自交</td>
+              </tr>
+              <tr>
+                <td><strong>GPU 显示效率</strong></td>
+                <td>必须先采样离散为网格才能绘制</td>
+                <td>必须细分 (Tessellation) 后才能绘制</td>
+                <td><strong>GPU 硬件原生支持</strong>，百万面实时秒级渲染</td>
+              </tr>
+              <tr>
+                <td><strong>土木工程核心场景</strong></td>
+                <td>大跨空间薄壳屋盖、异形幕墙找形</td>
+                <td>BIM 构件设计、开洞扣减、碰撞检查</td>
+                <td>有限元受力分析 (FEM)、数字孪生漫游</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 22: Engineering Workflow Pipeline ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">全生命周期</div>
+            <h2 class="section-title">工程实战协同：三者绝非对立，而是流水线</h2>
+            <p class="lead">在真实的数字化土木工程全生命周期中，三大表达方式分工明确、层层推进：</p>
+            <div class="takeaway" style="margin-top:20px;">
+              <strong>一句话贯通</strong>：<br>
+              建筑方案用 <strong>Surface</strong> 自由找形；<br>
+              工程设计用 <strong>B-Rep</strong> 精确实体扣减算量；<br>
+              结构计算与屏幕显示用 <strong>Mesh</strong> 离散求解与极速光栅化！
+            </div>
+          </div>
+          <div class="flow">
+            <div class="flow-step">
+              <strong>1</strong>
+              <div>
+                <span style="color:var(--ocean);">方案与形体探索 (Surface)</span>
+                <p style="margin:2px 0 0; font-size:15px; color:var(--muted);">建筑师在 Grasshopper/Rhino 中通过参数方程设计大跨异形屋盖曲面。</p>
+              </div>
+            </div>
+            <div class="flow-step">
+              <strong>2</strong>
+              <div>
+                <span style="color:var(--coral);">施工图与BIM构件加工 (B-Rep)</span>
+                <p style="margin:2px 0 0; font-size:15px; color:var(--muted);">赋予厚度生成封闭 B-Rep 构件，在 Revit/Tekla 进行开洞、倒角与配筋碰撞检查。</p>
+              </div>
+            </div>
+            <div class="flow-step">
+              <strong>3</strong>
+              <div>
+                <span style="color:var(--palm);">有限元仿真计算 (Mesh / FEA)</span>
+                <p style="margin:2px 0 0; font-size:15px; color:var(--muted);">将 B-Rep 构件剖分为四面体单元网格，导入 ANSYS/ABAQUS 求解动力抗震响应。</p>
+              </div>
+            </div>
+            <div class="flow-step">
+              <strong>4</strong>
+              <div>
+                <span style="color:#b45309;">图形学漫游与数字孪生 (Mesh / GPU)</span>
+                <p style="margin:2px 0 0; font-size:15px; color:var(--muted);">细分 (Tessellation) 转换为三角网格，通过 WebGL/PyVista 进行高帧率实时漫游。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 23: Side-by-Side Scene Practice ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">实战场景</div>
+            <h2 class="section-title">同屏三几何体对比渲染实战</h2>
+            <p class="lead">在脚本 <code>07_render_surface_brep_mesh_scene.py</code> 中，我们将三大几何体置于同一 3D 视口中并排展示：</p>
+            <ul>
+              <li><strong>空间平移错位</strong>：通过设置空间 X 轴位移 Offset，避免模型原点相互遮挡冲突。</li>
+              <li><strong>要素标记对比</strong>：同时展现 Surface 的等值线、B-Rep 的珊瑚红顶点与淡蓝面、Mesh 的海绿节点与麦黄三角面。</li>
+              <li><strong>一键调度</strong>：单次 <code>RenderEngine.render([surf, brep, mesh])</code> 即可统一完成三维交互。</li>
+            </ul>
+          </div>
+          <pre class="code-panel"><code># 同屏对比渲染场景脚本核心逻辑 (07_render_...)
+from brep_primitives import *
+import pyvista as pv
+
+# 1. 创建参数化马鞍曲面并平移至左侧 (X = -2500)
+surf = HyperbolicParaboloid(a=1500, b=1500)
+surf_grid = surf.to_pyvista().translate([-2500, 0, 0])
+
+# 2. 创建精确实体长方体并置于中央 (X = 0)
+brep = create_box_brep(width=400, depth=300, height=500)
+brep_poly = brep.to_pyvista()
+
+# 3. 创建参数化四棱锥网格并平移至右侧 (X = +2500)
+mesh = create_pyramid_mesh(width=500, depth=500, height=600)
+mesh_poly = mesh.to_pyvista().translate([2500, 0, 0])
+
+# 4. 同一视口分层着色绘制
+plotter = pv.Plotter()
+plotter.add_mesh(surf_grid, color="lightseagreen", show_edges=True)
+plotter.add_mesh(brep_poly, color="lightblue", opacity=0.85)
+plotter.add_mesh(mesh_poly, color="wheat", show_edges=True)
+plotter.show()</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 24: Script Architecture ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content">
+          <div class="eyebrow">源码清单</div>
+          <h2 class="section-title">本章在 scripts/ 下的完整 Python 源码体系</h2>
+          <div class="three">
+            <div class="panel">
+              <h2>核心架构与单元测试</h2>
+              <p>
+                <code>brep_primitives/</code> (含双曲马鞍面/球面/B-Rep/Mesh)<br>
+                <code>brep_mesh_rendering.py</code> (兼容层)<br>
+                <code>test_brep_mesh_rendering.py</code><br>
+                <span style="font-size:14px; color:var(--palm); font-weight:bold;">✔ 6项 pytest 测试用例全部通过</span>
+
+              </p>
+            </div>
+            <div class="panel">
+              <h2>数据结构生成示例</h2>
+              <p>
+                <code>01_create_surface_example.py</code><br>
+                (控制台打印双曲抛物面采样点)<br>
+                <code>03_create_brep_example.py</code><br>
+                (打印长方体点-边-面完整拓扑表)<br>
+                <code>05_create_mesh_example.py</code><br>
+                (打印四棱锥顶点与面片索引)
+              </p>
+            </div>
+            <div class="panel">
+              <h2>独立与综合渲染脚本</h2>
+              <p>
+                <code>02_render_surface_marked.py</code><br>
+                (双曲表面与深石板灰等值线)<br>
+                <code>04_render_brep_marked.py</code><br>
+                (珊瑚红点 + 钢青边 + 淡蓝面)<br>
+                <code>06_render_mesh_marked.py</code><br>
+                (海绿节点 + 麦黄离散面片)<br>
+                <code>07_render_surface_brep_mesh_scene.py</code>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== Slide 25: Summary & Acceptance ==================== -->
+    <section class="slide">
+      <div class="canvas">
+        <div class="content grid">
+          <div>
+            <div class="eyebrow">本节收束</div>
+            <h2 class="section-title">夯实底层数据结构，筑牢几何算法基石</h2>
+            <p class="lead">从连续数学映射（Surface）、严密边界拓扑（B-Rep）到极简离散面片（Mesh），我们亲手完成了几何体表达的核心代码编写。深刻理解这三者后，后续学习实体布尔、投影变换与 BIM 解析将如鱼得水！</p>
+            <div class="takeaway">
+              <strong>课后实战作业</strong>：<br>
+              使用 <code>MeshData</code> 编写一个 <code>create_cylinder_mesh(r, h, n_segments)</code> 函数，生成一个具有底圆、顶圆和侧面四边形条带的圆柱体网格并调用 PyVista 渲染。
+            </div>
+          </div>
+          <div class="practice-box">
+            <h2>验收标准检查单</h2>
+            <ul>
+              <li><strong>统一基类继承</strong>：所有几何类必须派生自 <code>GeometryData</code>，不引入外部黑盒 CAD 库。</li>
+              <li><strong>多态转换成功</strong>：Surface、B-Rep、Mesh 均能正确实现 <code>to_pyvista()</code> 并生成数据集。</li>
+              <li><strong>色彩标记清晰</strong>：Surface（浅海绿+深灰线）、B-Rep（珊瑚红+钢青+淡蓝）、Mesh（海绿+麦黄）。</li>
+              <li><strong>测试全部通过</strong>：执行 <code>pytest</code> 验证类结构、继承关系与坐标计算无误。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Slide Navigation Bar -->
+  <nav class="nav" aria-label="Slide navigation">
+    <button type="button" id="prev" aria-label="上一页">&lt;</button>
+    <div class="counter"><span id="current">1</span>/<span id="total">25</span></div>
+    <button type="button" id="next" aria-label="下一页">&gt;</button>
+  </nav>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const current = document.querySelector("#current");
+    const total = document.querySelector("#total");
+    let index = 0;
+    total.textContent = slides.length;
+
+    function show(nextIndex) {
+      index = Math.max(0, Math.min(slides.length - 1, nextIndex));
+      slides.forEach((slide, slideIndex) => {
+        slide.classList.toggle("active", slideIndex === index);
+      });
+      current.textContent = index + 1;
+      document.title = `06.01 面和体的表达方式 - ${index + 1}/${slides.length}`;
+      if (typeof checkSlideAnimation === 'function') {
+        checkSlideAnimation();
+      }
+      if (typeof updateActiveThreeScene === 'function') {
+        updateActiveThreeScene(index);
+      }
+    }
+
+    document.querySelector("#prev").addEventListener("click", () => show(index - 1));
+    document.querySelector("#next").addEventListener("click", () => show(index + 1));
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") {
+        event.preventDefault();
+        show(index + 1);
+      }
+      if (event.key === "ArrowLeft" || event.key === "PageUp") {
+        event.preventDefault();
+        show(index - 1);
+      }
+      if (event.key === "Home") {
+        event.preventDefault();
+        show(0);
+      }
+      if (event.key === "End") {
+        event.preventDefault();
+        show(slides.length - 1);
+      }
+    });
+
+    // Dynamic logo injection
+    document.querySelectorAll('.canvas').forEach(canvas => {
+      if (!canvas.querySelector('.slide-logo')) {
+        const logo = document.createElement('img');
+        logo.src = 'logo.png';
+        logo.className = 'slide-logo';
+        logo.alt = 'Logo';
+        canvas.appendChild(logo);
+      }
+    });
+
+    // ==================== Cover Slide Animation Controller ====================
+    const elements = {
+      canvas: document.querySelector('.cover-canvas'),
+      axes: [
+        document.getElementById('axis-x'), document.getElementById('axis-x-lbl'),
+        document.getElementById('axis-y'), document.getElementById('axis-y-lbl'),
+        document.getElementById('axis-z'), document.getElementById('axis-z-lbl')
+      ],
+      surf: [
+        document.getElementById('surf-shape'),
+        document.getElementById('surf-lbl')
+      ],
+      brep: [
+        document.getElementById('brep-faces'),
+        document.getElementById('brep-wire'),
+        document.getElementById('brep-nodes'),
+        document.getElementById('brep-lbl')
+      ],
+      mesh: [
+        document.getElementById('mesh-faces'),
+        document.getElementById('mesh-wire'),
+        document.getElementById('mesh-nodes'),
+        document.getElementById('mesh-lbl')
+      ]
+    };
+
+    const highlightSteps = [
+      {
+        lines: [
+          { text: "from core.geometry_data import Point3D, GeometryData", html: '<span class="keyword">from</span> core.geometry_data <span class="keyword">import</span> Point3D, GeometryData' },
+          { text: "from brep_primitives import *", html: '<span class="keyword">from</span> brep_primitives <span class="keyword">import</span> *' }
+        ]
+      },
+      {
+        lines: [
+          { text: "# 1. 参数化连续曲面 (Surface)", html: '<span class="comment"># 1. 参数化连续曲面 (Surface)</span>' },
+          { text: "surf = HyperbolicParaboloid(a=1500, b=1500)", html: 'surf = HyperbolicParaboloid(a=<span class="number">1500</span>, b=<span class="number">1500</span>)' }
+        ]
+      },
+      {
+        lines: [
+          { text: "# 2. 精确拓扑边界表示 (B-Rep)", html: '<span class="comment"># 2. 精确拓扑边界表示 (B-Rep)</span>' },
+          { text: "brep = create_box_brep(w=200, d=150, h=300)", html: 'brep = create_box_brep(w=<span class="number">200</span>, d=<span class="number">150</span>, h=<span class="number">300</span>)' }
+        ]
+      },
+      {
+        lines: [
+          { text: "# 3. 离散多边形网格 (Mesh)", html: '<span class="comment"># 3. 离散多边形网格 (Mesh)</span>' },
+          { text: "mesh = create_pyramid_mesh(w=200, d=200, h=250)", html: 'mesh = create_pyramid_mesh(w=<span class="number">200</span>, d=<span class="number">200</span>, h=<span class="number">250</span>)' }
+        ]
+      },
+      {
+        lines: [
+          { text: "# 4. 统一 GeometryData 送入渲染引擎", html: '<span class="comment"># 4. 统一 GeometryData 送入渲染引擎</span>' },
+          { text: "engine.render([surf, brep, mesh])", html: 'engine.render([surf, brep, mesh])' }
+        ]
+      }
+    ];
+
+    let isAnimRunning = false;
+    let animTimeout = null;
+    let animTimeout3D1 = null, animTimeout3D2 = null, animTimeout3D3 = null, animTimeout3D4 = null;
+    let textIntervals = [];
+
+    function trigger3DModel(trigger) {
+      if (trigger === 'axes') {
+        elements.axes.forEach(el => { if (el) el.style.opacity = "1"; });
+      } else if (trigger === 'surf') {
+        elements.surf.forEach(el => { if (el) el.style.opacity = "1"; });
+      } else if (trigger === 'brep') {
+        elements.brep.forEach(el => { if (el) el.style.opacity = "1"; });
+      } else if (trigger === 'mesh') {
+        elements.mesh.forEach(el => { if (el) el.style.opacity = "1"; });
+      } else if (trigger === 'plot') {
+        if (elements.canvas) {
+          elements.canvas.style.boxShadow = "0 22px 60px rgba(17, 120, 166, 0.32)";
+          setTimeout(() => {
+            if (elements.canvas) elements.canvas.style.boxShadow = "";
+          }, 1500);
+        }
+      }
+    }
+
+    function resetAnimation() {
+      textIntervals.forEach(interval => clearInterval(interval));
+      textIntervals = [];
+      clearTimeout(animTimeout3D1);
+      clearTimeout(animTimeout3D2);
+      clearTimeout(animTimeout3D3);
+      clearTimeout(animTimeout3D4);
+
+      const codeBody = document.getElementById('py-code-body');
+      if (codeBody) codeBody.innerHTML = "";
+
+      elements.axes.forEach(el => { if (el) el.style.opacity = "0"; });
+      elements.surf.forEach(el => { if (el) el.style.opacity = "0"; });
+      elements.brep.forEach(el => { if (el) el.style.opacity = "0"; });
+      elements.mesh.forEach(el => { if (el) el.style.opacity = "0"; });
+    }
+
+    function typeLine(stepIdx, lineIdx) {
+      if (!isAnimRunning) return;
+      if (stepIdx >= highlightSteps.length) {
+        animTimeout = setTimeout(() => {
+          resetAnimation();
+          animTimeout = setTimeout(() => {
+            typeLine(0, 0);
+            start3DDrawing();
+          }, 1000);
+        }, 5000);
+        return;
+      }
+
+      const step = highlightSteps[stepIdx];
+      if (lineIdx >= step.lines.length) {
+        animTimeout = setTimeout(() => typeLine(stepIdx + 1, 0), 900);
+        return;
+      }
+
+      const line = step.lines[lineIdx];
+      const codeBody = document.getElementById('py-code-body');
+      if (!codeBody) return;
+      const lineContainer = document.createElement('div');
+      lineContainer.className = 'code-line';
+      codeBody.appendChild(lineContainer);
+      codeBody.scrollTop = codeBody.scrollHeight;
+
+      let charIdx = 0;
+      const interval = setInterval(() => {
+        if (!isAnimRunning) {
+          clearInterval(interval);
+          return;
+        }
+        lineContainer.textContent = line.text.substring(0, charIdx) + "_";
+        charIdx++;
+        codeBody.scrollTop = codeBody.scrollHeight;
+        if (charIdx > line.text.length) {
+          clearInterval(interval);
+          lineContainer.innerHTML = line.html;
+          codeBody.scrollTop = codeBody.scrollHeight;
+          animTimeout = setTimeout(() => typeLine(stepIdx, lineIdx + 1), 280);
+        }
+      }, 24);
+      textIntervals.push(interval);
+    }
+
+    function start3DDrawing() {
+      clearTimeout(animTimeout3D1);
+      clearTimeout(animTimeout3D2);
+      clearTimeout(animTimeout3D3);
+      clearTimeout(animTimeout3D4);
+
+      elements.axes.forEach(el => { if (el) el.style.opacity = "0"; });
+      elements.surf.forEach(el => { if (el) el.style.opacity = "0"; });
+      elements.brep.forEach(el => { if (el) el.style.opacity = "0"; });
+      elements.mesh.forEach(el => { if (el) el.style.opacity = "0"; });
+
+      trigger3DModel('axes');
+      animTimeout3D1 = setTimeout(() => { if (isAnimRunning) trigger3DModel('surf'); }, 1400);
+      animTimeout3D2 = setTimeout(() => { if (isAnimRunning) trigger3DModel('brep'); }, 2800);
+      animTimeout3D3 = setTimeout(() => { if (isAnimRunning) trigger3DModel('mesh'); }, 4200);
+      animTimeout3D4 = setTimeout(() => { if (isAnimRunning) trigger3DModel('plot'); }, 5600);
+    }
+
+    function startCoverAnimation() {
+      if (isAnimRunning) return;
+      isAnimRunning = true;
+      resetAnimation();
+      typeLine(0, 0);
+      start3DDrawing();
+    }
+
+    function stopCoverAnimation() {
+      isAnimRunning = false;
+      clearTimeout(animTimeout);
+      clearTimeout(animTimeout3D1);
+      clearTimeout(animTimeout3D2);
+      clearTimeout(animTimeout3D3);
+      clearTimeout(animTimeout3D4);
+      resetAnimation();
+    }
+
+    function checkSlideAnimation() {
+      if (index === 0) {
+        startCoverAnimation();
+      } else {
+        stopCoverAnimation();
+      }
+    }
+
+    // ==================== Three.js Interactive Creation Scenes ====================
+    const threeScenes = {};
+    let activeSceneUpdater = null;
+
+    function setupDrag(container, targetGroup) {
+      let isDragging = false;
+      let prevX = 0, prevY = 0;
+
+      container.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        prevX = e.clientX;
+        prevY = e.clientY;
+        container.setPointerCapture(e.pointerId);
+      });
+
+      container.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - prevX;
+        const dy = e.clientY - prevY;
+        prevX = e.clientX;
+        prevY = e.clientY;
+        targetGroup.rotation.y += dx * 0.012;
+        targetGroup.rotation.x += dy * 0.012;
+      });
+
+      const endDrag = (e) => {
+        if (isDragging) {
+          isDragging = false;
+          try { container.releasePointerCapture(e.pointerId); } catch(err) {}
+        }
+      };
+      container.addEventListener('pointerup', endDrag);
+      container.addEventListener('pointercancel', endDrag);
+    }
+
+    function createBaseScene(containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return null;
+
+      const w = container.clientWidth || 380;
+      const h = container.clientHeight || 340;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
+      camera.position.set(3.2, 2.5, 3.5);
+      camera.lookAt(0, 0, 0);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+      renderer.setSize(w, h);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      container.appendChild(renderer.domElement);
+
+      // Lights
+      const ambLight = new THREE.AmbientLight(0xffedd5, 0.9);
+      scene.add(ambLight);
+      const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.25);
+      dirLight1.position.set(5, 7, 5);
+      scene.add(dirLight1);
+      const dirLight2 = new THREE.DirectionalLight(0x0284c7, 0.45);
+      dirLight2.position.set(-4, -3, -3);
+      scene.add(dirLight2);
+
+      const group = new THREE.Group();
+      scene.add(group);
+
+      // Mini Coordinate Axes in Scene
+      const axesHelper = new THREE.AxesHelper(1.6);
+      group.add(axesHelper);
+
+      setupDrag(container, group);
+
+      return { container, scene, camera, renderer, group, w, h };
+    }
+
+    // 1. Surface Step 1: Point Cloud Sampling
+    function initSurfStep1() {
+      const base = createBaseScene('stage-surf-step1');
+      if (!base) return null;
+
+      const uSegs = 18, vSegs = 18;
+      const dotGeom = new THREE.SphereGeometry(0.045, 8, 8);
+      const dotMat = new THREE.MeshStandardMaterial({
+        color: 0x0d9488,
+        emissive: 0x0f766e,
+        emissiveIntensity: 0.35,
+        roughness: 0.3
+      });
+
+      const dotsGroup = new THREE.Group();
+      base.group.add(dotsGroup);
+
+      for (let i = 0; i <= uSegs; i++) {
+        const u = (i / uSegs) * 2 - 1;
+        for (let j = 0; j <= vSegs; j++) {
+          const v = (j / vSegs) * 2 - 1;
+          const x = u * 1.5;
+          const z = v * 1.5;
+          const y = (u * u - v * v) * 0.65;
+          const dot = new THREE.Mesh(dotGeom, dotMat);
+          dot.position.set(x, y, z);
+          dotsGroup.add(dot);
+        }
+      }
+
+      return function update(time) {
+        dotsGroup.rotation.y += 0.006;
+        dotsGroup.rotation.x = Math.sin(time * 0.001) * 0.08 + 0.1;
+        base.renderer.render(base.scene, base.camera);
+      };
+    }
+
+    // 2. Surface Step 2: Isoline Curves Network
+    function initSurfStep2() {
+      const base = createBaseScene('stage-surf-step2');
+      if (!base) return null;
+
+      const uSegs = 18, vSegs = 18;
+      function evalSaddle(u, v) {
+        return new THREE.Vector3(u * 1.5, (u * u - v * v) * 0.65, v * 1.5);
+      }
+
+      const isoGroup = new THREE.Group();
+      base.group.add(isoGroup);
+
+      // Sample points
+      const pGeom = new THREE.SphereGeometry(0.03, 6, 6);
+      const pMat = new THREE.MeshBasicMaterial({ color: 0x0d9488 });
+      // Isolines
+      const linePositions = [];
+      for (let i = 0; i <= uSegs; i++) {
+        const u = (i / uSegs) * 2 - 1;
+        for (let j = 0; j < vSegs; j++) {
+          const p1 = evalSaddle(u, (j / vSegs) * 2 - 1);
+          const p2 = evalSaddle(u, ((j + 1) / vSegs) * 2 - 1);
+          linePositions.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+        }
+      }
+      for (let j = 0; j <= vSegs; j++) {
+        const v = (j / vSegs) * 2 - 1;
+        for (let i = 0; i < uSegs; i++) {
+          const p1 = evalSaddle((i / uSegs) * 2 - 1, v);
+          const p2 = evalSaddle(((i + 1) / uSegs) * 2 - 1, v);
+          linePositions.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+        }
+      }
+
+      const lGeom = new THREE.BufferGeometry();
+      lGeom.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+      const lMat = new THREE.LineBasicMaterial({ color: 0x0f766e, linewidth: 1.8 });
+      isoGroup.add(new THREE.LineSegments(lGeom, lMat));
+
+      return function update(time) {
+        isoGroup.rotation.y += 0.006;
+        isoGroup.rotation.x = Math.sin(time * 0.001) * 0.08 + 0.1;
+        base.renderer.render(base.scene, base.camera);
+      };
+    }
+
+    // 3. Surface Step 3: Continuous Smooth Shaded Surface with Normals
+    function initSurfStep3() {
+      const base = createBaseScene('stage-surf-step3');
+      if (!base) return null;
+
+      const uSegs = 20, vSegs = 20;
+      function evalSaddle(u, v) {
+        return new THREE.Vector3(u * 1.5, (u * u - v * v) * 0.65, v * 1.5);
+      }
+
+      const geom = new THREE.BufferGeometry();
+      const pos = [], uvs = [], indices = [];
+
+      for (let i = 0; i <= uSegs; i++) {
+        const u = (i / uSegs) * 2 - 1;
+        for (let j = 0; j <= vSegs; j++) {
+          const v = (j / vSegs) * 2 - 1;
+          const p = evalSaddle(u, v);
+          pos.push(p.x, p.y, p.z);
+          uvs.push(i / uSegs, j / vSegs);
+        }
+      }
+      for (let i = 0; i < uSegs; i++) {
+        for (let j = 0; j < vSegs; j++) {
+          const a = i * (vSegs + 1) + j;
+          const b = (i + 1) * (vSegs + 1) + j;
+          const c = (i + 1) * (vSegs + 1) + (j + 1);
+          const d = i * (vSegs + 1) + (j + 1);
+          indices.push(a, b, d);
+          indices.push(b, c, d);
+        }
+      }
+
+      geom.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      geom.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+      geom.setIndex(indices);
+      geom.computeVertexNormals();
+
+      const surfMat = new THREE.MeshStandardMaterial({
+        color: 0x20b2aa,
+        roughness: 0.28,
+        metalness: 0.15,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.88
+      });
+      const surfMesh = new THREE.Mesh(geom, surfMat);
+      base.group.add(surfMesh);
+
+      // Wireframe on surface
+      const wire = new THREE.LineSegments(new THREE.WireframeGeometry(geom), new THREE.LineBasicMaterial({ color: 0x134e4a, transparent: true, opacity: 0.35 }));
+      base.group.add(wire);
+
+      // Normal vector arrows
+      const normGroup = new THREE.Group();
+      base.group.add(normGroup);
+      const step = 4;
+      for (let i = 2; i < uSegs; i += step) {
+        const u = (i / uSegs) * 2 - 1;
+        for (let j = 2; j < vSegs; j += step) {
+          const v = (j / vSegs) * 2 - 1;
+          const p = evalSaddle(u, v);
+          // Partial derivatives
+          const Tu = new THREE.Vector3(1.5, 2 * u * 0.65, 0);
+          const Tv = new THREE.Vector3(0, -2 * v * 0.65, 1.5);
+          const n = new THREE.Vector3().crossVectors(Tu, Tv).normalize();
+          const arrow = new THREE.ArrowHelper(n, p, 0.35, 0xfacc15, 0.08, 0.05);
+          normGroup.add(arrow);
+        }
+      }
+
+      return function update(time) {
+        base.group.rotation.y += 0.006;
+        base.group.rotation.x = Math.sin(time * 0.001) * 0.08 + 0.1;
+        base.renderer.render(base.scene, base.camera);
+      };
+    }
+
+    // 4. B-Rep Step 1: 8 Vertices
+    function initBRepStep1() {
+      const base = createBaseScene('stage-brep-step1');
+      if (!base) return null;
+
+      const w = 1.1, d = 0.8, h = 0.9;
+      const corners = [
+        new THREE.Vector3(-w, -d, -h), new THREE.Vector3(w, -d, -h),
+        new THREE.Vector3(w, d, -h),   new THREE.Vector3(-w, d, -h),
+        new THREE.Vector3(-w, -d, h),  new THREE.Vector3(w, -d, h),
+        new THREE.Vector3(w, d, h),    new THREE.Vector3(-w, d, h)
+      ];
+
+      const vGeom = new THREE.SphereGeometry(0.09, 16, 16);
+      const vMat = new THREE.MeshStandardMaterial({
+        color: 0xff6f61,
+        emissive: 0xe11d48,
+        emissiveIntensity: 0.3,
+        roughness: 0.2
+      });
+
+      const vGroup = new THREE.Group();
+      base.group.add(vGroup);
+      corners.forEach((p, idx) => {
+        const s = new THREE.Mesh(vGeom, vMat);
+        s.position.copy(p);
+        vGroup.add(s);
+      });
+
+      return function update(time) {
+        vGroup.rotation.y += 0.007;
+        vGroup.rotation.x = Math.sin(time * 0.001) * 0.08 + 0.12;
+        base.renderer.render(base.scene, base.camera);
+      };
+    }
+
+    // 5. B-Rep Step 2: 12 Edges
+    function initBRepStep2() {
+      const base = createBaseScene('stage-brep-step2');
+      if (!base) return null;
+
+      const w = 1.1, d = 0.8, h = 0.9;
+      const corners = [
+        new THREE.Vector3(-w, -d, -h), new THREE.Vector3(w, -d, -h),
+        new THREE.Vector3(w, d, -h),   new THREE.Vector3(-w, d, -h),
+        new THREE.Vector3(-w, -d, h),  new THREE.Vector3(w, -d, h),
+        new THREE.Vector3(w, d, h),    new THREE.Vector3(-w, d, h)
+      ];
+
+      const edgeIdxs = [
+        [0,1], [1,2], [2,3], [3,0],
+        [4,5], [5,6], [6,7], [7,4],
+        [0,4], [1,5], [2,6], [3,7]
+      ];
+
+      const edgePositions = [];
+      edgeIdxs.forEach(([s, e]) => {
+        edgePositions.push(corners[s].x, corners[s].y, corners[s].z, corners[e].x, corners[e].y, corners[e].z);
+      });
+
+      const eGeom = new THREE.BufferGeometry();
+      eGeom.setAttribute('position', new THREE.Float32BufferAttribute(edgePositions, 3));
+      const eMat = new THREE.LineBasicMaterial({ color: 0x1178a6, linewidth: 3.5 });
+
+      const eLine = new THREE.LineSegments(eGeom, eMat);
+      base.group.add(eLine);
+
+      // Vertices
+      const vGeom = new THREE.SphereGeometry(0.065, 12, 12);
+      const vMat = new THREE.MeshStandardMaterial({ color: 0xff6f61, roughness: 0.2 });
+      corners.forEach(p => {
+        const s = new THREE.Mesh(vGeom, vMat);
+        s.position.copy(p);
+        base.group.add(s);
+      });
+
+      return function update(time) {
+        base.group.rotation.y += 0.007;
+        base.group.rotation.x = Math.sin(time * 0.001) * 0.08 + 0.12;
+        base.renderer.render(base.scene, base.camera);
+      };
+    }
+
+    // 6. B-Rep Step 3: 6 Closed Faces & Outward Normals
+    function initBRepStep3() {
+      const base = createBaseScene('stage-brep-step3');
+      if (!base) return null;
+
+      const w = 1.1, d = 0.8, h = 0.9;
+      const boxGeom = new THREE.BoxGeometry(w * 2, d * 2, h * 2);
+
+      const faceMat = new THREE.MeshStandardMaterial({
+        color: 0x7dd3fc,
+        roughness: 0.25,
+        metalness: 0.1,
+        transparent: true,
+        opacity: 0.76,
+        side: THREE.DoubleSide
+      });
+      const boxMesh = new THREE.Mesh(boxGeom, faceMat);
+      base.group.add(boxMesh);
+
+      // Solid wire edges
+      const edgeGeom = new THREE.EdgesGeometry(boxGeom);
+      const edgeMat = new THREE.LineBasicMaterial({ color: 0x0369a1, linewidth: 2.5 });
+      base.group.add(new THREE.LineSegments(edgeGeom, edgeMat));
+
+      // Outward Normals
+      const normalArrows = [
+        new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(w, 0, 0), 0.55, 0xfacc15, 0.12, 0.07),
+        new THREE.ArrowHelper(new THREE.Vector3(-1, 0, 0), new THREE.Vector3(-w, 0, 0), 0.55, 0xfacc15, 0.12, 0.07),
+        new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, d, 0), 0.55, 0xfacc15, 0.12, 0.07),
+        new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, -d, 0), 0.55, 0xfacc15, 0.12, 0.07),
+        new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, h), 0.55, 0xfacc15, 0.12, 0.07),
+        new THREE.ArrowHelper(new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, 0, -h), 0.55, 0xfacc15, 0.12, 0.07)
+      ];
+      normalArrows.forEach(a => base.group.add(a));
+
+      return function update(time) {
+        base.group.rotation.y += 0.007;
+        base.group.rotation.x = Math.sin(time * 0.001) * 0.08 + 0.12;
+        base.renderer.render(base.scene, base.camera);
+      };
+    }
+
+    // 7. Mesh Step 1: 5 Vertices in Buffer
+    function initMeshStep1() {
+      const base = createBaseScene('stage-mesh-step1');
+      if (!base) return null;
+
+      const w = 1.1, d = 1.1, h = 1.35;
+      const pts = [
+        new THREE.Vector3(-w, -0.6, -d),
+        new THREE.Vector3(w, -0.6, -d),
+        new THREE.Vector3(w, -0.6, d),
+        new THREE.Vector3(-w, -0.6, d),
+        new THREE.Vector3(0, -0.6 + h, 0) // Apex
+      ];
+
+      const nodeGeom = new THREE.SphereGeometry(0.08, 14, 14);
+      const nodeMat = new THREE.MeshStandardMaterial({
+        color: 0x10b981,
+        emissive: 0x059669,
+        emissiveIntensity: 0.35,
+        roughness: 0.2
+      });
+
+      const grp = new THREE.Group();
+      base.group.add(grp);
+      pts.forEach(p => {
+        const s = new THREE.Mesh(nodeGeom, nodeMat);
+        s.position.copy(p);
+        grp.add(s);
+      });
+
+      return function update(time) {
+        grp.rotation.y += 0.007;
+        grp.rotation.x = Math.sin(time * 0.001) * 0.08 + 0.1;
+        base.renderer.render(base.scene, base.camera);
+      };
+    }
+
+    // 8. Mesh Step 2: Face Index & Triangulation Lines
+    function initMeshStep2() {
+      const base = createBaseScene('stage-mesh-step2');
+      if (!base) return null;
+
+      const w = 1.1, d = 1.1, h = 1.35;
+      const pts = [
+        new THREE.Vector3(-w, -0.6, -d),
+        new THREE.Vector3(w, -0.6, -d),
+        new THREE.Vector3(w, -0.6, d),
+        new THREE.Vector3(-w, -0.6, d),
+        new THREE.Vector3(0, -0.6 + h, 0)
+      ];
+
+      const lines = [
+        // Base quad
+        pts[0], pts[1], pts[1], pts[2], pts[2], pts[3], pts[3], pts[0],
+        // Triangulation diagonal
+        pts[0], pts[2],
+        // 4 side triangles to apex
+        pts[0], pts[4], pts[1], pts[4], pts[2], pts[4], pts[3], pts[4]
+      ];
+
+      const lPositions = [];
+      lines.forEach(p => lPositions.push(p.x, p.y, p.z));
+
+      const lGeom = new THREE.BufferGeometry();
+      lGeom.setAttribute('position', new THREE.Float32BufferAttribute(lPositions, 3));
+      const lMat = new THREE.LineBasicMaterial({ color: 0xb45309, linewidth: 2.4 });
+      base.group.add(new THREE.LineSegments(lGeom, lMat));
+
+      // Nodes
+      const nodeGeom = new THREE.SphereGeometry(0.065, 10, 10);
+      const nodeMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.2 });
+      pts.forEach(p => {
+        const s = new THREE.Mesh(nodeGeom, nodeMat);
+        s.position.copy(p);
+        base.group.add(s);
+      });
+
+      return function update(time) {
+        base.group.rotation.y += 0.007;
+        base.group.rotation.x = Math.sin(time * 0.001) * 0.08 + 0.1;
+        base.renderer.render(base.scene, base.camera);
+      };
+    }
+
+    // 9. Mesh Step 3: Flat Shading Facets
+    function initMeshStep3() {
+      const base = createBaseScene('stage-mesh-step3');
+      if (!base) return null;
+
+      const w = 1.1, d = 1.1, h = 1.35;
+      const pts = [
+        new THREE.Vector3(-w, -0.6, -d), // 0
+        new THREE.Vector3(w, -0.6, -d),  // 1
+        new THREE.Vector3(w, -0.6, d),   // 2
+        new THREE.Vector3(-w, -0.6, d),  // 3
+        new THREE.Vector3(0, -0.6 + h, 0)// 4 Apex
+      ];
+
+      const geom = new THREE.BufferGeometry();
+      const pos = [];
+      // 6 triangles (2 for base + 4 for sides)
+      function addTri(a, b, c) {
+        pos.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+      }
+      addTri(pts[0], pts[1], pts[4]);
+      addTri(pts[1], pts[2], pts[4]);
+      addTri(pts[2], pts[3], pts[4]);
+      addTri(pts[3], pts[0], pts[4]);
+      addTri(pts[0], pts[2], pts[1]);
+      addTri(pts[0], pts[3], pts[2]);
+
+      geom.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      geom.computeVertexNormals();
+
+      const meshMat = new THREE.MeshStandardMaterial({
+        color: 0xf5deb3,
+        roughness: 0.35,
+        metalness: 0.08,
+        flatShading: true,
+        side: THREE.DoubleSide
+      });
+      const meshObj = new THREE.Mesh(geom, meshMat);
+      base.group.add(meshObj);
+
+      // Edge outline
+      const wire = new THREE.LineSegments(new THREE.WireframeGeometry(geom), new THREE.LineBasicMaterial({ color: 0x78350f, linewidth: 2 }));
+      base.group.add(wire);
+
+      return function update(time) {
+        base.group.rotation.y += 0.007;
+        base.group.rotation.x = Math.sin(time * 0.001) * 0.08 + 0.1;
+        base.renderer.render(base.scene, base.camera);
+      };
+    }
+
+    // Mapping slide indices (0-based) to Three.js scenes
+    // Slide 7 (idx 6): Surf step 1
+    // Slide 8 (idx 7): Surf step 2
+    // Slide 9 (idx 8): Surf step 3
+    // Slide 12 (idx 11): B-Rep step 1
+    // Slide 13 (idx 12): B-Rep step 2
+    // Slide 14 (idx 13): B-Rep step 3
+    // Slide 17 (idx 16): Mesh step 1
+    // Slide 18 (idx 17): Mesh step 2
+    // Slide 19 (idx 18): Mesh step 3
+    const sceneCreators = {
+      6: { id: 'surf_step1', init: initSurfStep1 },
+      7: { id: 'surf_step2', init: initSurfStep2 },
+      8: { id: 'surf_step3', init: initSurfStep3 },
+      11: { id: 'brep_step1', init: initBRepStep1 },
+      12: { id: 'brep_step2', init: initBRepStep2 },
+      13: { id: 'brep_step3', init: initBRepStep3 },
+      16: { id: 'mesh_step1', init: initMeshStep1 },
+      17: { id: 'mesh_step2', init: initMeshStep2 },
+      18: { id: 'mesh_step3', init: initMeshStep3 }
+    };
+
+    function updateActiveThreeScene(slideIndex) {
+      activeSceneUpdater = null;
+      const config = sceneCreators[slideIndex];
+      if (config) {
+        if (!threeScenes[config.id]) {
+          threeScenes[config.id] = config.init();
+        }
+        activeSceneUpdater = threeScenes[config.id];
+      }
+    }
+
+    function mainAnimationLoop(time) {
+      requestAnimationFrame(mainAnimationLoop);
+      if (activeSceneUpdater) {
+        activeSceneUpdater(time);
+      }
+    }
+    requestAnimationFrame(mainAnimationLoop);
+
+    // Initial check
+    setTimeout(() => {
+      startCoverAnimation();
+      updateActiveThreeScene(0);
+    }, 400);
+  </script>
+</body>
+</html>
