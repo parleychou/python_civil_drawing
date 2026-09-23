@@ -5,7 +5,7 @@
 [English](README.md) | [中文](README_ZH.md)
 
 🌐 **官方课程主页**：[https://drawing.python.venchy.online/](https://drawing.python.venchy.online/)  
-📺 **B 站个人空间**：[parleychou](https://space.bilibili.com/517887865)  
+📺 **B 站个人空间**：[非解构](https://space.bilibili.com/517887865)  
 🔴 **历次直播与录屏回放**：[https://drawing.python.venchy.online/live/](https://drawing.python.venchy.online/live/)
 
 本项目包含专为土木与工程设计人员打造的 Python 计算几何、三维实体表达与三维渲染全套课件与源码。

@@ -5,7 +5,7 @@
 [English](README.md) | [中文](README_ZH.md)
 
 🌐 **Official Course Website**: [https://drawing.python.venchy.online/](https://drawing.python.venchy.online/)  
-📺 **Bilibili Space & Channel**: [parleychou](https://space.bilibili.com/517887865)  
+📺 **Bilibili Space & Channel**: [非解构](https://space.bilibili.com/517887865)  
 🔴 **Live Sessions & Replays**: [https://drawing.python.venchy.online/live/](https://drawing.python.venchy.online/live/)
 
 This repository contains comprehensive course slides and production-ready source code tailored for civil engineers, structural designers, and AEC professionals looking to master 3D computational geometry, parametric surface generation, boundary representations (B-Rep), and 3D rendering with PyVista and Three.js.
