@@ -6,6 +6,13 @@
 
 import sys
 from pathlib import Path
+_SCRIPTS_DIR = Path(__file__).resolve().parent.parent / "scripts"
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
+
+
+import sys
+from pathlib import Path
 
 # 动态寻找第 04 章的脚本目录，以便导入公共的 RenderEngine
 def find_chapter_scripts(prefix: str) -> Path:

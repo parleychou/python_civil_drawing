@@ -8,6 +8,13 @@
 参数坐标 (u, v) 与其计算出的空间三维坐标 (x, y, z)，说明参数曲面采样的原理。
 """
 
+import sys
+from pathlib import Path
+_SCRIPTS_DIR = Path(__file__).resolve().parent.parent / "scripts"
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
+
+
 import math
 import sys
 from pathlib import Path

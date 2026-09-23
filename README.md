@@ -47,26 +47,34 @@ All slides are built with HTML5, responsive styling, and embedded Three.js 3D in
 
 ```text
 python_civil_drawing/
-├── scripts/     # All consolidated Python source code, geometry primitives, and tests
+├── scripts/     # Pure geometry data classes & RenderEngine core system
+├── examples/    # Real-world object creation, scenes, and library practices
+├── test/        # Unit test suite powered by pytest
 ├── slides/      # Interactive HTML5 + Three.js slide presentations
 ├── README.md    # English documentation (default)
 └── README_ZH.md # Chinese documentation
 ```
 
-### 1. Source Code (`scripts/`)
-Organized as a unified, flat directory for ease of learning and execution:
-- **03 Essential Libraries**: Vector mathematics (`numpy`), 2D technical plotting (`matplotlib`), tabular quantities (`pandas`), Excel workbook generation (`openpyxl`), spatial distance computation (`scipy`), 3D viewport rendering (`pyvista`), CAD solid modeling (`build123d`), DXF drawing export (`ezdxf`), 2D geometric intersections (`shapely`).
-- **04 3D Rendering Engine**: PyVista viewport management, custom camera controls, multi-view layouts, and the reusable `RenderEngine` class.
-- **05 Geometric Primitives**: Unified `GeometryData` abstract base class, 3D point (`Point3D`), 3D vector (`Vector3D`), local coordinate system (`CoordinateSystem3D`), line segment (`Line3D`), plane (`Plane3D`), circle (`Circle3D`), and arc (`Arc3D`).
-- **06 Surface & Body Representations**:
-  - **Parametric Surface**: `ParametricSurfaceData`, hyperbolic paraboloid (saddle roof), and parametric sphere.
-  - **Boundary Representation (B-Rep)**: `BrepData` with explicit vertex, edge, and face topological connectivity (box/cube generation).
-  - **Polygon Mesh**: `MeshData` with indexed vertices and polygonal faces (pyramid mesh).
-  - **Multi-Object Scene**: `07_render_surface_brep_mesh_scene.py` side-by-side interactive 3D comparison.
-### 2. Unit Tests (`test/`)
+### 1. Pure Geometry & Render Core (`scripts/`)
+A pure, self-contained geometry and rendering kernel where all geometric types inherit from `GeometryData`:
+- **Base Abstraction**: `_base.py` (`GeometryData(ABC)`, `CurveData`, `SurfaceData`)
+- **0D-1D Geometric Primitives**: `Point3D`, `Vector3D`, `CoordinateSystem3D`, `Line3D`, `Plane3D`, `Circle3D`, `Arc3D`, `Curve`
+- **2D Parametric Surfaces**: `ParametricSurfaceData`, `HyperbolicParaboloid` (saddle surface), `SphereSurface`
+- **3D Topologies (B-Rep & Mesh)**: `BrepData` (Euler topological connectivity), `MeshData` (indexed vertex buffer & polygon faces), `factories.py`
+- **Rendering Engine**: `RenderEngine` (PyVista-based multi-viewport rendering, camera management, coordinate axes)
+- **Package Facades**: `geometry_primitives.py`, `brep_primitives.py`, `geometry_data.py`, `brep_mesh_rendering.py`
+
+### 2. Examples & Real Object Creation (`examples/`)
+Runnable demonstration scripts that use the core geometry system or third-party tools:
+- **Surface, B-Rep & Mesh Demonstrations**: `01_create_surface_example.py` ~ `07_render_surface_brep_mesh_scene.py`
+- **Primitive Scene Rendering**: `05_render_geometry_scene.py`, `07_render_points_and_curves.py`
+- **Structural Object Modeling**: `02_render_beam_cube.py`, `06_pyvista_beam_cube.py`
+- **Essential Library Tutorials**: NumPy, Matplotlib, Pandas, openpyxl, SciPy, build123d, ezdxf, Shapely
+
+### 3. Unit Tests (`test/`)
 Dedicated test directory powered by `pytest`:
-- `test_geometry_data.py`: Unit tests for Chapter 05 geometric primitives (Point, Vector, CoordinateSystem, Line, Plane, Circle, Arc).
-- `test_brep_mesh_rendering.py`: Unit tests for Chapter 06 Surface, B-Rep, and Mesh data structures, topological validity, and PyVista conversion.
+- `test_geometry_data.py`: Unit tests for Chapter 05 geometric primitives.
+- `test_brep_mesh_rendering.py`: Unit tests for Chapter 06 Surface, B-Rep, and Mesh structures and rendering.
 
 ---
 
@@ -87,11 +95,11 @@ pytest test/
 ### Run Demos
 ```bash
 # Launch side-by-side comparison: Surface vs B-Rep vs Mesh
-python scripts/07_render_surface_brep_mesh_scene.py
+python examples/07_render_surface_brep_mesh_scene.py
 
 # Launch 3D point, vector, and coordinate system scene
-python scripts/05_render_geometry_scene.py
+python examples/05_render_geometry_scene.py
 
 # Launch hyperbolic paraboloid (saddle surface) renderer
-python scripts/02_render_surface_marked.py
+python examples/02_render_surface_marked.py
 ```

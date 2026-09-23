@@ -47,23 +47,31 @@
 
 ```text
 python_civil_drawing/
-├── scripts/     # 全部工程源码与核心几何库（单一目录扁平化组织）
+├── scripts/     # 纯几何内核与 RenderEngine 基础渲染系统
+├── examples/    # 实际对象建模、综合场景渲染与第三方库实操代码
+├── test/        # pytest 单元测试目录
 ├── slides/      # 各章节交互式 HTML 幻灯片课件与三维可视化演示
 ├── README.md    # 英文文档（默认）
 └── README_ZH.md # 中文文档
 ```
 
-### 1. 核心代码 (`scripts/`)
-涵盖从基础工程计算库到参数化几何体与拓扑表达：
-- **03 常用库入门**：Numpy 向量计算、Matplotlib 二维图、Pandas 表格、OpenPyxl 数据导出、SciPy 距离矩阵、PyVista 视口、build123d 实体、ezdxf 制图、Shapely 几何相交。
-- **04 渲染引擎封装**：PyVista 多视口初始化、坐标系、光照背景配置与 `RenderEngine` 交互类。
-- **05 基础几何表达**：`GeometryData` 统一抽象基类，点 (`Point3D`)、向量 (`Vector3D`)、坐标系 (`CoordinateSystem3D`)、线段 (`Line3D`)、平面 (`Plane3D`)、圆 (`Circle3D`) 与圆弧 (`Arc3D`)。
-- **06 面和体的表达方式**：
-  - 参数化曲面 (`ParametricSurfaceData`, 双曲抛物面/马鞍面、球面)
-  - 边界表示法 (`BrepData`, 长方体/立方体精确拓扑)
-  - 多边形网格 (`MeshData`, 四棱锥网格)
-  - 对比渲染场景 (`07_render_surface_brep_mesh_scene.py`)
-### 2. 单元测试 (`test/`)
+### 1. 纯几何与渲染内核 (`scripts/`)
+高度内聚的纯几何与渲染引擎体系，所有几何对象均继承自 `GeometryData`：
+- **基类抽象**：`_base.py` (`GeometryData(ABC)`, `CurveData`, `SurfaceData`)
+- **0D-1D 几何图元**：`Point3D`、`Vector3D`、`CoordinateSystem3D`、`Line3D`、`Plane3D`、`Circle3D`、`Arc3D`、`Curve`
+- **2D 参数化曲面**：`ParametricSurfaceData`、`HyperbolicParaboloid`（马鞍面）、`SphereSurface`（球面）
+- **3D 实体与网格**：`BrepData`（欧拉拓扑边界表示）、`MeshData`（离散多边形网格）、`factories.py`
+- **渲染引擎**：`RenderEngine`（基于 PyVista 的多视口调度、相机预设与坐标轴渲染）
+- **统一导出接口**：`geometry_primitives.py`、`brep_primitives.py`、`geometry_data.py`、`brep_mesh_rendering.py`
+
+### 2. 示例与实物建模 (`examples/`)
+基于纯几何内核构建实际结构对象与功能验证的脚本：
+- **曲面、B-Rep 与网格构建渲染**：`01_create_surface_example.py` ~ `07_render_surface_brep_mesh_scene.py`
+- **图元与点线场景渲染**：`05_render_geometry_scene.py`、`07_render_points_and_curves.py`
+- **梁立方体建模**：`02_render_beam_cube.py`、`06_pyvista_beam_cube.py`
+- **第三方库实操教学**：NumPy、Matplotlib、Pandas、openpyxl、SciPy、build123d、ezdxf、Shapely
+
+### 3. 单元测试 (`test/`)
 独立测试目录，使用 `pytest` 运行：
 - `test_geometry_data.py`：第 05 章基础几何类型（点、向量、坐标系、线、面、圆、弧）单元测试。
 - `test_brep_mesh_rendering.py`：第 06 章曲面、B-Rep、Mesh 数据结构与拓扑、PyVista 转换测试。
@@ -87,11 +95,11 @@ pytest test/
 ### 运行示例脚本
 ```bash
 # 启动曲面、B-Rep、Mesh 三合一三维对比渲染视口
-python scripts/07_render_surface_brep_mesh_scene.py
+python examples/07_render_surface_brep_mesh_scene.py
 
 # 启动点、向量与三维坐标系渲染演示
-python scripts/05_render_geometry_scene.py
+python examples/05_render_geometry_scene.py
 
 # 启动双曲抛物面 (马鞍面) 渲染
-python scripts/02_render_surface_marked.py
+python examples/02_render_surface_marked.py
 ```
