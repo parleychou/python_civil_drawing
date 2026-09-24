@@ -19,6 +19,10 @@
       --rose-light: #ffe4e6;
       --amber: #d97706;
       --amber-light: #fef3c7;
+      --purple: #8b5cf6;
+      --purple-light: #ede9fe;
+      --green: #10b981;
+      --green-light: #d1fae5;
       --navy: #0f172a;
       --radius: 12px;
       --shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
@@ -93,6 +97,7 @@
     }
     .tag-blue { background: var(--blue-light); color: var(--blue); }
     .tag-amber { background: var(--amber-light); color: var(--amber); }
+    .tag-purple { background: var(--purple-light); color: var(--purple); }
     .tag-rose { background: var(--rose-light); color: var(--rose); }
 
     .card-header h2 {
@@ -277,6 +282,77 @@
     .code-mini .fn { color: #fbbf24; }
     .code-mini .cmt { color: #94a3b8; font-style: italic; }
 
+    /* ================= SOLID PRINCIPLES CARDS ================= */
+    .solid-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      margin: 18px 0;
+    }
+    .solid-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      background: #ffffff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+    .solid-card.s-card { border-top: 4px solid var(--green); }
+    .solid-card.o-card { border-top: 4px solid var(--blue); }
+    .solid-card.l-card { border-top: 4px solid var(--purple); }
+    .solid-card.i-card { border-top: 4px solid var(--amber); }
+    .solid-card.d-card { border-top: 4px solid var(--rose); }
+
+    .solid-header {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .solid-letter {
+      font-size: 26px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .s-card .solid-letter { color: var(--green); }
+    .o-card .solid-letter { color: var(--blue); }
+    .l-card .solid-letter { color: var(--purple); }
+    .i-card .solid-letter { color: var(--amber); }
+    .d-card .solid-letter { color: var(--rose); }
+
+    .solid-name {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .solid-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      display: block;
+    }
+    .solid-metaphor {
+      background: #f8fafc;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12.5px;
+      color: #334155;
+      margin-bottom: 8px;
+      line-height: 1.45;
+    }
+    .solid-metaphor strong {
+      color: var(--navy);
+    }
+    .solid-code-note {
+      font-size: 12px;
+      color: #475569;
+      line-height: 1.45;
+    }
+    .solid-code-note code {
+      font-family: monospace;
+      color: #0369a1;
+      font-size: 11px;
+    }
+
     /* Summary Bar */
     .summary-box {
       background: #f1f5f9;
@@ -294,7 +370,7 @@
   <header class="hero">
     <div class="badge">土木人的 Python 课 · 极简架构图解</div>
     <h1>代码结构与面向对象 (OOP) 快速看懂指南</h1>
-    <p>专为土木工程师定制：一张结构总图 + 两个学习步骤，彻底搞懂 <code>src/</code> 底层如何用类表达曲面与实体</p>
+    <p>专为土木工程师定制：一张结构总图 + 两个学习步骤 + SOLID 五大原则，彻底搞懂 <code>src/</code> 底层如何用类表达曲面与实体</p>
   </header>
 
   <div class="main">
@@ -430,7 +506,7 @@
         <div class="metaphor-box">
           <h4>🏗️ 父类与子类 (Inheritance)</h4>
           <span class="python-term">class 子类(父类):</span>
-          <p><strong>＝ 标准底盘与定制构件</strong><br>父类预制了通用通用水电管线（采样与渲染），子类只需专注写出专属的受力公式即可，不用重复造轮子。</p>
+          <p><strong>＝ 标准底盘与定制构件</strong><br>父类预制了通用通用管线（采样与渲染），子类只需专注写出专属的受力公式即可，不用重复造轮子。</p>
         </div>
         <div class="metaphor-box">
           <h4>🏗️ 多态性 (Polymorphism)</h4>
@@ -546,11 +622,114 @@ mesh = create_pyramid_mesh(w, d, h)
       </div>
     </section>
 
-    <!-- Section 3: Summary -->
+    <!-- Section 3: SOLID Principles -->
+    <section class="card">
+      <div class="card-header">
+        <span class="tag tag-purple">架构心法</span>
+        <h2>3. 面向对象 SOLID 五大设计原则（土木工程实战图解）</h2>
+      </div>
+      <p style="font-size: 14.5px; color: var(--muted); margin-bottom: 16px;">
+        SOLID 是全球软件工业的五大黄金法则。在我们的 <code>src/</code> 几何库中，处处都是 SOLID 原则的生动体现。结合土木设计与施工类比，一次性彻底搞懂：
+      </p>
+
+      <div class="solid-grid">
+        <!-- S -->
+        <div class="solid-card s-card">
+          <div class="solid-header">
+            <span class="solid-letter">S</span>
+            <div>
+              <div class="solid-name">单一职责原则</div>
+              <span class="solid-subtitle">Single Responsibility</span>
+            </div>
+          </div>
+          <div class="solid-metaphor">
+            <strong>💡 土木类比：</strong><br>梁只管承重，塔吊只管垂直吊装。构件与施工机具严格分工。
+          </div>
+          <div class="solid-code-note">
+            <strong>📁 源码落地：</strong><br>
+            <code>BrepData</code> 纯粹存储几何拓扑；<code>RenderEngine</code> 专门负责打光与三维视口。数据与显示解耦，更换渲染引擎绝不破坏几何本身。
+          </div>
+        </div>
+
+        <!-- O -->
+        <div class="solid-card o-card">
+          <div class="solid-header">
+            <span class="solid-letter">O</span>
+            <div>
+              <div class="solid-name">开闭原则</div>
+              <span class="solid-subtitle">Open-Closed</span>
+            </div>
+          </div>
+          <div class="solid-metaphor">
+            <strong>💡 土木类比：</strong><br>大楼加装新型幕墙，无需砸毁核心筒剪力墙，预留标准转接件即可。
+          </div>
+          <div class="solid-code-note">
+            <strong>📁 源码落地：</strong><br>
+            需要增加“圆柱面”时，只需新建子类继承 <code>ParametricSurfaceData</code>。核心基类 <code>_base.py</code> 和 <code>RenderEngine</code> <strong>零修改</strong>！
+          </div>
+        </div>
+
+        <!-- L -->
+        <div class="solid-card l-card">
+          <div class="solid-header">
+            <span class="solid-letter">L</span>
+            <div>
+              <div class="solid-name">里氏替换原则</div>
+              <span class="solid-subtitle">Liskov Substitution</span>
+            </div>
+          </div>
+          <div class="solid-metaphor">
+            <strong>💡 土木类比：</strong><br>标准预制叠合梁无缝替换现浇梁。只要支座接口与标高一致，结构永不坍塌。
+          </div>
+          <div class="solid-code-note">
+            <strong>📁 源码落地：</strong><br>
+            调度器接收父类 <code>GeometryData</code>，传入 <code>Point3D</code>、<code>Line3D</code>、<code>BrepData</code> 均可透明替换，<code>to_pyvista()</code> 永不报错。
+          </div>
+        </div>
+
+        <!-- I -->
+        <div class="solid-card i-card">
+          <div class="solid-header">
+            <span class="solid-letter">I</span>
+            <div>
+              <div class="solid-name">接口隔离原则</div>
+              <span class="solid-subtitle">Interface Segregation</span>
+            </div>
+          </div>
+          <div class="solid-metaphor">
+            <strong>💡 土木类比：</strong><br>强电插座与自来水龙头分开布设，不要强迫一根水管同时具备通电功能。
+          </div>
+          <div class="solid-code-note">
+            <strong>📁 源码落地：</strong><br>
+            <code>Point3D</code> 只需要坐标；只有曲面才有 <code>u_range, v_range</code>。总基类 <code>GeometryData</code> 绝不把网格划分等臃肿接口强塞给点和线。
+          </div>
+        </div>
+
+        <!-- D -->
+        <div class="solid-card d-card">
+          <div class="solid-header">
+            <span class="solid-letter">D</span>
+            <div>
+              <div class="solid-name">依赖倒置原则</div>
+              <span class="solid-subtitle">Dependency Inversion</span>
+            </div>
+          </div>
+          <div class="solid-metaphor">
+            <strong>💡 土木类比：</strong><br>监理依据国家规范（国标 GB）验收工程，而不是绑定特定水泥小作坊。
+          </div>
+          <div class="solid-code-note">
+            <strong>📁 源码落地：</strong><br>
+            高层渲染调度 <code>RenderEngine</code> 只依赖抽象规范 <code>GeometryData</code>，绝不直接硬编码依赖马鞍面或立方体具体底层细节。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Summary -->
     <section class="card">
       <div class="card-header">
         <span class="tag tag-rose">总结要诀</span>
-        <h2>3. 土木人编程避坑与设计心法</h2>
+        <h2>4. 土木人编程避坑与设计心法</h2>
       </div>
 
       <div class="summary-box">
