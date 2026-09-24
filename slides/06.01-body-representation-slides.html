@@ -1187,27 +1187,72 @@ class MeshData(GeometryData):
             <div class="eyebrow">范式二：边界表示法</div>
             <h2 class="section-title">原理：欧拉公式与几何拓扑严格解耦</h2>
             <p class="lead">B-Rep (Boundary Representation) 的根本公理：“三维实心体由包围它的封闭二维边界表面所唯一确定”。</p>
+
+            <div style="background:#fff6f3; padding:12px 14px; border-left:4px solid var(--coral); border-radius:4px; margin:10px 0;">
+              <div style="font-size:13px; font-weight:700; color:var(--coral); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">
+                拓扑守恒核心方程 (Euler-Poincaré Formula)
+              </div>
+              <div style="font-size:20px; font-weight:bold; color:#991b1b; font-family:'Times New Roman', serif;">
+                <i>V</i> − <i>E</i> + <i>F</i> − <i>R</i> = 2(<i>S</i> − <i>G</i>)
+              </div>
+              <div style="font-size:13px; color:var(--muted); margin-top:4px;">
+                简单无孔单体 (<i>R</i>=0, <i>S</i>=1, <i>G</i>=0)：<strong style="color:var(--ink);"><i>V</i> − <i>E</i> + <i>F</i> = 2</strong>
+              </div>
+            </div>
+
             <ul>
-              <li><strong>欧拉-庞加莱公式</strong>：多面体顶点 <i>V</i>、边 <i>E</i> 与面 <i>F</i> 严格服从拓扑平衡：
-                <span style="font-weight:bold; color:var(--coral); font-size:20px;"><i>V</i> − <i>E</i> + <i>F</i> = 2(1 − <i>g</i>)</span>（简单体 <i>V</i> − <i>E</i> + <i>F</i> = 2）。
+              <li><strong>几何 (Geometry) vs 拓扑 (Topology) 解耦</strong>：
+                <br>• <strong>几何</strong>：点绝对坐标 (<i>x</i>, <i>y</i>, <i>z</i>)、棱线解析方程、曲面形状（决定“在哪里、多大”）；
+                <br>• <strong>拓扑</strong>：Vertex → Edge → Loop → Face → Shell → Solid 连接关系（决定“谁与谁相接”）。
               </li>
-              <li><strong>几何 (Geometry) vs 拓扑 (Topology)</strong>：
-                <br>• <strong>几何</strong>：点坐标 (<i>x</i>, <i>y</i>, <i>z</i>)、棱线方程、表面解析面（定义“在哪里、多大”）；
-                <br>• <strong>拓扑</strong>：Vertex → Edge → Loop (Wire) → Face → Shell → Solid（定义“谁与谁相接”）。
+              <li><strong>法向一致性 (Normal Consistency)</strong>：
+                表面外法向量 <b><i>n</i></b> 严格背离实体内部朝外，是判断空间任意点“体内 / 体外”的绝对充要依据。
               </li>
-              <li><strong>法向一致性</strong>：面外法向量严格背离实体内部朝外，赋予计算机判断“体内/体外”的绝对依据。</li>
+              <li><strong>欧拉操作算子 (Euler Operators)</strong>：
+                工业造型内核通过 <code>mvfs</code>（建立点面体壳）、<code>mev</code>（加边加点）、<code>mef</code>（加边生面）等算子保证每步拓扑变换严格守恒。
+              </li>
             </ul>
           </div>
-          <div class="panel">
-            <h2>以六面体 (长方体 Box) 为例</h2>
-            <p>长方体拥有标准的 B-Rep 拓扑元素结构：</p>
-            <div style="background:#f0f8fa; padding:12px; border-left:4px solid var(--ocean); font-size:16px; margin:10px 0;">
-              • <strong>8 个几何顶点 (Vertex)</strong>：三维角点坐标。<br>
-              • <strong>12 条拓扑棱边 (Edge)</strong>：连接角点的边界线。<br>
-              • <strong>6 个闭合表面 (Face)</strong>：各由 4 条边围合成环。<br>
-              • <strong>欧拉校验</strong>：8 - 12 + 6 = 2（严格守恒）。
+          <div class="panel" style="padding:16px 18px;">
+            <h2 style="font-size:18px; margin-bottom:8px;">欧拉-庞加莱公式参数全解析</h2>
+            <p style="font-size:13px; color:var(--muted); margin-bottom:8px;">B-Rep 实体验证与流形封闭性的数学不变量：</p>
+
+            <table style="width:100%; border-collapse:collapse; font-size:13px; line-height:1.45; margin-bottom:10px;">
+              <tbody>
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:5px 6px; font-weight:bold; color:var(--coral); width:50px; font-family:'Times New Roman', serif; font-size:15px;"><i>V</i></td>
+                  <td style="padding:5px 6px;"><strong>顶点数 (Vertices)</strong>：0 维几何点，角点的绝对三维坐标。</td>
+                </tr>
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:5px 6px; font-weight:bold; color:var(--coral); font-family:'Times New Roman', serif; font-size:15px;"><i>E</i></td>
+                  <td style="padding:5px 6px;"><strong>棱边数 (Edges)</strong>：1 维拓扑边界线，成对的有向半边连接。</td>
+                </tr>
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:5px 6px; font-weight:bold; color:var(--coral); font-family:'Times New Roman', serif; font-size:15px;"><i>F</i></td>
+                  <td style="padding:5px 6px;"><strong>表面数 (Faces)</strong>：2 维闭合外表面片，具备向外的统一法向量。</td>
+                </tr>
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:5px 6px; font-weight:bold; color:var(--ocean); font-family:'Times New Roman', serif; font-size:15px;"><i>R</i></td>
+                  <td style="padding:5px 6px;"><strong>面上内环数 (Rings / Holes in faces)</strong>：单面内部开孔数（如板开洞、门窗洞口内环，每一个内环增加边界边但不增新面）。</td>
+                </tr>
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                  <td style="padding:5px 6px; font-weight:bold; color:var(--ocean); font-family:'Times New Roman', serif; font-size:15px;"><i>G</i> (<i>g</i>)</td>
+                  <td style="padding:5px 6px;"><strong>亏格 / 贯通孔数 (Genus / Through-holes)</strong>：穿透实体的空间通孔数（中空圆筒柱/环形截面 <i>G</i>=1，实心体 <i>G</i>=0）。</td>
+                </tr>
+                <tr>
+                  <td style="padding:5px 6px; font-weight:bold; color:var(--ocean); font-family:'Times New Roman', serif; font-size:15px;"><i>S</i></td>
+                  <td style="padding:5px 6px;"><strong>壳体数 (Shells)</strong>：独立闭合表面数（单实体 <i>S</i>=1；若包含内部封闭中空气室空腔则 <i>S</i>=2）。</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="background:#f0f8fa; padding:8px 10px; border-left:3px solid var(--ocean); border-radius:4px; font-size:12.5px; line-height:1.5;">
+              <strong style="color:var(--deep-ocean);">典型算例校验：</strong><br>
+              • <strong>实心长方体 (梁/柱)</strong>：<i>V</i>=8, <i>E</i>=12, <i>F</i>=6, <i>R</i>=0, <i>S</i>=1, <i>G</i>=0<br>
+              &nbsp;&nbsp;→ 8 − 12 + 6 − 0 = 2(1 − 0) = <strong>2</strong>（完美平衡）<br>
+              • <strong>穿孔空心柱 (贯通孔)</strong>：<i>V</i>=16, <i>E</i>=24, <i>F</i>=10, <i>R</i>=2, <i>S</i>=1, <i>G</i>=1<br>
+              &nbsp;&nbsp;→ 16 − 24 + 10 − 2 = 0 = 2(1 − 1) = <strong>0</strong>（严格守恒）
             </div>
-            <p style="font-size:15px; color:var(--muted);">下面三页将通过 Three.js 动画演示从角点到棱边再到封闭面的长方体创建全流程。</p>
           </div>
         </div>
       </div>
