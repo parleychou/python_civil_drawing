@@ -3,259 +3,512 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>土木人的 Python 几何内核与面向对象 (OOP) 极简图解指南</title>
+  <title>土木人的 Python 几何内核与面向对象 (OOP) 极简通识指南</title>
   <style>
     :root {
       --bg: #f8fafc;
       --card-bg: #ffffff;
+      --card-sub-bg: #f1f5f9;
       --border: #e2e8f0;
-      --text: #1e293b;
-      --muted: #64748b;
-      --blue: #0284c7;
-      --blue-light: #e0f2fe;
+      --border-strong: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #0284c7;
+      --primary-light: #e0f2fe;
+      --primary-dark: #0369a1;
       --teal: #0d9488;
       --teal-light: #ccfbf1;
       --rose: #e11d48;
       --rose-light: #ffe4e6;
       --amber: #d97706;
       --amber-light: #fef3c7;
-      --purple: #8b5cf6;
+      --purple: #7c3aed;
       --purple-light: #ede9fe;
-      --green: #10b981;
+      --green: #059669;
       --green-light: #d1fae5;
       --navy: #0f172a;
+      --code-bg: #1e293b;
       --radius: 12px;
-      --shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+      --radius-sm: 8px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.06);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b0f19;
+      --card-bg: #131c2e;
+      --card-sub-bg: #1a253c;
+      --border: #23314d;
+      --border-strong: #334469;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-light: rgba(56, 189, 248, 0.12);
+      --primary-dark: #0284c7;
+      --teal-light: rgba(13, 148, 136, 0.15);
+      --rose-light: rgba(225, 29, 72, 0.15);
+      --amber-light: rgba(217, 119, 6, 0.15);
+      --purple-light: rgba(124, 58, 237, 0.15);
+      --green-light: rgba(5, 150, 105, 0.15);
+      --code-bg: #090d16;
+      --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.6;
-      padding: 0 0 60px 0;
+      line-height: 1.68;
+      padding: 0 0 80px 0;
+      transition: background 0.25s, color 0.25s;
     }
 
-    /* Hero Header */
+    /* Sticky Navigation */
+    .nav-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 24px;
+      transition: background 0.25s;
+    }
+    [data-theme="dark"] .nav-bar {
+      background: rgba(19, 28, 46, 0.92);
+    }
+    .nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .nav-brand {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      overflow-x: auto;
+      font-size: 13px;
+      white-space: nowrap;
+      padding-bottom: 2px;
+    }
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.15s;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .nav-links a:hover {
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+    .theme-toggle-btn {
+      background: var(--card-sub-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    /* Hero Section */
     .hero {
-      background: linear-gradient(135deg, var(--navy) 0%, #1e293b 60%, #0369a1 100%);
+      background: linear-gradient(135deg, #09111e 0%, #0f1d36 50%, #034b75 100%);
       color: #fff;
-      padding: 44px 20px;
+      padding: 52px 24px 64px;
       text-align: center;
+      position: relative;
+    }
+    .hero-badge-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
     }
     .hero .badge {
       display: inline-block;
       padding: 4px 12px;
-      background: rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.2);
       border-radius: 20px;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
-      margin-bottom: 12px;
+      letter-spacing: 0.5px;
     }
     .hero h1 {
-      font-size: clamp(24px, 3.5vw, 36px);
+      font-size: clamp(22px, 3.6vw, 36px);
       font-weight: 800;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+      line-height: 1.3;
     }
     .hero p {
-      font-size: clamp(15px, 1.8vw, 17px);
+      font-size: clamp(14px, 1.8vw, 16px);
+      color: #cbd5e1;
+      max-width: 820px;
+      margin: 0 auto 16px;
+      line-height: 1.65;
+    }
+    .hero-meta {
+      font-size: 13px;
       color: #94a3b8;
-      max-width: 780px;
-      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
     }
 
+    /* Main Container */
     .main {
-      max-width: 1100px;
-      margin: -24px auto 0;
+      max-width: 1080px;
+      margin: -28px auto 0;
       padding: 0 20px;
     }
 
-    /* Core Section Card */
+    /* Card Box */
     .card {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 28px;
-      margin-bottom: 28px;
-      box-shadow: var(--shadow);
+      padding: 32px 32px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-md);
+      transition: background 0.25s, border-color 0.25s;
     }
+    @media (max-width: 640px) {
+      .card { padding: 22px 16px; margin-bottom: 24px; }
+    }
+
     .card-header {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 18px;
-      padding-bottom: 12px;
-      border-bottom: 2px solid var(--border);
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
     }
     .card-header .tag {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
       text-transform: uppercase;
     }
-    .tag-blue { background: var(--blue-light); color: var(--blue); }
+    .tag-blue { background: var(--primary-light); color: var(--primary); }
     .tag-amber { background: var(--amber-light); color: var(--amber); }
     .tag-purple { background: var(--purple-light); color: var(--purple); }
     .tag-rose { background: var(--rose-light); color: var(--rose); }
 
     .card-header h2 {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--navy);
+      font-size: 21px;
+      font-weight: 750;
+      color: var(--text);
+      letter-spacing: -0.3px;
     }
 
-    /* ================= STRUCTURE GRAPH (SVG) ================= */
-    .graph-container {
-      background: #ffffff;
+    /* Global SVG Graph Container */
+    .graph-wrapper {
+      background: var(--card-sub-bg);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px 10px;
-      margin: 16px 0;
+      border-radius: var(--radius-sm);
+      padding: 16px 12px;
+      margin: 18px 0;
       overflow-x: auto;
       text-align: center;
     }
     svg.struct-graph {
-      max-width: 1000px;
+      width: 100%;
+      max-width: 980px;
       height: auto;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .graph-legend {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
       display: inline-block;
     }
 
     /* Metaphor 4-Box Grid */
     .metaphor-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
       gap: 16px;
-      margin: 20px 0;
+      margin: 22px 0 10px;
     }
     .metaphor-box {
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      background: #f8fafc;
-      border-top: 4px solid var(--blue);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      background: var(--card-sub-bg);
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      position: relative;
+    }
+    .metaphor-box:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+      border-color: var(--primary);
+    }
+    .metaphor-box .box-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
     }
     .metaphor-box h4 {
-      font-size: 15px;
-      color: var(--navy);
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
     }
     .metaphor-box .python-term {
       font-size: 12px;
-      color: var(--muted);
-      font-family: monospace;
+      color: var(--primary);
+      font-family: Consolas, Monaco, monospace;
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .metaphor-box .analogy {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+      display: inline-block;
     }
     .metaphor-box p {
       font-size: 13.5px;
-      color: #334155;
-      line-height: 1.5;
+      color: var(--text-muted);
+      line-height: 1.55;
     }
 
     /* Two Steps Timeline */
     .step-box {
-      border-radius: 10px;
-      padding: 20px 24px;
-      margin-bottom: 20px;
-      border-left: 6px solid var(--blue);
-      background: #f0f9ff;
+      border-radius: var(--radius-sm);
+      padding: 24px;
+      margin-bottom: 24px;
+      border-left: 6px solid var(--primary);
+      background: var(--card-sub-bg);
     }
     .step-box.step2 {
       border-left-color: var(--amber);
-      background: #fffbeb;
     }
-    .step-title {
-      font-size: 18px;
+    .step-header {
+      margin-bottom: 16px;
+    }
+    .step-badge {
+      font-size: 12px;
       font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
       margin-bottom: 6px;
+    }
+    .step1-badge { background: var(--primary-light); color: var(--primary); }
+    .step2-badge { background: var(--amber-light); color: var(--amber); }
+
+    .step-title {
+      font-size: 19px;
+      font-weight: 750;
+      color: var(--text);
       display: flex;
       align-items: center;
       gap: 8px;
     }
     .step-desc {
       font-size: 14px;
-      color: var(--muted);
-      margin-bottom: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
     }
 
-    /* Mini Grid for Elements */
+    /* Element Cards Grid */
     .items-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 14px;
+      gap: 16px;
     }
     .elem-card {
-      background: #fff;
+      background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+    }
+    .elem-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
     }
     .elem-card h5 {
       font-size: 15px;
       font-weight: 700;
-      color: var(--navy);
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 6px;
+      color: var(--text);
+      font-family: Consolas, Monaco, monospace;
     }
     .elem-card .file-tag {
-      font-size: 11px;
-      color: var(--muted);
-      font-family: monospace;
-      font-weight: normal;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-family: Consolas, Monaco, monospace;
+      background: var(--card-sub-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
     }
     .elem-card p {
-      font-size: 13px;
-      color: #475569;
-      line-height: 1.5;
-      margin: 0;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
     }
     .elem-card .key-point {
-      margin-top: 6px;
-      font-size: 12px;
-      color: #0369a1;
+      margin-top: 10px;
+      font-size: 12.5px;
+      color: var(--primary);
       font-weight: 600;
+      background: var(--primary-light);
+      padding: 4px 10px;
+      border-radius: 4px;
+      display: inline-block;
     }
 
-    /* 3 Paradigms Comparison Cards */
+    /* Comparison Table */
+    .table-container {
+      overflow-x: auto;
+      margin: 18px 0 24px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--card-bg);
+    }
+    table.compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+      min-width: 680px;
+    }
+    table.compare-table th {
+      background: var(--card-sub-bg);
+      color: var(--text);
+      font-weight: 700;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    table.compare-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+      vertical-align: middle;
+    }
+    table.compare-table tr:last-child td {
+      border-bottom: none;
+    }
+    table.compare-table tr:hover td {
+      background: rgba(2, 132, 199, 0.03);
+    }
+    .table-pill {
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    /* 3 Paradigms Detailed Cards */
     .paradigm-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 16px;
-      margin: 16px 0;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 18px;
+      margin: 18px 0;
     }
     .para-card {
-      border-radius: 10px;
-      padding: 18px;
+      border-radius: var(--radius-sm);
+      padding: 22px;
       border: 1px solid var(--border);
-      background: #fff;
+      background: var(--card-bg);
+      display: flex;
+      flex-col;
+      flex-direction: column;
+      justify-content: space-between;
     }
-    .para-surf { border-top: 4px solid var(--blue); }
+    .para-surf { border-top: 4px solid var(--primary); }
     .para-brep { border-top: 4px solid var(--rose); }
     .para-mesh { border-top: 4px solid var(--amber); }
 
-    .para-card h4 {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 8px;
+    .para-card-head {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: baseline;
+      margin-bottom: 12px;
     }
+    .para-card h4 {
+      font-size: 17px;
+      font-weight: 750;
+      color: var(--text);
+    }
+    .para-card .para-sub {
+      font-size: 12px;
+      font-family: Consolas, monospace;
+      font-weight: 600;
+    }
+    .para-surf .para-sub { color: var(--primary); }
+    .para-brep .para-sub { color: var(--rose); }
+    .para-mesh .para-sub { color: var(--amber); }
+
     .para-card ul {
       list-style: none;
       font-size: 13.5px;
-      line-height: 1.6;
-      color: #334155;
+      line-height: 1.65;
+      color: var(--text-muted);
+      margin-bottom: 14px;
     }
     .para-card li {
-      margin-bottom: 6px;
-      padding-left: 14px;
+      margin-bottom: 8px;
+      padding-left: 16px;
       position: relative;
     }
     .para-card li::before {
@@ -263,484 +516,847 @@
       position: absolute;
       left: 0;
       font-weight: bold;
-      color: var(--muted);
+      color: var(--primary);
+    }
+    .para-brep li::before { color: var(--rose); }
+    .para-mesh li::before { color: var(--amber); }
+
+    .para-card strong {
+      color: var(--text);
     }
 
     /* Minimal Code Box */
     .code-mini {
-      background: #1e293b;
+      background: var(--code-bg);
       color: #f8fafc;
       border-radius: 6px;
-      padding: 10px 14px;
-      font-family: Consolas, monospace;
+      padding: 12px 14px;
+      font-family: Consolas, Monaco, "Courier New", monospace;
       font-size: 12.5px;
-      margin-top: 10px;
-      line-height: 1.5;
+      line-height: 1.55;
+      position: relative;
+      overflow-x: auto;
     }
     .code-mini .kw { color: #f43f5e; font-weight: bold; }
     .code-mini .cls { color: #38bdf8; }
     .code-mini .fn { color: #fbbf24; }
     .code-mini .cmt { color: #94a3b8; font-style: italic; }
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255,255,255,0.12);
+      border: none;
+      color: #94a3b8;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.25);
+      color: #fff;
+    }
 
-    /* ================= SOLID PRINCIPLES CARDS ================= */
-    .solid-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-      gap: 14px;
-      margin: 18px 0;
+    /* SOLID PRINCIPLES SECTION */
+    .solid-intro {
+      font-size: 14.5px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      line-height: 1.65;
+    }
+    .solid-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
     .solid-card {
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      background: #ffffff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+      border-radius: var(--radius-sm);
+      padding: 20px 24px;
+      background: var(--card-bg);
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 20px;
+      align-items: start;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .solid-card.s-card { border-top: 4px solid var(--green); }
-    .solid-card.o-card { border-top: 4px solid var(--blue); }
-    .solid-card.l-card { border-top: 4px solid var(--purple); }
-    .solid-card.i-card { border-top: 4px solid var(--amber); }
-    .solid-card.d-card { border-top: 4px solid var(--rose); }
-
-    .solid-header {
+    @media (max-width: 640px) {
+      .solid-card {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+    }
+    .solid-card:hover {
+      box-shadow: var(--shadow-sm);
+    }
+    .solid-badge {
       display: flex;
-      align-items: baseline;
-      gap: 8px;
-      margin-bottom: 8px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--card-sub-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 4px;
+      text-align: center;
     }
     .solid-letter {
-      font-size: 26px;
+      font-size: 32px;
       font-weight: 900;
       line-height: 1;
     }
-    .s-card .solid-letter { color: var(--green); }
-    .o-card .solid-letter { color: var(--blue); }
-    .l-card .solid-letter { color: var(--purple); }
-    .i-card .solid-letter { color: var(--amber); }
-    .d-card .solid-letter { color: var(--rose); }
-
-    .solid-name {
-      font-size: 13.5px;
+    .solid-acronym {
+      font-size: 10px;
       font-weight: 700;
-      color: var(--navy);
+      letter-spacing: 0.5px;
+      margin-top: 4px;
     }
-    .solid-subtitle {
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 8px;
-      display: block;
+    .s-item .solid-letter { color: var(--green); }
+    .o-item .solid-letter { color: var(--primary); }
+    .l-item .solid-letter { color: var(--purple); }
+    .i-item .solid-letter { color: var(--amber); }
+    .d-item .solid-letter { color: var(--rose); }
+
+    .solid-content {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-    .solid-metaphor {
-      background: #f8fafc;
-      border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 12.5px;
-      color: #334155;
-      margin-bottom: 8px;
-      line-height: 1.45;
+    .solid-title-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
     }
-    .solid-metaphor strong {
-      color: var(--navy);
+    .solid-title-row h4 {
+      font-size: 17px;
+      font-weight: 750;
+      color: var(--text);
     }
-    .solid-code-note {
+    .solid-en-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .solid-metaphor-banner {
+      background: var(--card-sub-bg);
+      border-left: 3px solid var(--primary);
+      border-radius: 0 6px 6px 0;
+      padding: 8px 12px;
+      font-size: 13.5px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .s-item .solid-metaphor-banner { border-left-color: var(--green); }
+    .o-item .solid-metaphor-banner { border-left-color: var(--primary); }
+    .l-item .solid-metaphor-banner { border-left-color: var(--purple); }
+    .i-item .solid-metaphor-banner { border-left-color: var(--amber); }
+    .d-item .solid-metaphor-banner { border-left-color: var(--rose); }
+
+    .solid-code-detail {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .solid-code-detail code {
+      font-family: Consolas, Monaco, monospace;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 1px 5px;
+      border-radius: 3px;
       font-size: 12px;
-      color: #475569;
-      line-height: 1.45;
-    }
-    .solid-code-note code {
-      font-family: monospace;
-      color: #0369a1;
-      font-size: 11px;
     }
 
     /* Summary Bar */
     .summary-box {
-      background: #f1f5f9;
-      border-radius: 8px;
-      padding: 16px 20px;
-      font-size: 14px;
-      color: #334155;
-      line-height: 1.6;
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(13, 148, 136, 0.06) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 24px;
+      font-size: 14.5px;
+      color: var(--text);
+      line-height: 1.8;
+      margin-bottom: 24px;
+    }
+    .summary-box strong {
+      color: var(--primary-dark);
+    }
+    [data-theme="dark"] .summary-box strong {
+      color: var(--primary);
+    }
+
+    /* Repo / Download Bar */
+    .repo-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      background: var(--card-sub-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px 24px;
+    }
+    .repo-info h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .repo-info p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .repo-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: 1px solid var(--primary);
+    }
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+    .btn-secondary {
+      background: var(--card-bg);
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+    }
+    .btn-secondary:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* Floating Back to Top */
+    .back-to-top {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--card-bg);
+      border: 1px solid var(--border-strong);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-size: 18px;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.2s, background 0.2s;
+      opacity: 0.85;
+      z-index: 99;
+    }
+    .back-to-top:hover {
+      transform: translateY(-3px);
+      opacity: 1;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    @media print {
+      .nav-bar, .theme-toggle-btn, .back-to-top, .copy-btn { display: none !important; }
+      body { background: #fff !important; color: #000 !important; }
+      .card { box-shadow: none !important; border: 1px solid #ccc !important; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <header class="hero">
-    <div class="badge">土木人的 Python 课 · 极简架构图解</div>
-    <h1>代码结构与面向对象 (OOP) 快速看懂指南</h1>
-    <p>专为土木工程师定制：一张结构总图 + 两个学习步骤 + SOLID 五大原则，彻底搞懂 <code>src/</code> 底层如何用类表达曲面与实体</p>
+  <!-- Sticky Quick Nav Bar -->
+  <nav class="nav-bar">
+    <div class="nav-inner">
+      <a href="#top" class="nav-brand">
+        <span>📐 土木 Python 几何内核</span>
+      </a>
+      <div class="nav-links">
+        <a href="#structure-graph">1. 架构总图</a>
+        <a href="#core-concepts">2. 四大概念</a>
+        <a href="#two-steps">3. 两步进阶</a>
+        <a href="#three-paradigms">4. 三大范式对比</a>
+        <a href="#solid-principles">5. SOLID 原则</a>
+        <a href="#summary">6. 总结要诀</a>
+      </div>
+      <button class="theme-toggle-btn" id="theme-btn" type="button" aria-label="切换明暗主题">
+        <span id="theme-icon">🌓 主题</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Header -->
+  <header class="hero" id="top">
+    <div class="hero-badge-row">
+      <span class="badge">土木人的 Python 课 · 第 06 讲专属指南</span>
+      <span class="badge">面向对象 (OOP) 极简通识</span>
+    </div>
+    <h1>代码结构与面向对象设计 (OOP) 图解通俗读本</h1>
+    <p>
+      无需复杂的计算机理论包袱：以结构工程师熟悉的<strong>“设计图集、现浇构件、统一吊装、国家规范”</strong>为类比，彻底看懂 <code>src/</code> 几何库底层如何用类优雅表达点、线、曲面与 3D 实体。
+    </p>
+    <div class="hero-meta">
+      <span>主讲：周文琪 (Venchy)</span>
+      <span>•</span>
+      <span>配套源码：src/ 几何内核</span>
+      <span>•</span>
+      <span>面向土木、结构与 BIM 工程师</span>
+    </div>
   </header>
 
   <div class="main">
 
-    <!-- Section 1: Global Structure Graph -->
-    <section class="card">
+    <!-- ================= SECTION 1: GLOBAL STRUCTURE GRAPH ================= -->
+    <section class="card" id="structure-graph">
       <div class="card-header">
         <span class="tag tag-blue">全局俯瞰</span>
         <h2>1. 核心代码架构关系图 (The Code Structure Tree)</h2>
       </div>
-      <p style="font-size: 14.5px; color: var(--muted);">
-        整个 <code>src/</code> 目录像一栋设计精巧的装配式建筑。所有几何对象都从根基类 <strong><code>GeometryData</code></strong> 派生，各司其职：
+      <p style="font-size: 14.5px; color: var(--text-muted);">
+        整个 <code>src/</code> 目录如同设计精密的装配式结构大厦。所有几何实体均派生自根基类 <strong><code>GeometryData</code></strong>，通过清晰的继承关系层层分工：
       </p>
 
-      <!-- SVG Structure Graph -->
-      <div class="graph-container">
-        <svg class="struct-graph" viewBox="0 0 960 480" width="960" height="480">
+      <!-- SVG Structure Graph (Responsive Vector) -->
+      <div class="graph-wrapper">
+        <svg class="struct-graph" viewBox="0 0 980 430" width="980" height="430">
           <defs>
             <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <path d="M 0 1 L 10 5 L 0 9 z" fill="#94a3b8" />
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
             </marker>
             <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
               <path d="M 0 1 L 10 5 L 0 9 z" fill="#0284c7" />
             </marker>
-            <filter id="shadow-box" x="-5%" y="-5%" width="110%" height="115%">
+            <marker id="arrow-gold" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#d97706" />
+            </marker>
+            <filter id="box-shadow" x="-5%" y="-5%" width="110%" height="115%">
               <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.08" />
             </filter>
           </defs>
 
-          <!-- ROOT: GeometryData -->
-          <g transform="translate(360, 20)" filter="url(#shadow-box)">
-            <rect width="240" height="66" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
-            <text x="120" y="28" fill="#38bdf8" font-size="15" font-weight="bold" text-anchor="middle" font-family="monospace">GeometryData (ABC)</text>
-            <text x="120" y="48" fill="#94a3b8" font-size="12" text-anchor="middle">【总父类】国家规范契约：name + to_pyvista()</text>
+          <!-- TIER 1: ROOT (GeometryData) -->
+          <g transform="translate(365, 18)" filter="url(#box-shadow)">
+            <rect width="250" height="66" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+            <text x="125" y="28" fill="#38bdf8" font-size="15" font-weight="bold" text-anchor="middle" font-family="Consolas, Monaco, monospace">GeometryData (ABC)</text>
+            <text x="125" y="49" fill="#94a3b8" font-size="12" text-anchor="middle">【总基类】国家规范契约：name + to_pyvista()</text>
           </g>
 
-          <!-- CONNECTING LINES FROM ROOT -->
+          <!-- CONNECTING WIRES FROM ROOT TO 5 COLUMNS -->
           <!-- To 0D -->
-          <path d="M 400 86 L 400 130 L 110 130 L 110 170" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrow)" />
-          <!-- To 1D Curve -->
-          <path d="M 440 86 L 440 130 L 310 130 L 310 170" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrow)" />
-          <!-- To 2D Surface -->
-          <path d="M 480 86 L 480 130 L 520 130 L 520 170" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrow)" />
-          <!-- To 3D B-Rep -->
-          <path d="M 520 86 L 520 130 L 720 130 L 720 170" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrow)" />
+          <path d="M 400 84 L 400 120 L 105 120 L 105 150" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrow)" />
+          <!-- To 1D -->
+          <path d="M 440 84 L 440 120 L 295 120 L 295 150" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrow)" />
+          <!-- To 2D -->
+          <path d="M 490 84 L 490 150" fill="none" stroke="#0284c7" stroke-width="2" marker-end="url(#arrow-blue)" />
+          <!-- To 3D Brep -->
+          <path d="M 540 84 L 540 120 L 685 120 L 685 150" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrow)" />
           <!-- To 3D Mesh -->
-          <path d="M 560 86 L 560 130 L 880 130 L 880 170" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrow)" />
+          <path d="M 580 84 L 580 120 L 875 120 L 875 150" fill="none" stroke="#64748b" stroke-width="1.8" marker-end="url(#arrow)" />
 
-          <!-- BRANCH 1: 0D Point & Vector -->
-          <g transform="translate(20, 170)" filter="url(#shadow-box)">
-            <rect width="180" height="74" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" />
-            <text x="90" y="24" fill="#0284c7" font-size="14" font-weight="bold" text-anchor="middle" font-family="monospace">Point3D & Vector3D</text>
-            <text x="90" y="44" fill="#64748b" font-size="11.5" text-anchor="middle">【0D 几何基石】</text>
-            <text x="90" y="62" fill="#334155" font-size="11" text-anchor="middle">坐标点位 / 位移力矢量</text>
+          <!-- COLUMN 1: 0D Point & Vector -->
+          <g transform="translate(20, 150)" filter="url(#box-shadow)">
+            <rect width="170" height="74" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+            <text x="85" y="24" fill="#0369a1" font-size="13.5" font-weight="bold" text-anchor="middle" font-family="Consolas, monospace">Point3D & Vector3D</text>
+            <text x="85" y="44" fill="#64748b" font-size="11.5" text-anchor="middle">【0D 几何基石】</text>
+            <text x="85" y="62" fill="#334155" font-size="11" text-anchor="middle">坐标点位 / 跨度与荷载向量</text>
           </g>
 
-          <!-- BRANCH 2: 1D Curve (Parent) -->
-          <g transform="translate(220, 170)" filter="url(#shadow-box)">
-            <rect width="180" height="74" rx="8" fill="#f0fdfa" stroke="#5eead4" stroke-width="1.5" />
-            <text x="90" y="24" fill="#0d9488" font-size="14" font-weight="bold" text-anchor="middle" font-family="monospace">Curve (ABC 父类)</text>
-            <text x="90" y="44" fill="#0f766e" font-size="11.5" text-anchor="middle">【1D 曲线抽象】</text>
-            <text x="90" y="62" fill="#64748b" font-size="11" text-anchor="middle">t∈[0,1] → 采样点折线</text>
+          <!-- COLUMN 2: 1D Curve Parent -->
+          <g transform="translate(210, 150)" filter="url(#box-shadow)">
+            <rect width="170" height="74" rx="8" fill="#f0fdfa" stroke="#5eead4" stroke-width="1.5" />
+            <text x="85" y="24" fill="#0d9488" font-size="14" font-weight="bold" text-anchor="middle" font-family="Consolas, monospace">Curve (ABC 父类)</text>
+            <text x="85" y="44" fill="#0f766e" font-size="11.5" text-anchor="middle">【1D 线性骨架】</text>
+            <text x="85" y="62" fill="#64748b" font-size="11" text-anchor="middle">t∈[0,1] 采样折线管线</text>
+          </g>
+          <!-- 1D Subclass: Line3D / Arc3D -->
+          <path d="M 295 224 L 295 252" fill="none" stroke="#0d9488" stroke-width="1.5" marker-end="url(#arrow)" />
+          <g transform="translate(210, 256)" filter="url(#box-shadow)">
+            <rect width="170" height="52" rx="6" fill="#ffffff" stroke="#99f6e4" stroke-width="1.2" />
+            <text x="85" y="22" fill="#0f766e" font-size="12.5" font-weight="bold" text-anchor="middle" font-family="Consolas, monospace">Line3D / Arc3D (子类)</text>
+            <text x="85" y="41" fill="#64748b" font-size="11" text-anchor="middle">直线段 / 空间圆弧</text>
           </g>
 
-          <!-- BRANCH 2 SUBCLASSES -->
-          <path d="M 310 244 L 310 275" fill="none" stroke="#0d9488" stroke-width="1.5" marker-end="url(#arrow)" />
-          <g transform="translate(220, 280)" filter="url(#shadow-box)">
-            <rect width="180" height="54" rx="6" fill="#ffffff" stroke="#99f6e4" stroke-width="1.2" />
-            <text x="90" y="22" fill="#0f766e" font-size="12.5" font-weight="bold" text-anchor="middle" font-family="monospace">Line3D / Arc3D (子类)</text>
-            <text x="90" y="42" fill="#64748b" font-size="11" text-anchor="middle">直线段 / 空间圆弧</text>
-          </g>
-
-          <!-- BRANCH 3: 2D ParametricSurfaceData (Parent) -->
-          <g transform="translate(430, 170)" filter="url(#shadow-box)">
-            <rect width="180" height="74" rx="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5" />
-            <text x="90" y="24" fill="#0284c7" font-size="13" font-weight="bold" text-anchor="middle" font-family="monospace">ParametricSurfaceData</text>
+          <!-- COLUMN 3: 2D ParametricSurfaceData -->
+          <g transform="translate(400, 150)" filter="url(#box-shadow)">
+            <rect width="180" height="74" rx="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.8" />
+            <text x="90" y="24" fill="#0284c7" font-size="13" font-weight="bold" text-anchor="middle" font-family="Consolas, monospace">ParametricSurfaceData</text>
             <text x="90" y="44" fill="#1d4ed8" font-size="11.5" text-anchor="middle">【2D 参数曲面父类】</text>
-            <text x="90" y="62" fill="#64748b" font-size="11" text-anchor="middle">(u,v)网格划分/结构化网格</text>
+            <text x="90" y="62" fill="#64748b" font-size="11" text-anchor="middle">(u,v) 步长与结构化网格剖分</text>
+          </g>
+          <!-- 2D Subclass: HyperbolicParaboloid -->
+          <path d="M 490 224 L 490 252" fill="none" stroke="#0284c7" stroke-width="1.8" marker-end="url(#arrow-blue)" />
+          <g transform="translate(400, 256)" filter="url(#box-shadow)">
+            <rect width="180" height="58" rx="6" fill="#ffffff" stroke="#bfdbfe" stroke-width="1.4" />
+            <text x="90" y="22" fill="#1e40af" font-size="12" font-weight="bold" text-anchor="middle" font-family="Consolas, monospace">HyperbolicParaboloid</text>
+            <text x="90" y="38" fill="#0284c7" font-size="11" font-weight="bold" text-anchor="middle">【马鞍面子类】</text>
+            <text x="90" y="52" fill="#64748b" font-size="10.5" text-anchor="middle">核心公式 evaluate(u,v)</text>
           </g>
 
-          <!-- BRANCH 3 SUBCLASSES -->
-          <path d="M 520 244 L 520 275" fill="none" stroke="#0284c7" stroke-width="1.5" marker-end="url(#arrow-blue)" />
-          <g transform="translate(430, 280)" filter="url(#shadow-box)">
-            <rect width="180" height="64" rx="6" fill="#ffffff" stroke="#bfdbfe" stroke-width="1.2" />
-            <text x="90" y="22" fill="#1e40af" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">HyperbolicParaboloid</text>
-            <text x="90" y="40" fill="#0284c7" font-size="11" font-weight="bold" text-anchor="middle">【马鞍面子类】</text>
-            <text x="90" y="56" fill="#64748b" font-size="10.5" text-anchor="middle">解析公式求值 evaluate()</text>
-          </g>
-
-          <!-- BRANCH 4: 3D B-Rep (Solid) -->
-          <g transform="translate(630, 170)" filter="url(#shadow-box)">
+          <!-- COLUMN 4: 3D B-Rep (Solid) -->
+          <g transform="translate(600, 150)" filter="url(#box-shadow)">
             <rect width="170" height="74" rx="8" fill="#fff1f2" stroke="#fda4af" stroke-width="1.5" />
-            <text x="85" y="24" fill="#e11d48" font-size="14" font-weight="bold" text-anchor="middle" font-family="monospace">BrepData (子类)</text>
+            <text x="85" y="24" fill="#e11d48" font-size="14" font-weight="bold" text-anchor="middle" font-family="Consolas, monospace">BrepData (子类)</text>
             <text x="85" y="44" fill="#be123c" font-size="11.5" text-anchor="middle">【3D 边界表示实体】</text>
-            <text x="85" y="62" fill="#64748b" font-size="11" text-anchor="middle">点-边-面三元组 (长方体)</text>
+            <text x="85" y="62" fill="#64748b" font-size="11" text-anchor="middle">点-边-面三元组 (立方体)</text>
           </g>
 
-          <!-- BRANCH 5: 3D Mesh -->
-          <g transform="translate(820, 170)" filter="url(#shadow-box)">
-            <rect width="130" height="74" rx="8" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.5" />
-            <text x="65" y="24" fill="#d97706" font-size="14" font-weight="bold" text-anchor="middle" font-family="monospace">MeshData (子类)</text>
-            <text x="65" y="44" fill="#b45309" font-size="11.5" text-anchor="middle">【3D 离散网格】</text>
-            <text x="65" y="62" fill="#64748b" font-size="11" text-anchor="middle">顶点池+面索引 (四棱锥)</text>
+          <!-- COLUMN 5: 3D Mesh (Polygon) -->
+          <g transform="translate(790, 150)" filter="url(#box-shadow)">
+            <rect width="170" height="74" rx="8" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.5" />
+            <text x="85" y="24" fill="#d97706" font-size="14" font-weight="bold" text-anchor="middle" font-family="Consolas, monospace">MeshData (子类)</text>
+            <text x="85" y="44" fill="#b45309" font-size="11.5" text-anchor="middle">【3D 离散网格】</text>
+            <text x="85" y="62" fill="#64748b" font-size="11" text-anchor="middle">顶点池 + 面索引 (四棱锥)</text>
           </g>
 
-          <!-- CONSUMER: RenderEngine (Polymorphism) -->
-          <g transform="translate(260, 390)" filter="url(#shadow-box)">
-            <rect width="440" height="66" rx="8" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
-            <text x="220" y="26" fill="#facc15" font-size="14" font-weight="bold" text-anchor="middle" font-family="monospace">RenderEngine.render([surf, brep, mesh])</text>
-            <text x="220" y="48" fill="#e2e8f0" font-size="11.5" text-anchor="middle">🏗️ 【多态吊钩】无需关心具体类型，统一切换为 to_pyvista() 混合渲染！</text>
+          <!-- TIER 3: CONSUMER (RenderEngine) -->
+          <g transform="translate(260, 350)" filter="url(#box-shadow)">
+            <rect width="460" height="64" rx="8" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+            <text x="230" y="26" fill="#facc15" font-size="14" font-weight="bold" text-anchor="middle" font-family="Consolas, monospace">RenderEngine.render([surf, brep, mesh])</text>
+            <text x="230" y="48" fill="#e2e8f0" font-size="12" text-anchor="middle">🏗️ 【多态统一吊装】只认 to_pyvista() 接口，任何几何体一键同台混染！</text>
           </g>
 
-          <!-- DASHED LINES TO RENDER ENGINE -->
-          <path d="M 520 344 L 520 385" fill="none" stroke="#facc15" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
-          <path d="M 715 244 L 715 370 L 600 370 L 600 385" fill="none" stroke="#facc15" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
-          <path d="M 885 244 L 885 375 L 640 375 L 640 385" fill="none" stroke="#facc15" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
+          <!-- DASHED FLOW LINES INTO RENDER ENGINE -->
+          <path d="M 490 314 L 490 344" fill="none" stroke="#d97706" stroke-dasharray="4,4" stroke-width="1.6" marker-end="url(#arrow-gold)" />
+          <path d="M 685 224 L 685 330 L 600 330 L 600 344" fill="none" stroke="#d97706" stroke-dasharray="4,4" stroke-width="1.6" marker-end="url(#arrow-gold)" />
+          <path d="M 875 224 L 875 335 L 650 335 L 650 344" fill="none" stroke="#d97706" stroke-width="1.6" stroke-dasharray="4,4" marker-end="url(#arrow-gold)" />
         </svg>
-      </div>
 
-      <!-- 4 Core OOP Metaphors for Civil Engineers -->
-      <h3 style="font-size: 17px; margin: 20px 0 12px; color: var(--navy);">💡 土木工程师 4 句话看懂面向对象核心概念：</h3>
-      <div class="metaphor-grid">
-        <div class="metaphor-box">
-          <h4>🏛️ 类 (Class)</h4>
-          <span class="python-term">class HyperbolicParaboloid:</span>
-          <p><strong>＝ 标准设计图集 / 族定义</strong><br>本身不是实体建筑，而是一份图纸模板，规定了构件有哪些尺寸参数与计算方法。</p>
-        </div>
-        <div class="metaphor-box">
-          <h4>🧱 对象 (Instance)</h4>
-          <span class="python-term">surf = HyperbolicParaboloid()</span>
-          <p><strong>＝ 工地实际浇筑的构件</strong><br>根据图纸实际创建出来的一个具体梁柱。可以输入不同长宽高，生成成千上万个对象。</p>
-        </div>
-        <div class="metaphor-box">
-          <h4>🏗️ 父类与子类 (Inheritance)</h4>
-          <span class="python-term">class 子类(父类):</span>
-          <p><strong>＝ 标准底盘与定制构件</strong><br>父类预制了通用通用管线（采样与渲染），子类只需专注写出专属的受力公式即可，不用重复造轮子。</p>
-        </div>
-        <div class="metaphor-box">
-          <h4>🏗️ 多态性 (Polymorphism)</h4>
-          <span class="python-term">engine.render(any_object)</span>
-          <p><strong>＝ 施工塔吊的统一吊耳</strong><br>塔吊不管是钢梁还是混凝土板，只要每个构件都焊上了标准吊耳（<code>to_pyvista</code>），就能一键统一吊装上天！</p>
+        <div class="graph-legend">
+          <div class="legend-item"><span class="legend-dot" style="background: #0f172a;"></span> 抽象基类 (契约)</div>
+          <div class="legend-item"><span class="legend-dot" style="background: #0284c7;"></span> 2D 参数曲面族</div>
+          <div class="legend-item"><span class="legend-dot" style="background: #e11d48;"></span> 3D B-Rep 闭合体</div>
+          <div class="legend-item"><span class="legend-dot" style="background: #d97706;"></span> 3D 离散 Mesh</div>
+          <div class="legend-item"><span class="legend-dot" style="background: #facc15;"></span> 统一渲染引擎调度</div>
         </div>
       </div>
     </section>
 
-    <!-- Section 2: Two Steps Roadmap -->
-    <section class="card">
+    <!-- ================= SECTION 2: 4 CORE OOP CONCEPTS ================= -->
+    <section class="card" id="core-concepts">
+      <div class="card-header">
+        <span class="tag tag-blue">通俗通识</span>
+        <h2>2. 土木工程师 4 句话看懂面向对象 (OOP) 核心概念</h2>
+      </div>
+      <p style="font-size: 14.5px; color: var(--text-muted);">
+        很多土木工程师觉得面向对象难懂，是因为被“封装、继承、多态”这些生硬字眼绕晕了。其实土木工程早已在日夜践行这套思想：
+      </p>
+
+      <div class="metaphor-grid">
+        <!-- 1. Class -->
+        <div class="metaphor-box">
+          <div class="box-icon">🏛️</div>
+          <h4>1. 类 (Class)</h4>
+          <span class="python-term">class HyperbolicParaboloid:</span>
+          <span class="analogy">＝ 标准设计图集 / 族定义</span>
+          <p>
+            图集本身<strong>不是实体建筑</strong>，而是一套设计规范与尺寸模板。它规定了这个构件应该具备哪些参数（长、宽、高）以及怎么计算受力。
+          </p>
+        </div>
+
+        <!-- 2. Instance -->
+        <div class="metaphor-box">
+          <div class="box-icon">🧱</div>
+          <h4>2. 对象 (Object / Instance)</h4>
+          <span class="python-term">surf1 = HyperbolicParaboloid(...)</span>
+          <span class="analogy">＝ 工地实际浇筑的一根具体梁</span>
+          <p>
+            按照图集实际浇筑出来的具体物理实体。给它输入跨度 20m、高度 5m，就在内存中真实创建出了一座具体的结构屋盖。
+          </p>
+        </div>
+
+        <!-- 3. Inheritance -->
+        <div class="metaphor-box">
+          <div class="box-icon">🏗️</div>
+          <h4>3. 继承 (Inheritance)</h4>
+          <span class="python-term">class 子类(父类):</span>
+          <span class="analogy">＝ 标准汽车底盘与定制特种车</span>
+          <p>
+            父类预制了<strong>通用基础设施</strong>（如坐标采样、网格生成）；子类只需写自己独有的核心物理方程，绝不重复发明轮子。
+          </p>
+        </div>
+
+        <!-- 4. Polymorphism -->
+        <div class="metaphor-box">
+          <div class="box-icon">🪝</div>
+          <h4>4. 多态 (Polymorphism)</h4>
+          <span class="python-term">engine.render([surf, brep, mesh])</span>
+          <span class="analogy">＝ 施工塔吊的标准吊耳</span>
+          <p>
+            塔吊师傅不管吊的是钢梁、混凝土预制板还是钢筋笼，只要每个构件出厂时都焊接了标准吊耳（<code>to_pyvista</code>），就能通通吊起上天！
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECTION 3: TWO STEPS PROGRESSION ================= -->
+    <section class="card" id="two-steps">
       <div class="card-header">
         <span class="tag tag-amber">教学演进</span>
-        <h2>2. 从“点线基础”到“曲面实体”的两步学习法</h2>
+        <h2>3. 从“点线基础”到“曲面实体”的两步学习法</h2>
       </div>
 
       <!-- STEP 1 -->
       <div class="step-box">
-        <div class="step-title">
-          <span>📍 第一步：回顾前序知识 · 0D 空间点与 1D 线性骨架</span>
-        </div>
-        <div class="step-desc">
-          前几讲的核心任务是建立空间坐标基准与梁轴线。只有长度与尺寸，没有厚度与受力体积。
+        <div class="step-header">
+          <span class="step-badge step1-badge">Step 1 · 承前</span>
+          <div class="step-title">
+            <span>📍 第一步：回顾前序知识 · 0D 空间点与 1D 线性骨架</span>
+          </div>
+          <div class="step-desc">
+            前几讲的核心任务是建立空间坐标基准与构件轴线。只有坐标与长度，尚未产生厚度与受力实体。
+          </div>
         </div>
 
         <div class="items-grid">
           <div class="elem-card">
-            <h5>Point3D & Vector3D <span class="file-tag">src/point3d.py</span></h5>
-            <p><strong>空间角点与位移荷载向量</strong>：给三维空间点赋予计算能力。两点相减直接得到跨度矢量 <code>span = p_end - p_start</code>，彻底告别零散的数组混乱。</p>
-            <div class="key-point">✔ 运算符重载：符合土木力学公式书写直觉</div>
+            <div class="elem-card-head">
+              <h5>Point3D & Vector3D</h5>
+              <span class="file-tag">src/point3d.py</span>
+            </div>
+            <p><strong>空间角点与位移荷载向量</strong>：给三维空间点赋予数学运算能力。两点相减直接求得梁跨度向量 <code>span = p2 - p1</code>，彻底告别零散的数组计算混乱。</p>
+            <div class="key-point">✔ 运算符重载：符合土木力学公式手写直觉</div>
           </div>
+
           <div class="elem-card">
-            <h5>Curve (基类) → Line3D <span class="file-tag">src/line3d.py</span></h5>
-            <p><strong>轴线与钢筋路径</strong>：父类 <code>Curve</code> 强制规定了参数方程 <code>point_at(t)</code>，并承包了采样逻辑；子类 <code>Line3D</code> 仅需实现起点与终点间的线性插值。</p>
-            <div class="key-point">✔ 初步体会：父类写通用管线，子类写具体插值</div>
+            <div class="elem-card-head">
+              <h5>Curve (基类) → Line3D</h5>
+              <span class="file-tag">src/line3d.py</span>
+            </div>
+            <p><strong>轴线与钢筋路径</strong>：父类 <code>Curve</code> 抽象出参数方程 <code>point_at(t)</code> 并封装统一采样；子类 <code>Line3D</code> 仅需专注于起点到终点的线性插值。</p>
+            <div class="key-point">✔ 体验继承：父类管采样管线，子类管数学插值</div>
           </div>
+
           <div class="elem-card">
-            <h5>GeometryData <span class="file-tag">src/_base.py</span></h5>
-            <p><strong>整个几何系统的法律规范</strong>：强制所有几何对象都有统一的 <code>name</code> 和 <code>to_pyvista()</code> 接口。凡是想要被屏幕渲染的物体，必须遵守此规则。</p>
-            <div class="key-point">✔ 建立工业软件的统一接口规范 (契约化编程)</div>
+            <div class="elem-card-head">
+              <h5>GeometryData</h5>
+              <span class="file-tag">src/_base.py</span>
+            </div>
+            <p><strong>几何内核的强制性国家规范</strong>：硬性规定所有几何对象必须提供 <code>name</code> 和 <code>to_pyvista()</code> 方法。任何物体想要渲染到视口，必须服从此规范。</p>
+            <div class="key-point">✔ 工业软件规范化：契约化编程 (Contract)</div>
           </div>
         </div>
       </div>
 
       <!-- STEP 2 -->
-      <div class="step-box step2">
-        <div class="step-title" style="color: var(--amber);">
-          <span>🌊 第二步：今日拓展进阶 · 2D 曲面与 3D 实体的三大工业范式</span>
-        </div>
-        <div class="step-desc">
-          今天我们将几何维度升至 2 维连续曲面与 3 维闭合实体。深入剖析工业界三大截然不同的构造型态：
+      <div class="step-box step2" id="three-paradigms">
+        <div class="step-header">
+          <span class="step-badge step2-badge">Step 2 · 启后</span>
+          <div class="step-title" style="color: var(--amber);">
+            <span>🌊 第二步：今日拓展进阶 · 2D 曲面与 3D 实体的三大工业范式</span>
+          </div>
+          <div class="step-desc">
+            今天我们将几何升维至二维连续曲面与三维封闭实体。深入剖析工业界三大截然不同的构造型态：
+          </div>
         </div>
 
+        <!-- Comparison Table -->
+        <div class="table-container">
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th>范式分类</th>
+                <th>代表类与源码</th>
+                <th>数学与几何本质</th>
+                <th>土木典型应用场景</th>
+                <th>核心优势</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="table-pill" style="background: var(--primary-light); color: var(--primary);">2D 参数曲面</span></td>
+                <td><code>HyperbolicParaboloid</code><br><span style="font-size:11px; color:var(--text-muted);">src/hyperbolic_paraboloid.py</span></td>
+                <td>连续双参数解析方程：<br>$(u,v) \mapsto (x, y, z)$</td>
+                <td>大跨索网屋顶、连续箱梁放样、复杂异形曲面表皮</td>
+                <td>轻量紧凑（几行公式表达巨型结构），表面法向无限光滑</td>
+              </tr>
+              <tr>
+                <td><span class="table-pill" style="background: var(--rose-light); color: var(--rose);">3D B-Rep 实体</span></td>
+                <td><code>BrepData</code><br><span style="font-size:11px; color:var(--text-muted);">src/brep.py / factories.py</span></td>
+                <td>边界表示拓扑三元组：<br>顶点(V) + 边(E) + 面(F)</td>
+                <td>BIM 构件设计 (Revit/Tekla)、梁柱实体、布尔挖洞开槽</td>
+                <td>欧拉公式 $V-E+F=2$ 严格守恒，绝对保证水密封闭实体</td>
+              </tr>
+              <tr>
+                <td><span class="table-pill" style="background: var(--amber-light); color: var(--amber);">3D 离散 Mesh</span></td>
+                <td><code>MeshData</code><br><span style="font-size:11px; color:var(--text-muted);">src/mesh.py / factories.py</span></td>
+                <td>扁平离散索引池：<br>顶点池 + 面片顶点索引数组</td>
+                <td>有限元分析 (FEA) 网格划分、三维激光扫描逆向点云</td>
+                <td>硬件显卡原生渲染加速，千万级面片依然高效运转</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 3 Paradigms Detailed Cards -->
         <div class="paradigm-row">
-          <!-- 1. Surface -->
+          <!-- 1. Parametric Surface -->
           <div class="para-card para-surf">
-            <h4>
-              <span>范式一：连续参数曲面</span>
-              <span style="font-size:12px; color:var(--blue); font-family:monospace;">Parametric Surface</span>
-            </h4>
-            <ul>
-              <li><strong>土木应用</strong>：大跨索网屋顶（体育馆）、异形幕墙表皮 (扎哈风格)、连续箱梁放样。</li>
-              <li><strong>底层代码</strong>：<code>ParametricSurfaceData</code>（父类）划分 $(u, v)$ 参数网格；<code>HyperbolicParaboloid</code>（马鞍面子类）负责解析求值。</li>
-              <li><strong>最大优点</strong>：几百字节解析方程定义庞大结构，法向量光滑连续。</li>
-            </ul>
+            <div>
+              <div class="para-card-head">
+                <h4>连续参数曲面</h4>
+                <span class="para-sub">Parametric Surface</span>
+              </div>
+              <ul>
+                <li><strong>工程场景</strong>：大跨双曲抛物面薄壳、索网膜结构、体育场馆异形屋顶。</li>
+                <li><strong>代码架构</strong>：父类 <code>ParametricSurfaceData</code> 负责划分 $(u, v)$ 参数网格；马鞍面子类负责求值。</li>
+                <li><strong>核心亮点</strong>：几百字节公式定义宏伟建筑，改变参数即时形变。</li>
+              </ul>
+            </div>
             <div class="code-mini">
+              <button class="copy-btn" onclick="copySnippet(this)">复制</button>
 <span class="cmt"># src/hyperbolic_paraboloid.py</span>
 <span class="kw">class</span> <span class="cls">HyperbolicParaboloid</span>(<span class="cls">ParametricSurfaceData</span>):
     <span class="kw">def</span> <span class="fn">evaluate</span>(self, u, v):
-        <span class="cmt"># 子类仅写 3 行核心物理方程！</span>
+        <span class="cmt"># 子类仅需实现 3 行核心物理方程！</span>
         z = self.c * ((u/self.a)**2 - (v/self.b)**2)
         <span class="kw">return</span> Point3D(u, v, z)
             </div>
           </div>
 
-          <!-- 2. B-Rep -->
+          <!-- 2. B-Rep Solid -->
           <div class="para-card para-brep">
-            <h4>
-              <span>范式二：边界表示实体</span>
-              <span style="font-size:12px; color:var(--rose); font-family:monospace;">B-Rep Solid</span>
-            </h4>
-            <ul>
-              <li><strong>土木应用</strong>：Revit/Tekla 工业级 BIM 构件、框架柱、桥墩实心造型与布尔差集开窗开洞。</li>
-              <li><strong>底层代码</strong>：<code>BrepData</code> 维护 <code>vertices</code>(点)、<code>edges</code>(边)、<code>faces</code>(闭合面环)。</li>
-              <li><strong>拓扑守恒</strong>：服从欧拉-庞加莱公式 $V - E + F - R = 2(S - G)$，绝对保证体封闭不漏水。</li>
-            </ul>
+            <div>
+              <div class="para-card-head">
+                <h4>边界表示实体</h4>
+                <span class="para-sub">B-Rep Solid</span>
+              </div>
+              <ul>
+                <li><strong>工程场景</strong>：工业级 BIM 建模、装配式混凝土柱、钢结构连接节点与开孔。</li>
+                <li><strong>代码架构</strong>：<code>BrepData</code> 维护 <code>vertices</code>、<code>edges</code> 与 <code>faces</code> 拓扑闭环。</li>
+                <li><strong>核心亮点</strong>：拓扑严格满足欧拉公式 $V - E + F = 2$，体不漏风漏水。</li>
+              </ul>
+            </div>
             <div class="code-mini">
+              <button class="copy-btn" onclick="copySnippet(this)">复制</button>
 <span class="cmt"># src/factories.py: create_cube_brep</span>
-<span class="cmt"># 严格解耦：8个角点 + 12条边 + 6个闭合面</span>
-<span class="cmt"># 8 - 12 + 6 = 2 (拓扑完美闭合)</span>
-brep = create_cube_brep(w, d, h)
+<span class="cmt"># 严格解耦：8个角点 + 12条空间边 + 6个闭合面</span>
+<span class="cmt"># 拓扑验证：8 - 12 + 6 = 2 (拓扑闭合实体)</span>
+brep = create_cube_brep(width=10, depth=10, height=20)
             </div>
           </div>
 
           <!-- 3. Mesh -->
           <div class="para-card para-mesh">
-            <h4>
-              <span>范式三：离散多边形网格</span>
-              <span style="font-size:12px; color:var(--amber); font-family:monospace;">Polygon Mesh</span>
-            </h4>
-            <ul>
-              <li><strong>土木应用</strong>：ANSYS / ABAQUS 结构有限元剖分 (FEA)、3D 激光扫描逆向点云重建、GPU 实时渲染。</li>
-              <li><strong>底层代码</strong>：<code>MeshData</code> 彻底抛弃“边”概念，只有顶点池 + 面片顶点索引表 (Index Buffer)。</li>
-              <li><strong>最大优点</strong>：专为显卡硬件光栅化着色打造，处理千万级面片依然流畅。</li>
-            </ul>
+            <div>
+              <div class="para-card-head">
+                <h4>离散多边形网格</h4>
+                <span class="para-sub">Polygon Mesh</span>
+              </div>
+              <ul>
+                <li><strong>工程场景</strong>：有限元受力分析 (ANSYS/ABAQUS)、施工无人机倾斜摄影实景模型。</li>
+                <li><strong>代码架构</strong>：<code>MeshData</code> 彻底抛弃“边”，仅由顶点池 + 索引缓冲区构成。</li>
+                <li><strong>核心亮点</strong>：显卡 GPU 光栅化渲染最高效的底层数据结构。</li>
+              </ul>
+            </div>
             <div class="code-mini">
+              <button class="copy-btn" onclick="copySnippet(this)">复制</button>
 <span class="cmt"># src/factories.py: create_pyramid_mesh</span>
-<span class="cmt"># 扁平结构：5个顶点 + 5个三角/四边面片索引</span>
-mesh = create_pyramid_mesh(w, d, h)
+<span class="cmt"># 扁平缓冲区：5个顶点池 + 5个面片索引表</span>
+mesh = create_pyramid_mesh(base_w=10, base_d=10, height=15)
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Section 3: SOLID Principles -->
-    <section class="card">
+    <!-- ================= SECTION 4: SOLID PRINCIPLES ================= -->
+    <section class="card" id="solid-principles">
       <div class="card-header">
         <span class="tag tag-purple">架构心法</span>
-        <h2>3. 面向对象 SOLID 五大设计原则（土木工程实战图解）</h2>
+        <h2>4. 面向对象 SOLID 五大设计原则（土木工程实战图解）</h2>
       </div>
-      <p style="font-size: 14.5px; color: var(--muted); margin-bottom: 16px;">
-        SOLID 是全球软件工业的五大黄金法则。在我们的 <code>src/</code> 几何库中，处处都是 SOLID 原则的生动体现。结合土木设计与施工类比，一次性彻底搞懂：
+      <p class="solid-intro">
+        SOLID 是全球软件工业的五大黄金准则。在我们的 <code>src/</code> 几何库中，处处融入了这些原则。结合土木工程的设计与施工类比，一次性建立终身受用的代码审美：
       </p>
 
-      <div class="solid-grid">
+      <div class="solid-list">
         <!-- S -->
-        <div class="solid-card s-card">
-          <div class="solid-header">
+        <div class="solid-card s-item">
+          <div class="solid-badge">
             <span class="solid-letter">S</span>
-            <div>
-              <div class="solid-name">单一职责原则</div>
-              <span class="solid-subtitle">Single Responsibility</span>
+            <span class="solid-acronym">SRP</span>
+          </div>
+          <div class="solid-content">
+            <div class="solid-title-row">
+              <h4>单一职责原则</h4>
+              <span class="solid-en-title">Single Responsibility Principle</span>
             </div>
-          </div>
-          <div class="solid-metaphor">
-            <strong>💡 土木类比：</strong><br>梁只管承重，塔吊只管垂直吊装。构件与施工机具严格分工。
-          </div>
-          <div class="solid-code-note">
-            <strong>📁 源码落地：</strong><br>
-            <code>BrepData</code> 纯粹存储几何拓扑；<code>RenderEngine</code> 专门负责打光与三维视口。数据与显示解耦，更换渲染引擎绝不破坏几何本身。
+            <div class="solid-metaphor-banner">
+              <strong>💡 土木工程直觉类比：</strong> 梁只负责承受荷载与弯矩，施工塔吊只负责垂直吊装。承重构件绝不负责给自身打光与搭建看台，两者职责必须彻底分开。
+            </div>
+            <div class="solid-code-detail">
+              <strong>📁 源码落地体现：</strong> <code>BrepData</code> 纯粹存储几何拓扑数据；<code>RenderEngine</code> 专门负责打光、材质与视口调度。数据与显示彻底解耦，哪怕换掉 PyVista 引擎，几何数据结构依然原封不动。
+            </div>
           </div>
         </div>
 
         <!-- O -->
-        <div class="solid-card o-card">
-          <div class="solid-header">
+        <div class="solid-card o-item">
+          <div class="solid-badge">
             <span class="solid-letter">O</span>
-            <div>
-              <div class="solid-name">开闭原则</div>
-              <span class="solid-subtitle">Open-Closed</span>
+            <span class="solid-acronym">OCP</span>
+          </div>
+          <div class="solid-content">
+            <div class="solid-title-row">
+              <h4>开闭原则（对扩展开放，对修改关闭）</h4>
+              <span class="solid-en-title">Open-Closed Principle</span>
             </div>
-          </div>
-          <div class="solid-metaphor">
-            <strong>💡 土木类比：</strong><br>大楼加装新型幕墙，无需砸毁核心筒剪力墙，预留标准转接件即可。
-          </div>
-          <div class="solid-code-note">
-            <strong>📁 源码落地：</strong><br>
-            需要增加“圆柱面”时，只需新建子类继承 <code>ParametricSurfaceData</code>。核心基类 <code>_base.py</code> 和 <code>RenderEngine</code> <strong>零修改</strong>！
+            <div class="solid-metaphor-banner">
+              <strong>💡 土木工程直觉类比：</strong> 建筑主体结构已经封顶，未来业主加装玻璃幕墙或光伏板，只需在预埋件上加装转接件，绝不需要把核心筒剪力墙砸开重铸。
+            </div>
+            <div class="solid-code-detail">
+              <strong>📁 源码落地体现：</strong> 当我们需要在系统里新增一种“圆柱面”时，只需新建子类继承 <code>ParametricSurfaceData</code>。核心基类 <code>_base.py</code> 和 <code>RenderEngine</code> <strong>一行代码都不用修改</strong>即可完美支持！
+            </div>
           </div>
         </div>
 
         <!-- L -->
-        <div class="solid-card l-card">
-          <div class="solid-header">
+        <div class="solid-card l-item">
+          <div class="solid-badge">
             <span class="solid-letter">L</span>
-            <div>
-              <div class="solid-name">里氏替换原则</div>
-              <span class="solid-subtitle">Liskov Substitution</span>
+            <span class="solid-acronym">LSP</span>
+          </div>
+          <div class="solid-content">
+            <div class="solid-title-row">
+              <h4>里氏替换原则</h4>
+              <span class="solid-en-title">Liskov Substitution Principle</span>
             </div>
-          </div>
-          <div class="solid-metaphor">
-            <strong>💡 土木类比：</strong><br>标准预制叠合梁无缝替换现浇梁。只要支座接口与标高一致，结构永不坍塌。
-          </div>
-          <div class="solid-code-note">
-            <strong>📁 源码落地：</strong><br>
-            调度器接收父类 <code>GeometryData</code>，传入 <code>Point3D</code>、<code>Line3D</code>、<code>BrepData</code> 均可透明替换，<code>to_pyvista()</code> 永不报错。
+            <div class="solid-metaphor-banner">
+              <strong>💡 土木工程直觉类比：</strong> 工地使用预制叠合梁无缝替换传统现浇梁。只要截面抗弯刚度与支座标高一致，上部结构就能安全承载，结构绝不会因构件来源不同而塌陷。
+            </div>
+            <div class="solid-code-detail">
+              <strong>📁 源码落地体现：</strong> 任何需要接收父类 <code>GeometryData</code> 的地方，传入 <code>Point3D</code>、<code>Line3D</code>、<code>HyperbolicParaboloid</code> 或 <code>BrepData</code> 都能正常工作，调用 <code>to_pyvista()</code> 绝不抛出意外异常。
+            </div>
           </div>
         </div>
 
         <!-- I -->
-        <div class="solid-card i-card">
-          <div class="solid-header">
+        <div class="solid-card i-item">
+          <div class="solid-badge">
             <span class="solid-letter">I</span>
-            <div>
-              <div class="solid-name">接口隔离原则</div>
-              <span class="solid-subtitle">Interface Segregation</span>
+            <span class="solid-acronym">ISP</span>
+          </div>
+          <div class="solid-content">
+            <div class="solid-title-row">
+              <h4>接口隔离原则</h4>
+              <span class="solid-en-title">Interface Segregation Principle</span>
             </div>
-          </div>
-          <div class="solid-metaphor">
-            <strong>💡 土木类比：</strong><br>强电插座与自来水龙头分开布设，不要强迫一根水管同时具备通电功能。
-          </div>
-          <div class="solid-code-note">
-            <strong>📁 源码落地：</strong><br>
-            <code>Point3D</code> 只需要坐标；只有曲面才有 <code>u_range, v_range</code>。总基类 <code>GeometryData</code> 绝不把网格划分等臃肿接口强塞给点和线。
+            <div class="solid-metaphor-banner">
+              <strong>💡 土木工程直觉类比：</strong> 强电插座只提供 220V 电流，自来水龙头只负责供水。绝不要强迫一根水管同时具备插网线和通强电的功能。
+            </div>
+            <div class="solid-code-detail">
+              <strong>📁 源码落地体现：</strong> 空间点 <code>Point3D</code> 只需要坐标；只有曲面才具备 <code>u_range, v_range</code> 参数。总基类 <code>GeometryData</code> 保持极简，绝不把曲面网格细分等沉重接口强塞给基础的点和线。
+            </div>
           </div>
         </div>
 
         <!-- D -->
-        <div class="solid-card d-card">
-          <div class="solid-header">
+        <div class="solid-card d-item">
+          <div class="solid-badge">
             <span class="solid-letter">D</span>
-            <div>
-              <div class="solid-name">依赖倒置原则</div>
-              <span class="solid-subtitle">Dependency Inversion</span>
+            <span class="solid-acronym">DIP</span>
+          </div>
+          <div class="solid-content">
+            <div class="solid-title-row">
+              <h4>依赖倒置原则</h4>
+              <span class="solid-en-title">Dependency Inversion Principle</span>
             </div>
-          </div>
-          <div class="solid-metaphor">
-            <strong>💡 土木类比：</strong><br>监理依据国家规范（国标 GB）验收工程，而不是绑定特定水泥小作坊。
-          </div>
-          <div class="solid-code-note">
-            <strong>📁 源码落地：</strong><br>
-            高层渲染调度 <code>RenderEngine</code> 只依赖抽象规范 <code>GeometryData</code>，绝不直接硬编码依赖马鞍面或立方体具体底层细节。
+            <div class="solid-metaphor-banner">
+              <strong>💡 土木工程直觉类比：</strong> 监理工程师验收钢筋混凝土工程，只依据国家规范标准 (GB/JTG) 验收，而不是依赖某一家特定供应商的独门私家配方。
+            </div>
+            <div class="solid-code-detail">
+              <strong>📁 源码落地体现：</strong> 高层渲染调度引擎 <code>RenderEngine</code> 只依赖抽象的规范 <code>GeometryData</code>，绝不在内部硬编码绑定具体的马鞍面或立方体细节。上层与底层同时依赖抽象接口。
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Section 4: Summary -->
-    <section class="card">
+    <!-- ================= SECTION 5: SUMMARY & REPO ================= -->
+    <section class="card" id="summary">
       <div class="card-header">
         <span class="tag tag-rose">总结要诀</span>
-        <h2>4. 土木人编程避坑与设计心法</h2>
+        <h2>5. 土木人编程避坑与核心心法</h2>
       </div>
 
       <div class="summary-box">
-        <strong>📌 三句话记住今天这套代码的精髓：</strong><br>
-        1. <strong>找共性放父类</strong>：只要是参数曲面，都要划分 $(u, v)$ 步长并转为 VTK 网格，所以写在 <code>ParametricSurfaceData</code> 里；<br>
-        2. <strong>个性留给子类</strong>：马鞍面的公式是马鞍面的，球面的公式是球面的，子类只重写 <code>evaluate(u, v)</code> 这一个函数；<br>
-        3. <strong>接口对外统一</strong>：无论内部是曲面、B-Rep 实体还是网格，对渲染引擎都只暴露一个 <code>to_pyvista()</code>，这就是工业软件极度稳定优雅的秘密！
+        <strong>📌 三句话牢记现代工程软件几何内核的设计精髓：</strong><br>
+        1. <strong>找共性放父类</strong>：只要是参数曲面，都要划分 $(u, v)$ 网格并转为渲染数据，因此统一收录在 <code>ParametricSurfaceData</code>；<br>
+        2. <strong>个性留给子类</strong>：马鞍面的公式属于马鞍面，双曲面的公式属于双曲面，子类只需专注实现 <code>evaluate(u, v)</code> 核心函数；<br>
+        3. <strong>接口对外统一</strong>：无论内部是曲面、B-Rep 实体还是离散多边形网格，对外部渲染器一律只暴露一个 <code>to_pyvista()</code>，这就是工业软件历经几十年依然稳健拓展的秘密！
+      </div>
+
+      <!-- Repo & Download Callout -->
+      <div class="repo-bar">
+        <div class="repo-info">
+          <h4>📦 完整源码与示例工程 (GitHub 开源仓库)</h4>
+          <p>涵盖 <code>src/</code> 几何内核全套代码与 <code>examples/</code> 运行脚本，可离线运行测试</p>
+        </div>
+        <div class="repo-btn-group">
+          <a href="https://github.com/parleychou/python_civil_drawing" target="_blank" rel="noopener" class="btn btn-primary">
+            <span>访问 GitHub 仓库 ↗</span>
+          </a>
+          <a href="../slides/06.01-body-representation-slides.html" class="btn btn-secondary">
+            <span>查看第 6 讲在线课件 ↗</span>
+          </a>
+        </div>
       </div>
     </section>
 
   </div>
 
+  <!-- Floating Back to Top Button -->
+  <a href="#top" class="back-to-top" title="返回顶部" aria-label="返回顶部">↑</a>
+
+  <!-- JavaScript: Theme Toggle & Copy Snippet -->
+  <script>
+    // Theme Toggle
+    const themeBtn = document.getElementById("theme-btn");
+    const themeIcon = document.getElementById("theme-icon");
+    const currentTheme = localStorage.getItem("civil-guide-theme") || "light";
+    document.documentElement.setAttribute("data-theme", currentTheme);
+    updateThemeIcon(currentTheme);
+
+    themeBtn.addEventListener("click", () => {
+      const activeTheme = document.documentElement.getAttribute("data-theme");
+      const nextTheme = activeTheme === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", nextTheme);
+      localStorage.setItem("civil-guide-theme", nextTheme);
+      updateThemeIcon(nextTheme);
+    });
+
+    function updateThemeIcon(t) {
+      themeIcon.textContent = t === "dark" ? "☀️ 浅色" : "🌙 深色";
+    }
+
+    // Copy Code Snippet
+    function copySnippet(btn) {
+      const codeBlock = btn.parentElement;
+      const textToCopy = codeBlock.innerText.replace("复制", "").trim();
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        btn.textContent = "已复制 ✓";
+        setTimeout(() => {
+          btn.textContent = "复制";
+        }, 2000);
+      });
+    }
+  </script>
 </body>
 </html>
