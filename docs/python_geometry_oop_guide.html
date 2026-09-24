@@ -3,854 +3,565 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>土木工程师的 Python 面向对象 (OOP) 与几何内核架构指南</title>
+  <title>土木人的 Python 几何内核与面向对象 (OOP) 极简图解指南</title>
   <style>
     :root {
-      --primary: #0284c7;
-      --primary-dark: #0369a1;
-      --primary-light: #e0f2fe;
-      --secondary: #0f172a;
-      --accent-coral: #e11d48;
-      --accent-palm: #0d9488;
-      --accent-amber: #d97706;
-      --bg-main: #f8fafc;
-      --bg-card: #ffffff;
-      --border-color: #e2e8f0;
-      --text-main: #334155;
-      --text-muted: #64748b;
-      --code-bg: #1e293b;
-      --code-text: #f1f5f9;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+      --blue: #0284c7;
+      --blue-light: #e0f2fe;
+      --teal: #0d9488;
+      --teal-light: #ccfbf1;
+      --rose: #e11d48;
+      --rose-light: #ffe4e6;
+      --amber: #d97706;
+      --amber-light: #fef3c7;
+      --navy: #0f172a;
       --radius: 12px;
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+      --shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
-      background-color: var(--bg-main);
-      color: var(--text-main);
-      line-height: 1.7;
-      font-size: 16px;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 0 0 60px 0;
     }
 
-    /* Top Banner & Header */
-    .top-bar {
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0369a1 100%);
-      color: #ffffff;
-      padding: 50px 24px;
+    /* Hero Header */
+    .hero {
+      background: linear-gradient(135deg, var(--navy) 0%, #1e293b 60%, #0369a1 100%);
+      color: #fff;
+      padding: 44px 20px;
       text-align: center;
-      position: relative;
-      overflow: hidden;
     }
-    .top-bar::after {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: radial-gradient(circle at 80% 20%, rgba(2, 132, 199, 0.25) 0%, transparent 60%);
-      pointer-events: none;
-    }
-    .badge-series {
+    .hero .badge {
       display: inline-block;
-      padding: 6px 14px;
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 4px 12px;
+      background: rgba(255,255,255,0.16);
       border-radius: 20px;
       font-size: 13px;
-      letter-spacing: 1px;
       font-weight: 600;
-      text-transform: uppercase;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
-    .top-bar h1 {
-      font-size: clamp(28px, 4vw, 42px);
+    .hero h1 {
+      font-size: clamp(24px, 3.5vw, 36px);
       font-weight: 800;
-      letter-spacing: -0.5px;
-      margin-bottom: 14px;
-      color: #ffffff;
+      margin-bottom: 8px;
     }
-    .top-bar p {
-      font-size: clamp(16px, 2vw, 19px);
-      max-width: 860px;
-      margin: 0 auto;
+    .hero p {
+      font-size: clamp(15px, 1.8vw, 17px);
       color: #94a3b8;
-      line-height: 1.6;
-    }
-    .top-meta {
-      margin-top: 24px;
-      display: flex;
-      justify-content: center;
-      gap: 24px;
-      font-size: 14px;
-      color: #cbd5e1;
-    }
-
-    /* Layout Container */
-    .container {
-      max-width: 1240px;
+      max-width: 780px;
       margin: 0 auto;
-      padding: 40px 20px 80px;
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      gap: 36px;
-      align-items: start;
     }
 
-    @media (max-width: 960px) {
-      .container { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
+    .main {
+      max-width: 1100px;
+      margin: -24px auto 0;
+      padding: 0 20px;
     }
 
-    /* Sticky Sidebar Navigation */
-    .sidebar {
-      position: sticky;
-      top: 24px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
+    /* Core Section Card */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 24px;
+      padding: 28px;
+      margin-bottom: 28px;
       box-shadow: var(--shadow);
     }
-    .sidebar h3 {
-      font-size: 15px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-      border-bottom: 2px solid var(--border-color);
-      padding-bottom: 8px;
-    }
-    .sidebar ul {
-      list-style: none;
-    }
-    .sidebar li {
-      margin-bottom: 10px;
-    }
-    .sidebar a {
-      color: var(--text-main);
-      text-decoration: none;
-      font-size: 14px;
-      display: block;
-      padding: 6px 10px;
-      border-radius: 6px;
-      transition: all 0.2s;
-    }
-    .sidebar a:hover {
-      background: var(--primary-light);
-      color: var(--primary-dark);
-      font-weight: 600;
-      transform: translateX(4px);
-    }
-    .sidebar .step-badge {
-      display: inline-block;
-      font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 4px;
-      margin-right: 6px;
-      font-weight: 700;
-    }
-    .badge-step1 { background: #e0f2fe; color: #0284c7; }
-    .badge-step2 { background: #fef3c7; color: #d97706; }
-
-    /* Content Area */
-    .content {
-      min-width: 0;
-    }
-
-    /* Section Cards */
-    .section-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      padding: 36px;
-      margin-bottom: 36px;
-      box-shadow: var(--shadow);
-    }
-    .section-card h2 {
-      font-size: 26px;
-      font-weight: 700;
-      color: var(--secondary);
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 18px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--border);
     }
-    .section-card h2 .icon {
-      font-size: 28px;
-    }
-    .section-card h3 {
-      font-size: 20px;
-      font-weight: 600;
-      color: var(--secondary);
-      margin: 28px 0 14px;
-      border-left: 4px solid var(--primary);
-      padding-left: 12px;
-    }
-    .section-card h4 {
-      font-size: 17px;
-      font-weight: 600;
-      color: #1e293b;
-      margin: 20px 0 10px;
-    }
-    .section-card p {
-      margin-bottom: 16px;
-      color: #475569;
-    }
-
-    /* Civil Engineering Analogy Callout Box */
-    .analogy-box {
-      background: #f0fdf4;
-      border-left: 5px solid #22c55e;
-      border-radius: 8px;
-      padding: 20px 22px;
-      margin: 22px 0;
-    }
-    .analogy-title {
+    .card-header .tag {
+      font-size: 12px;
       font-weight: 700;
-      color: #15803d;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
     }
-    .analogy-content {
-      font-size: 15px;
-      color: #166534;
-      line-height: 1.65;
-    }
+    .tag-blue { background: var(--blue-light); color: var(--blue); }
+    .tag-amber { background: var(--amber-light); color: var(--amber); }
+    .tag-rose { background: var(--rose-light); color: var(--rose); }
 
-    /* Mechanics & Math Callout Box */
-    .math-box {
-      background: #eff6ff;
-      border-left: 5px solid var(--primary);
-      border-radius: 8px;
-      padding: 20px 22px;
-      margin: 22px 0;
-    }
-    .math-title {
+    .card-header h2 {
+      font-size: 22px;
       font-weight: 700;
-      color: var(--primary-dark);
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .math-content {
-      font-size: 15px;
-      color: #1e40af;
-      line-height: 1.65;
+      color: var(--navy);
     }
 
-    /* Warning & Pitfall Box */
-    .pitfall-box {
-      background: #fff1f2;
-      border-left: 5px solid var(--accent-coral);
-      border-radius: 8px;
-      padding: 20px 22px;
-      margin: 22px 0;
-    }
-    .pitfall-title {
-      font-weight: 700;
-      color: #be123c;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .pitfall-content {
-      font-size: 15px;
-      color: #9f1239;
-      line-height: 1.65;
-    }
-
-    /* Code Panel */
-    .code-panel {
-      background: var(--code-bg);
-      color: var(--code-text);
-      border-radius: 10px;
-      padding: 18px 22px;
-      margin: 20px 0;
+    /* ================= STRUCTURE GRAPH (SVG) ================= */
+    .graph-container {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 10px;
+      margin: 16px 0;
       overflow-x: auto;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 14px;
-      line-height: 1.6;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.25);
+      text-align: center;
     }
-    .code-panel .kw { color: #f43f5e; font-weight: bold; } /* def, class, import, return */
-    .code-panel .cls { color: #38bdf8; font-weight: bold; } /* ClassNames */
-    .code-panel .fn { color: #fbbf24; } /* function calls */
-    .code-panel .str { color: #4ade80; } /* strings */
-    .code-panel .num { color: #c084fc; } /* numbers */
-    .code-panel .cmt { color: #94a3b8; font-style: italic; } /* comments */
-    .code-panel .dec { color: #f59e0b; } /* decorators */
+    svg.struct-graph {
+      max-width: 1000px;
+      height: auto;
+      display: inline-block;
+    }
 
-    /* Tree Diagram */
-    .tree-view {
-      background: #f8fafc;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 20px 24px;
+    /* Metaphor 4-Box Grid */
+    .metaphor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
       margin: 20px 0;
-      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-      font-size: 14px;
-      line-height: 1.8;
-      color: #1e293b;
     }
-    .tree-node-base { color: #0284c7; font-weight: bold; }
-    .tree-node-1d { color: #0d9488; font-weight: bold; }
-    .tree-node-2d { color: #d97706; font-weight: bold; }
-    .tree-node-3d { color: #e11d48; font-weight: bold; }
-
-    /* Comparison Table */
-    .styled-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 24px 0;
-      font-size: 15px;
-    }
-    .styled-table th, .styled-table td {
-      padding: 12px 16px;
-      border: 1px solid var(--border-color);
-      text-align: left;
-    }
-    .styled-table th {
-      background: #f1f5f9;
-      color: #1e293b;
-      font-weight: 700;
-    }
-    .styled-table tr:nth-child(even) {
+    .metaphor-box {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
       background: #f8fafc;
+      border-top: 4px solid var(--blue);
     }
-    .styled-table tr:hover {
+    .metaphor-box h4 {
+      font-size: 15px;
+      color: var(--navy);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .metaphor-box .python-term {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: monospace;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .metaphor-box p {
+      font-size: 13.5px;
+      color: #334155;
+      line-height: 1.5;
+    }
+
+    /* Two Steps Timeline */
+    .step-box {
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      border-left: 6px solid var(--blue);
       background: #f0f9ff;
     }
-
-    /* Step Banner */
-    .step-banner {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      background: linear-gradient(90deg, #f0f9ff 0%, #ffffff 100%);
-      border: 1px solid #bae6fd;
-      border-left: 6px solid var(--primary);
-      border-radius: 8px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
+    .step-box.step2 {
+      border-left-color: var(--amber);
+      background: #fffbeb;
     }
-    .step-number {
-      font-size: 32px;
-      font-weight: 900;
-      color: var(--primary);
-      line-height: 1;
-    }
-    .step-text h3 {
-      margin: 0 0 4px;
+    .step-title {
       font-size: 18px;
-      color: var(--secondary);
-      border-left: none;
-      padding-left: 0;
-    }
-    .step-text p {
-      margin: 0;
-      font-size: 14px;
-      color: var(--text-muted);
-    }
-
-    /* Grid Cards */
-    .grid-2col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin: 20px 0;
-    }
-    @media (max-width: 768px) {
-      .grid-2col { grid-template-columns: 1fr; }
-    }
-    .concept-card {
-      background: #ffffff;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: var(--shadow);
-    }
-    .concept-card h4 {
-      margin-top: 0;
-      font-size: 16px;
-      color: var(--primary-dark);
+      font-weight: 700;
+      margin-bottom: 6px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
+    .step-desc {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
 
-    /* Quick Links Pill */
-    .pill {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 20px;
+    /* Mini Grid for Elements */
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .elem-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .elem-card h5 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .elem-card .file-tag {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: monospace;
+      font-weight: normal;
+    }
+    .elem-card p {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .elem-card .key-point {
+      margin-top: 6px;
       font-size: 12px;
+      color: #0369a1;
       font-weight: 600;
     }
-    .pill-surf { background: #e0f2fe; color: #0369a1; }
-    .pill-brep { background: #ffe4e6; color: #be123c; }
-    .pill-mesh { background: #fef3c7; color: #b45309; }
 
-    /* Footer */
-    footer {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-muted);
+    /* 3 Paradigms Comparison Cards */
+    .paradigm-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      margin: 16px 0;
+    }
+    .para-card {
+      border-radius: 10px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+    .para-surf { border-top: 4px solid var(--blue); }
+    .para-brep { border-top: 4px solid var(--rose); }
+    .para-mesh { border-top: 4px solid var(--amber); }
+
+    .para-card h4 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .para-card ul {
+      list-style: none;
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: #334155;
+    }
+    .para-card li {
+      margin-bottom: 6px;
+      padding-left: 14px;
+      position: relative;
+    }
+    .para-card li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      font-weight: bold;
+      color: var(--muted);
+    }
+
+    /* Minimal Code Box */
+    .code-mini {
+      background: #1e293b;
+      color: #f8fafc;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: Consolas, monospace;
+      font-size: 12.5px;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+    .code-mini .kw { color: #f43f5e; font-weight: bold; }
+    .code-mini .cls { color: #38bdf8; }
+    .code-mini .fn { color: #fbbf24; }
+    .code-mini .cmt { color: #94a3b8; font-style: italic; }
+
+    /* Summary Bar */
+    .summary-box {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 16px 20px;
       font-size: 14px;
-      border-top: 1px solid var(--border-color);
-      background: #ffffff;
-      margin-top: 60px;
+      color: #334155;
+      line-height: 1.6;
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Hero Header -->
-  <header class="top-bar">
-    <div class="badge-series">土木人的 Python 课 · 几何内核讲义</div>
-    <h1>土木工程师的 Python 面向对象与几何内核架构</h1>
-    <p>
-      摒弃晦涩的计算机术语，用土木工程师熟悉的「图纸设计、预制构件装配与国家规范」视角，
-      彻底读懂 <code>src/</code> 核心几何算法库的继承与多态架构。
-    </p>
-    <div class="top-meta">
-      <span>主讲：周文琪</span>
-      <span>上海非解构数字科技有限公司</span>
-      <span>配套源码仓库：parleychou/python_civil_drawing</span>
-    </div>
+  <!-- Header -->
+  <header class="hero">
+    <div class="badge">土木人的 Python 课 · 极简架构图解</div>
+    <h1>代码结构与面向对象 (OOP) 快速看懂指南</h1>
+    <p>专为土木工程师定制：一张结构总图 + 两个学习步骤，彻底搞懂 <code>src/</code> 底层如何用类表达曲面与实体</p>
   </header>
 
-  <!-- Main Container -->
-  <div class="container">
+  <div class="main">
 
-    <!-- Sticky Navigation Sidebar -->
-    <aside class="sidebar">
-      <h3>课程讲义导航</h3>
-      <ul>
-        <li><a href="#intro">📖 前言：土木人为何要学面向对象</a></li>
-        <li>
-          <a href="#step1">
-            <span class="step-badge badge-step1">步骤 1</span>
-            承前启后：前序几何基石
-          </a>
-        </li>
-        <li><a href="#step1-point-vector">&nbsp;&nbsp;• 0D 空间点与物理矢量</a></li>
-        <li><a href="#step1-curve">&nbsp;&nbsp;• 1D 参数化曲线与类封装</a></li>
-        <li><a href="#step1-base">&nbsp;&nbsp;• 基类 GeometryData 的初心</a></li>
-        <li>
-          <a href="#step2">
-            <span class="step-badge badge-step2">步骤 2</span>
-            今日拓展：曲面与实体飞跃
-          </a>
-        </li>
-        <li><a href="#step2-surface">&nbsp;&nbsp;• 范式一：连续参数曲面</a></li>
-        <li><a href="#step2-brep">&nbsp;&nbsp;• 范式二：边界表示实体 (B-Rep)</a></li>
-        <li><a href="#step2-mesh">&nbsp;&nbsp;• 范式三：离散多边形网格 (Mesh)</a></li>
-        <li><a href="#step2-oop-secrets">&nbsp;&nbsp;• 高阶 OOP 秘籍：父类、子类与多态</a></li>
-        <li><a href="#summary">🎯 全景总结与架构速查表</a></li>
-      </ul>
-    </aside>
+    <!-- Section 1: Global Structure Graph -->
+    <section class="card">
+      <div class="card-header">
+        <span class="tag tag-blue">全局俯瞰</span>
+        <h2>1. 核心代码架构关系图 (The Code Structure Tree)</h2>
+      </div>
+      <p style="font-size: 14.5px; color: var(--muted);">
+        整个 <code>src/</code> 目录像一栋设计精巧的装配式建筑。所有几何对象都从根基类 <strong><code>GeometryData</code></strong> 派生，各司其职：
+      </p>
 
-    <!-- Content Body -->
-    <main class="content">
+      <!-- SVG Structure Graph -->
+      <div class="graph-container">
+        <svg class="struct-graph" viewBox="0 0 960 480" width="960" height="480">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#94a3b8" />
+            </marker>
+            <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#0284c7" />
+            </marker>
+            <filter id="shadow-box" x="-5%" y="-5%" width="110%" height="115%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.08" />
+            </filter>
+          </defs>
 
-      <!-- Preface: Civil Engineering to OOP -->
-      <section id="intro" class="section-card">
-        <h2><span class="icon">🏗️</span> 前言：写给土木工程师的编程思维映射</h2>
-        <p>
-          许多土木与结构工程师初学 Python 时，习惯把代码写成一大串按顺序执行的脚本，用零散的浮点数列表（如 <code>[0.0, 1500.0, 3000.0]</code>）来表示坐标。这种写法在处理一两个简单梁柱时还能应付，但一旦面对复杂大跨空间网壳、BIM 构件布尔运算或三维有限元前处理，代码就会迅速陷入“尺寸单位混乱、变量满天飞、稍作改动全盘崩溃”的泥潭。
-        </p>
-        <p>
-          解决这个问题的终极武器，正是现代工业软件内核的根基——<strong>面向对象编程 (Object-Oriented Programming, OOP)</strong>。
-        </p>
+          <!-- ROOT: GeometryData -->
+          <g transform="translate(360, 20)" filter="url(#shadow-box)">
+            <rect width="240" height="66" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+            <text x="120" y="28" fill="#38bdf8" font-size="15" font-weight="bold" text-anchor="middle" font-family="monospace">GeometryData (ABC)</text>
+            <text x="120" y="48" fill="#94a3b8" font-size="12" text-anchor="middle">【总父类】国家规范契约：name + to_pyvista()</text>
+          </g>
 
-        <div class="analogy-box">
-          <div class="analogy-title">💡 核心土木类比：设计图纸 vs 实际现浇梁柱</div>
-          <div class="analogy-content">
-            • <strong>类 (Class)</strong>：相当于结构专业的一套<strong>《标准预制构件设计图集》</strong>或<strong>《族定义 (Family Symbol)》</strong>。它本身不是真实的物理构件，而是规定了构件拥有哪些尺寸参数（长宽高、混凝土标号）以及具备哪些计算能力（计算截面惯性矩、承载力验算）。<br>
-            • <strong>对象 / 实例 (Instance / Object)</strong>：相当于根据图集<strong>在施工现场实际浇筑成型的一根根具体柱子</strong>（如首层 A 轴 KZ-1）。你可以依据同一份图集（类），输入不同的几何尺寸，生成成百上千根独立的物理构件（对象）。
+          <!-- CONNECTING LINES FROM ROOT -->
+          <!-- To 0D -->
+          <path d="M 400 86 L 400 130 L 110 130 L 110 170" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrow)" />
+          <!-- To 1D Curve -->
+          <path d="M 440 86 L 440 130 L 310 130 L 310 170" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrow)" />
+          <!-- To 2D Surface -->
+          <path d="M 480 86 L 480 130 L 520 130 L 520 170" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrow)" />
+          <!-- To 3D B-Rep -->
+          <path d="M 520 86 L 520 130 L 720 130 L 720 170" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrow)" />
+          <!-- To 3D Mesh -->
+          <path d="M 560 86 L 560 130 L 880 130 L 880 170" fill="none" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#arrow)" />
+
+          <!-- BRANCH 1: 0D Point & Vector -->
+          <g transform="translate(20, 170)" filter="url(#shadow-box)">
+            <rect width="180" height="74" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" />
+            <text x="90" y="24" fill="#0284c7" font-size="14" font-weight="bold" text-anchor="middle" font-family="monospace">Point3D & Vector3D</text>
+            <text x="90" y="44" fill="#64748b" font-size="11.5" text-anchor="middle">【0D 几何基石】</text>
+            <text x="90" y="62" fill="#334155" font-size="11" text-anchor="middle">坐标点位 / 位移力矢量</text>
+          </g>
+
+          <!-- BRANCH 2: 1D Curve (Parent) -->
+          <g transform="translate(220, 170)" filter="url(#shadow-box)">
+            <rect width="180" height="74" rx="8" fill="#f0fdfa" stroke="#5eead4" stroke-width="1.5" />
+            <text x="90" y="24" fill="#0d9488" font-size="14" font-weight="bold" text-anchor="middle" font-family="monospace">Curve (ABC 父类)</text>
+            <text x="90" y="44" fill="#0f766e" font-size="11.5" text-anchor="middle">【1D 曲线抽象】</text>
+            <text x="90" y="62" fill="#64748b" font-size="11" text-anchor="middle">t∈[0,1] → 采样点折线</text>
+          </g>
+
+          <!-- BRANCH 2 SUBCLASSES -->
+          <path d="M 310 244 L 310 275" fill="none" stroke="#0d9488" stroke-width="1.5" marker-end="url(#arrow)" />
+          <g transform="translate(220, 280)" filter="url(#shadow-box)">
+            <rect width="180" height="54" rx="6" fill="#ffffff" stroke="#99f6e4" stroke-width="1.2" />
+            <text x="90" y="22" fill="#0f766e" font-size="12.5" font-weight="bold" text-anchor="middle" font-family="monospace">Line3D / Arc3D (子类)</text>
+            <text x="90" y="42" fill="#64748b" font-size="11" text-anchor="middle">直线段 / 空间圆弧</text>
+          </g>
+
+          <!-- BRANCH 3: 2D ParametricSurfaceData (Parent) -->
+          <g transform="translate(430, 170)" filter="url(#shadow-box)">
+            <rect width="180" height="74" rx="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5" />
+            <text x="90" y="24" fill="#0284c7" font-size="13" font-weight="bold" text-anchor="middle" font-family="monospace">ParametricSurfaceData</text>
+            <text x="90" y="44" fill="#1d4ed8" font-size="11.5" text-anchor="middle">【2D 参数曲面父类】</text>
+            <text x="90" y="62" fill="#64748b" font-size="11" text-anchor="middle">(u,v)网格划分/结构化网格</text>
+          </g>
+
+          <!-- BRANCH 3 SUBCLASSES -->
+          <path d="M 520 244 L 520 275" fill="none" stroke="#0284c7" stroke-width="1.5" marker-end="url(#arrow-blue)" />
+          <g transform="translate(430, 280)" filter="url(#shadow-box)">
+            <rect width="180" height="64" rx="6" fill="#ffffff" stroke="#bfdbfe" stroke-width="1.2" />
+            <text x="90" y="22" fill="#1e40af" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">HyperbolicParaboloid</text>
+            <text x="90" y="40" fill="#0284c7" font-size="11" font-weight="bold" text-anchor="middle">【马鞍面子类】</text>
+            <text x="90" y="56" fill="#64748b" font-size="10.5" text-anchor="middle">解析公式求值 evaluate()</text>
+          </g>
+
+          <!-- BRANCH 4: 3D B-Rep (Solid) -->
+          <g transform="translate(630, 170)" filter="url(#shadow-box)">
+            <rect width="170" height="74" rx="8" fill="#fff1f2" stroke="#fda4af" stroke-width="1.5" />
+            <text x="85" y="24" fill="#e11d48" font-size="14" font-weight="bold" text-anchor="middle" font-family="monospace">BrepData (子类)</text>
+            <text x="85" y="44" fill="#be123c" font-size="11.5" text-anchor="middle">【3D 边界表示实体】</text>
+            <text x="85" y="62" fill="#64748b" font-size="11" text-anchor="middle">点-边-面三元组 (长方体)</text>
+          </g>
+
+          <!-- BRANCH 5: 3D Mesh -->
+          <g transform="translate(820, 170)" filter="url(#shadow-box)">
+            <rect width="130" height="74" rx="8" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.5" />
+            <text x="65" y="24" fill="#d97706" font-size="14" font-weight="bold" text-anchor="middle" font-family="monospace">MeshData (子类)</text>
+            <text x="65" y="44" fill="#b45309" font-size="11.5" text-anchor="middle">【3D 离散网格】</text>
+            <text x="65" y="62" fill="#64748b" font-size="11" text-anchor="middle">顶点池+面索引 (四棱锥)</text>
+          </g>
+
+          <!-- CONSUMER: RenderEngine (Polymorphism) -->
+          <g transform="translate(260, 390)" filter="url(#shadow-box)">
+            <rect width="440" height="66" rx="8" fill="#1e293b" stroke="#475569" stroke-width="1.5" />
+            <text x="220" y="26" fill="#facc15" font-size="14" font-weight="bold" text-anchor="middle" font-family="monospace">RenderEngine.render([surf, brep, mesh])</text>
+            <text x="220" y="48" fill="#e2e8f0" font-size="11.5" text-anchor="middle">🏗️ 【多态吊钩】无需关心具体类型，统一切换为 to_pyvista() 混合渲染！</text>
+          </g>
+
+          <!-- DASHED LINES TO RENDER ENGINE -->
+          <path d="M 520 344 L 520 385" fill="none" stroke="#facc15" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
+          <path d="M 715 244 L 715 370 L 600 370 L 600 385" fill="none" stroke="#facc15" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
+          <path d="M 885 244 L 885 375 L 640 375 L 640 385" fill="none" stroke="#facc15" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
+        </svg>
+      </div>
+
+      <!-- 4 Core OOP Metaphors for Civil Engineers -->
+      <h3 style="font-size: 17px; margin: 20px 0 12px; color: var(--navy);">💡 土木工程师 4 句话看懂面向对象核心概念：</h3>
+      <div class="metaphor-grid">
+        <div class="metaphor-box">
+          <h4>🏛️ 类 (Class)</h4>
+          <span class="python-term">class HyperbolicParaboloid:</span>
+          <p><strong>＝ 标准设计图集 / 族定义</strong><br>本身不是实体建筑，而是一份图纸模板，规定了构件有哪些尺寸参数与计算方法。</p>
+        </div>
+        <div class="metaphor-box">
+          <h4>🧱 对象 (Instance)</h4>
+          <span class="python-term">surf = HyperbolicParaboloid()</span>
+          <p><strong>＝ 工地实际浇筑的构件</strong><br>根据图纸实际创建出来的一个具体梁柱。可以输入不同长宽高，生成成千上万个对象。</p>
+        </div>
+        <div class="metaphor-box">
+          <h4>🏗️ 父类与子类 (Inheritance)</h4>
+          <span class="python-term">class 子类(父类):</span>
+          <p><strong>＝ 标准底盘与定制构件</strong><br>父类预制了通用通用水电管线（采样与渲染），子类只需专注写出专属的受力公式即可，不用重复造轮子。</p>
+        </div>
+        <div class="metaphor-box">
+          <h4>🏗️ 多态性 (Polymorphism)</h4>
+          <span class="python-term">engine.render(any_object)</span>
+          <p><strong>＝ 施工塔吊的统一吊耳</strong><br>塔吊不管是钢梁还是混凝土板，只要每个构件都焊上了标准吊耳（<code>to_pyvista</code>），就能一键统一吊装上天！</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Two Steps Roadmap -->
+    <section class="card">
+      <div class="card-header">
+        <span class="tag tag-amber">教学演进</span>
+        <h2>2. 从“点线基础”到“曲面实体”的两步学习法</h2>
+      </div>
+
+      <!-- STEP 1 -->
+      <div class="step-box">
+        <div class="step-title">
+          <span>📍 第一步：回顾前序知识 · 0D 空间点与 1D 线性骨架</span>
+        </div>
+        <div class="step-desc">
+          前几讲的核心任务是建立空间坐标基准与梁轴线。只有长度与尺寸，没有厚度与受力体积。
+        </div>
+
+        <div class="items-grid">
+          <div class="elem-card">
+            <h5>Point3D & Vector3D <span class="file-tag">src/point3d.py</span></h5>
+            <p><strong>空间角点与位移荷载向量</strong>：给三维空间点赋予计算能力。两点相减直接得到跨度矢量 <code>span = p_end - p_start</code>，彻底告别零散的数组混乱。</p>
+            <div class="key-point">✔ 运算符重载：符合土木力学公式书写直觉</div>
+          </div>
+          <div class="elem-card">
+            <h5>Curve (基类) → Line3D <span class="file-tag">src/line3d.py</span></h5>
+            <p><strong>轴线与钢筋路径</strong>：父类 <code>Curve</code> 强制规定了参数方程 <code>point_at(t)</code>，并承包了采样逻辑；子类 <code>Line3D</code> 仅需实现起点与终点间的线性插值。</p>
+            <div class="key-point">✔ 初步体会：父类写通用管线，子类写具体插值</div>
+          </div>
+          <div class="elem-card">
+            <h5>GeometryData <span class="file-tag">src/_base.py</span></h5>
+            <p><strong>整个几何系统的法律规范</strong>：强制所有几何对象都有统一的 <code>name</code> 和 <code>to_pyvista()</code> 接口。凡是想要被屏幕渲染的物体，必须遵守此规则。</p>
+            <div class="key-point">✔ 建立工业软件的统一接口规范 (契约化编程)</div>
           </div>
         </div>
+      </div>
 
-        <p>
-          本文档基于我们工程核心代码库 <code>src/</code>，分为<strong>两大步骤</strong>：首先回顾前几讲打下的 0 维和 1 维几何基础与面向对象初心，随后全面拓展到今天的主题——<strong>三种截然不同的曲面与三维实体构造架构</strong>。
-        </p>
-      </section>
-
-      <!-- ==================== STEP 1 ==================== -->
-      <section id="step1" class="section-card">
-        <div class="step-banner">
-          <div class="step-number">01</div>
-          <div class="step-text">
-            <h3>第一步 · 承前启后：前序基础回顾 (0D 与 1D)</h3>
-            <p>从孤立的空间坐标到具有行为能力的参数线图元，体会 OOP 的初步封装</p>
-          </div>
+      <!-- STEP 2 -->
+      <div class="step-box step2">
+        <div class="step-title" style="color: var(--amber);">
+          <span>🌊 第二步：今日拓展进阶 · 2D 曲面与 3D 实体的三大工业范式</span>
+        </div>
+        <div class="step-desc">
+          今天我们将几何维度升至 2 维连续曲面与 3 维闭合实体。深入剖析工业界三大截然不同的构造型态：
         </div>
 
-        <h3 id="step1-point-vector">1. 0D 空间点 (Point3D) 与物理矢量 (Vector3D)</h3>
-        <p>
-          在工程测量与结构建模中，点与向量是几何系统的最底层基石。
-          在 <code>src/point3d.py</code> 与 <code>src/vector3d.py</code> 中，我们没有使用孤立的 Python 浮点数，而是将其封装为标准几何类：
-        </p>
-
-        <div class="code-panel">
-<span class="cmt"># src/point3d.py 核心结构简化</span>
-<span class="dec">@dataclass</span>
-<span class="kw">class</span> <span class="cls">Point3D</span>(<span class="cls">GeometryData</span>):
-    x: <span class="cls">float</span> = <span class="num">0.0</span>  <span class="cmt"># 空间 X 轴坐标 (mm)</span>
-    y: <span class="cls">float</span> = <span class="num">0.0</span>  <span class="cmt"># 空间 Y 轴坐标 (mm)</span>
-    z: <span class="cls">float</span> = <span class="num">0.0</span>  <span class="cmt"># 空间 Z 轴坐标 (mm)</span>
-
-    <span class="kw">def</span> <span class="fn">distance_to</span>(self, other: <span class="str">"Point3D"</span>) -> <span class="cls">float</span>:
-        <span class="str">"""计算当前点与目标点的空间直线欧氏距离"""</span>
-        <span class="kw">return</span> float(np.linalg.norm(self.to_array() - other.to_array()))
-
-    <span class="kw">def</span> <span class="fn">__sub__</span>(self, other: <span class="str">"Point3D"</span>) -> <span class="str">"Vector3D"</span>:
-        <span class="str">"""运算符重载：两点相减，自动得到连通两点的位移矢量 Vector3D"""</span>
-        <span class="kw">from</span> vector3d <span class="kw">import</span> Vector3D
-        <span class="kw">return</span> Vector3D(self.x - other.x, self.y - other.y, self.z - other.z)
-        </div>
-
-        <div class="analogy-box">
-          <div class="analogy-title">💡 为什么重载减法运算符 <code>__sub__</code>？</div>
-          <div class="analogy-content">
-            在土木施工放样中，“终点坐标减去起点坐标”等于“放样方向与跨度矢量”。
-            通过定义 <code>__sub__</code>，工程师在代码中可以直接写 <code>span_vec = p_end - p_start</code>，
-            这不仅符合结构力学推导的直觉习惯，更杜绝了手动拆分 <code>x2 - x1, y2 - y1, z2 - z1</code> 时不小心抄错下标的低级错误！
-          </div>
-        </div>
-
-        <h3 id="step1-curve">2. 1D 线性骨架：参数化曲线抽象基类 (Curve)</h3>
-        <p>
-          在进入曲面之前，我们学习了 1 维构件（如框架梁轴线、桥梁拱肋中心线）。
-          在 <code>src/curve.py</code> 中，我们首次引入了<strong>抽象基类 (Abstract Base Class)</strong> 的概念：
-        </p>
-
-        <div class="code-panel">
-<span class="cmt"># src/curve.py：所有 1D 曲线的“国家行业规范”</span>
-<span class="kw">class</span> <span class="cls">Curve</span>(<span class="cls">GeometryData</span>):
-    <span class="dec">@abstractmethod</span>
-    <span class="kw">def</span> <span class="fn">point_at</span>(self, t: <span class="cls">float</span>) -> <span class="str">"Point3D"</span>:
-        <span class="str">"""强制规范：任何具体曲线，必须提供归一化参数 t∈[0, 1] 到 3D 空间点的映射！"""</span>
-
-    <span class="kw">def</span> <span class="fn">sample_points</span>(self, count: <span class="cls">int</span>) -> <span class="cls">list</span>[<span class="cls">Point3D</span>]:
-        <span class="str">"""通用预制方法：不管你是直线、圆弧还是样条，均分采样逻辑完全一致！"""</span>
-        <span class="kw">return</span> [self.point_at(float(t)) <span class="kw">for</span> t <span class="kw">in</span> np.linspace(<span class="num">0.0</span>, <span class="num">1.0</span>, count)]
-        </div>
-
-        <p>
-          由此，空间直线段 <code>Line3D</code>（<code>src/line3d.py</code>）、圆弧 <code>Arc3D</code>（<code>src/arc3d.py</code>）作为<strong>子类</strong>，
-          只需负责实现具体的数学插值公式 <code>point_at(t)</code>，而离散采样、生成渲染网格等繁重工作，直接由父类 <code>Curve</code> 全权承包！
-        </p>
-
-        <h3 id="step1-base">3. 几何大一统的根基：基类 GeometryData</h3>
-        <p>
-          打开 <code>src/_base.py</code>，您会看到整个几何库的终极总源头：<code>GeometryData</code>。
-        </p>
-        <div class="math-box">
-          <div class="math-title">📐 统一接口契约：所有几何图形的“国家标准”</div>
-          <div class="math-content">
-            <code>GeometryData</code> 强制规定了两个核心契约：<br>
-            1. <strong><code>name: str</code></strong>：每一个进入系统的构件都必须有一个字符串名称，方便工程图纸追踪与标识。<br>
-            2. <strong><code>@abstractmethod def to_pyvista(self) -> pv.DataSet:</code></strong>：任何几何体，无论是 0D 点、1D 轴线、2D 壳面还是 3D 实体，<strong>必须自己知道如何把自己转换为 PyVista 渲染网格</strong>！
-          </div>
-        </div>
-      </section>
-
-      <!-- ==================== STEP 2 ==================== -->
-      <section id="step2" class="section-card">
-        <div class="step-banner" style="border-left-color: var(--accent-amber);">
-          <div class="step-number" style="color: var(--accent-amber);">02</div>
-          <div class="step-text">
-            <h3>第二步 · 今日拓展：曲面与三维实体 (2D 与 3D)</h3>
-            <p>从一维线跨入二维围护表面与三维受力实体，掌握三大工业范式及其高阶 OOP 架构</p>
-          </div>
-        </div>
-
-        <p>
-          在实际土木工程中，仅有中轴线是不够的。体育场屋盖是<strong>连续双曲抛物面</strong>，
-          混凝土桥墩是<strong>实心封闭的 B-Rep 实体</strong>，而在进行受力云图渲染或抗震有限元分析时，
-          我们必须将其划分为<strong>多边形网格 (Mesh)</strong>。
-          下面我们来深入拆解今日课程在 <code>src/</code> 中的三大范式实现！
-        </p>
-
-        <!-- Paradigm 1: Surface -->
-        <h3 id="step2-surface">
-          <span class="pill pill-surf">范式一</span>
-          连续参数曲面 (Parametric Surface)
-        </h3>
-        <p>
-          对应源码：<code>src/parametric_surface.py</code> 与 <code>src/hyperbolic_paraboloid.py</code>。
-        </p>
-        <div class="analogy-box">
-          <div class="analogy-title">💡 土木工程场景：大跨度索网屋盖与连续张拉薄壳</div>
-          <div class="analogy-content">
-            双曲抛物面（马鞍面）在土木大跨空间结构（如体育馆马鞍形索网屋顶）中广泛应用。
-            其解析方程包含负高斯曲率，两向正交截面一凸一凹，在预应力钢索双向张拉时能形成天然的自平衡与抗风颤刚度。
-          </div>
-        </div>
-
-        <p><strong>代码层面的父子继承关系：</strong></p>
-        <div class="code-panel">
-<span class="cmt"># 1. 父类（基类）：ParametricSurfaceData (src/parametric_surface.py)</span>
-<span class="dec">@dataclass</span>
-<span class="kw">class</span> <span class="cls">ParametricSurfaceData</span>(<span class="cls">GeometryData</span>, <span class="cls">ABC</span>):
-    u_range: <span class="cls">tuple</span>[<span class="cls">float</span>, <span class="cls">float</span>] = (<span class="num">0.0</span>, <span class="num">1.0</span>)      <span class="cmt"># u 参数域 [u_min, u_max]</span>
-    v_range: <span class="cls">tuple</span>[<span class="cls">float</span>, <span class="cls">float</span>] = (<span class="num">0.0</span>, <span class="num">1.0</span>)      <span class="cmt"># v 参数域 [v_min, v_max]</span>
-    u_resolution: <span class="cls">int</span> = <span class="num">20</span>                         <span class="cmt"># u 方向离散网格划分精度</span>
-    v_resolution: <span class="cls">int</span> = <span class="num">20</span>                         <span class="cmt"># v 方向离散网格划分精度</span>
-
-    <span class="dec">@abstractmethod</span>
-    <span class="kw">def</span> <span class="fn">evaluate</span>(self, u: <span class="cls">float</span>, v: <span class="cls">float</span>) -> <span class="str">"Point3D"</span>:
-        <span class="str">"""强制子类必须实现：输入 (u, v) 参数坐标，返回唯一三维空间点 Point3D"""</span>
-
-    <span class="kw">def</span> <span class="fn">to_pyvista</span>(self) -> <span class="str">"pv.StructuredGrid"</span>:
-        <span class="str">"""父类提供通用预制管线：遍历 (u, v) 点阵，自动构建结构化网格 StructuredGrid"""</span>
-        u_vals = np.linspace(self.u_range[<span class="num">0</span>], self.u_range[<span class="num">1</span>], self.u_resolution)
-        v_vals = np.linspace(self.v_range[<span class="num">0</span>], self.v_range[<span class="num">1</span>], self.v_resolution)
-        points = [self.evaluate(u, v).to_tuple() <span class="kw">for</span> v <span class="kw">in</span> v_vals <span class="kw">for</span> u <span class="kw">in</span> u_vals]
-        grid = pv.StructuredGrid()
-        grid.points = np.array(points)
-        grid.dimensions = (self.u_resolution, self.v_resolution, <span class="num">1</span>)
-        <span class="kw">return</span> grid
-        </div>
-
-        <p><strong>具体的马鞍面子类实现：</strong></p>
-        <div class="code-panel">
-<span class="cmt"># 2. 子类（派生类）：HyperbolicParaboloid (src/hyperbolic_paraboloid.py)</span>
-<span class="dec">@dataclass</span>
+        <div class="paradigm-row">
+          <!-- 1. Surface -->
+          <div class="para-card para-surf">
+            <h4>
+              <span>范式一：连续参数曲面</span>
+              <span style="font-size:12px; color:var(--blue); font-family:monospace;">Parametric Surface</span>
+            </h4>
+            <ul>
+              <li><strong>土木应用</strong>：大跨索网屋顶（体育馆）、异形幕墙表皮 (扎哈风格)、连续箱梁放样。</li>
+              <li><strong>底层代码</strong>：<code>ParametricSurfaceData</code>（父类）划分 $(u, v)$ 参数网格；<code>HyperbolicParaboloid</code>（马鞍面子类）负责解析求值。</li>
+              <li><strong>最大优点</strong>：几百字节解析方程定义庞大结构，法向量光滑连续。</li>
+            </ul>
+            <div class="code-mini">
+<span class="cmt"># src/hyperbolic_paraboloid.py</span>
 <span class="kw">class</span> <span class="cls">HyperbolicParaboloid</span>(<span class="cls">ParametricSurfaceData</span>):
-    a: <span class="cls">float</span> = <span class="num">1500.0</span>  <span class="cmt"># X 轴抛物线开合跨度基准</span>
-    b: <span class="cls">float</span> = <span class="num">1500.0</span>  <span class="cmt"># Y 轴抛物线开合跨度基准</span>
-    c: <span class="cls">float</span> = <span class="num">600.0</span>   <span class="cmt"># 鞍点到边界的矢高差系数</span>
+    <span class="kw">def</span> <span class="fn">evaluate</span>(self, u, v):
+        <span class="cmt"># 子类仅写 3 行核心物理方程！</span>
+        z = self.c * ((u/self.a)**2 - (v/self.b)**2)
+        <span class="kw">return</span> Point3D(u, v, z)
+            </div>
+          </div>
 
-    <span class="kw">def</span> <span class="fn">evaluate</span>(self, u: <span class="cls">float</span>, v: <span class="cls">float</span>) -> <span class="str">"Point3D"</span>:
-        <span class="str">"""子类只需专注实现数学公式，完全不需关心底层 VTK 网格是如何缝合的！"""</span>
-        x = float(u)
-        y = float(v)
-        z = float(self.c * ((u / self.a) ** <span class="num">2</span> - (v / self.b) ** <span class="num">2</span>))
-        <span class="kw">return</span> Point3D(x, y, z)
-        </div>
+          <!-- 2. B-Rep -->
+          <div class="para-card para-brep">
+            <h4>
+              <span>范式二：边界表示实体</span>
+              <span style="font-size:12px; color:var(--rose); font-family:monospace;">B-Rep Solid</span>
+            </h4>
+            <ul>
+              <li><strong>土木应用</strong>：Revit/Tekla 工业级 BIM 构件、框架柱、桥墩实心造型与布尔差集开窗开洞。</li>
+              <li><strong>底层代码</strong>：<code>BrepData</code> 维护 <code>vertices</code>(点)、<code>edges</code>(边)、<code>faces</code>(闭合面环)。</li>
+              <li><strong>拓扑守恒</strong>：服从欧拉-庞加莱公式 $V - E + F - R = 2(S - G)$，绝对保证体封闭不漏水。</li>
+            </ul>
+            <div class="code-mini">
+<span class="cmt"># src/factories.py: create_cube_brep</span>
+<span class="cmt"># 严格解耦：8个角点 + 12条边 + 6个闭合面</span>
+<span class="cmt"># 8 - 12 + 6 = 2 (拓扑完美闭合)</span>
+brep = create_cube_brep(w, d, h)
+            </div>
+          </div>
 
-        <!-- Paradigm 2: B-Rep -->
-        <h3 id="step2-brep">
-          <span class="pill pill-brep">范式二</span>
-          边界表示实体 (B-Rep Solid)
-        </h3>
-        <p>
-          对应源码：<code>src/brep_data.py</code> 与工厂函数 <code>src/factories.py</code> 中的 <code>create_cube_brep</code>。
-        </p>
-        <div class="analogy-box">
-          <div class="analogy-title">💡 土木工程场景：工业级 BIM 构件与 CAD 实心体造型</div>
-          <div class="analogy-content">
-            Revit、Tekla、AutoCAD 中的框架柱、现浇梁、桥台，都是典型的 B-Rep 实体。
-            B-Rep 的根本公理是：“<strong>三维实心体由包围它的封闭二维边界表面所唯一确定</strong>”。
-            只要外表面的法向量一致朝外，计算机就能 100% 确定实体的内部与外部，从而精确执行布尔开洞、体积求和与质量统计。
+          <!-- 3. Mesh -->
+          <div class="para-card para-mesh">
+            <h4>
+              <span>范式三：离散多边形网格</span>
+              <span style="font-size:12px; color:var(--amber); font-family:monospace;">Polygon Mesh</span>
+            </h4>
+            <ul>
+              <li><strong>土木应用</strong>：ANSYS / ABAQUS 结构有限元剖分 (FEA)、3D 激光扫描逆向点云重建、GPU 实时渲染。</li>
+              <li><strong>底层代码</strong>：<code>MeshData</code> 彻底抛弃“边”概念，只有顶点池 + 面片顶点索引表 (Index Buffer)。</li>
+              <li><strong>最大优点</strong>：专为显卡硬件光栅化着色打造，处理千万级面片依然流畅。</li>
+            </ul>
+            <div class="code-mini">
+<span class="cmt"># src/factories.py: create_pyramid_mesh</span>
+<span class="cmt"># 扁平结构：5个顶点 + 5个三角/四边面片索引</span>
+mesh = create_pyramid_mesh(w, d, h)
+            </div>
           </div>
         </div>
+      </div>
+    </section>
 
-        <p><strong>B-Rep 的核心数据结构设计：</strong></p>
-        <div class="code-panel">
-<span class="cmt"># src/brep_data.py：几何与拓扑严格解耦的三元组结构</span>
-<span class="dec">@dataclass</span>
-<span class="kw">class</span> <span class="cls">BrepData</span>(<span class="cls">GeometryData</span>):
-    vertices: <span class="cls">tuple</span>[<span class="cls">Point3D</span>, ...] = ()             <span class="cmt"># 0D 几何角点坐标表 (Geometry)</span>
-    edges: <span class="cls">tuple</span>[<span class="cls">tuple</span>[<span class="cls">int</span>, <span class="cls">int</span>], ...] = ()         <span class="cmt"># 1D 棱边连接关系 (Topology)</span>
-    faces: <span class="cls">tuple</span>[<span class="cls">tuple</span>[<span class="cls">int</span>, ...], ...] = ()         <span class="cmt"># 2D 闭合表面边界环 (Topology)</span>
+    <!-- Section 3: Summary -->
+    <section class="card">
+      <div class="card-header">
+        <span class="tag tag-rose">总结要诀</span>
+        <h2>3. 土木人编程避坑与设计心法</h2>
+      </div>
 
-    <span class="kw">def</span> <span class="fn">to_pyvista</span>(self) -> <span class="str">"pv.PolyData"</span>:
-        <span class="str">"""将闭合面拓扑提取为 PolyData，供 3D 着色显示"""</span>
-        points = [v.to_tuple() <span class="kw">for</span> v <span class="kw">in</span> self.vertices]
-        pv_faces = []
-        <span class="kw">for</span> face <span class="kw">in</span> self.faces:
-            pv_faces.append(len(face))  <span class="cmt"># 如多边形顶点数 4</span>
-            pv_faces.extend(face)       <span class="cmt"># 紧跟角点索引 [0, 1, 2, 3]</span>
-        <span class="kw">return</span> pv.PolyData(points, pv_faces)
-        </div>
+      <div class="summary-box">
+        <strong>📌 三句话记住今天这套代码的精髓：</strong><br>
+        1. <strong>找共性放父类</strong>：只要是参数曲面，都要划分 $(u, v)$ 步长并转为 VTK 网格，所以写在 <code>ParametricSurfaceData</code> 里；<br>
+        2. <strong>个性留给子类</strong>：马鞍面的公式是马鞍面的，球面的公式是球面的，子类只重写 <code>evaluate(u, v)</code> 这一个函数；<br>
+        3. <strong>接口对外统一</strong>：无论内部是曲面、B-Rep 实体还是网格，对渲染引擎都只暴露一个 <code>to_pyvista()</code>，这就是工业软件极度稳定优雅的秘密！
+      </div>
+    </section>
 
-        <div class="math-box">
-          <div class="math-title">📐 欧拉-庞加莱拓扑守恒定律 (Euler-Poincaré Formula)</div>
-          <div class="math-content">
-            我们在 <code>create_cube_brep</code> 中创建的长方体实体，必须严格满足拓扑平衡：<br>
-            <strong>V − E + F − R = 2(S − G)</strong><br>
-            • 长方体角点 V=8，棱边 E=12，表面 F=6，面上无开孔 R=0，外壳 S=1，无穿透孔 G=0：<br>
-            <strong>8 − 12 + 6 − 0 = 2(1 − 0) = 2</strong>（完美自洽！杜绝悬挂面与漏水缝隙）。
-          </div>
-        </div>
-
-        <!-- Paradigm 3: Mesh -->
-        <h3 id="step2-mesh">
-          <span class="pill pill-mesh">范式三</span>
-          离散多边形网格 (Polygon Mesh)
-        </h3>
-        <p>
-          对应源码：<code>src/mesh_data.py</code> 与工厂函数 <code>create_pyramid_mesh</code>。
-        </p>
-        <div class="analogy-box">
-          <div class="analogy-title">💡 土木工程场景：有限元分析 (FEA) 剖分与 GPU 快速图形渲染</div>
-          <div class="analogy-content">
-            在 ANSYS、SAP2000 或 ABAQUS 中进行结构应力计算，或者在屏幕上快速旋转庞大的三维城市模型时，B-Rep 复杂的高阶边界太重了。
-            计算机图形显卡和有限元求解器最喜欢的是极其轻量、扁平的<strong>多边形离散面片</strong>（以三角形、四边形为主）。
-          </div>
-        </div>
-
-        <p><strong>Mesh 的极致精简结构：</strong></p>
-        <div class="code-panel">
-<span class="cmt"># src/mesh_data.py：彻底剥离"边"结构，只留顶点与面索引</span>
-<span class="dec">@dataclass</span>
-<span class="kw">class</span> <span class="cls">MeshData</span>(<span class="cls">GeometryData</span>):
-    vertices: <span class="cls">tuple</span>[<span class="cls">Point3D</span>, ...] = ()      <span class="cmt"># 顶点坐标池 (Vertex Buffer)</span>
-    faces: <span class="cls">tuple</span>[<span class="cls">tuple</span>[<span class="cls">int</span>, ...], ...] = ()  <span class="cmt"># 面片顶点索引表 (Index Buffer)</span>
-
-    <span class="kw">def</span> <span class="fn">to_pyvista</span>(self) -> <span class="str">"pv.PolyData"</span>:
-        <span class="str">"""直接交由 GPU 硬件光栅化管线执行平面着色 (Flat Shading)"""</span>
-        points = [v.to_tuple() <span class="kw">for</span> v <span class="kw">in</span> self.vertices]
-        pv_faces = []
-        <span class="kw">for</span> face <span class="kw">in</span> self.faces:
-            pv_faces.append(len(face))
-            pv_faces.extend(face)
-        <span class="kw">return</span> pv.PolyData(points, pv_faces)
-        </div>
-
-        <!-- Advanced OOP Concepts for Civil Engineers -->
-        <h3 id="step2-oop-secrets">4. 土木工程师必修的高阶 Python OOP 秘籍</h3>
-        <p>
-          结合上述代码，我们将现代 Python 面向对象的核心概念提炼为以下 4 大支柱：
-        </p>
-
-        <div class="grid-2col">
-          <!-- Card 1 -->
-          <div class="concept-card">
-            <h4>1. 父类与子类（继承 Inheritance）</h4>
-            <p><strong>工程类比</strong>：装配式建筑标准化底盘。</p>
-            <p>
-              <code>HyperbolicParaboloid</code>（马鞍面）继承了 <code>ParametricSurfaceData</code>。
-              父类已经预制好了参数离散采样和构建 VTK 网格的繁杂管线，子类自动免费继承这些能力，无需重复写一行网格生成代码！
-            </p>
-          </div>
-          <!-- Card 2 -->
-          <div class="concept-card">
-            <h4>2. 抽象基类与契约（ABC & Contract）</h4>
-            <p><strong>工程类比</strong>：建筑工程强制性国家规范。</p>
-            <p>
-              父类标记了 <code>@abstractmethod</code> 的方法（如 <code>evaluate</code>），相当于强制规范条文。
-              如果某个子类偷懒没有实现这个方法，Python 会像质监站验收不合格一样，<strong>在实例化时立即报错拒绝执行</strong>，从源头消灭潜在 Bug！
-            </p>
-          </div>
-          <!-- Card 3 -->
-          <div class="concept-card">
-            <h4>3. 多态性（Polymorphism）</h4>
-            <p><strong>工程类比</strong>：施工塔吊的标准化吊钩。</p>
-            <p>
-              在 <code>src/render_engine.py</code> 中，调度函数只写 <code>engine.render([surf, brep, mesh])</code>。
-              塔吊不需要知道吊上来的是钢梁还是混凝土板，只要它们都有 <code>to_pyvista()</code> 这个统一接口，就能一键混合多体同屏渲染！
-            </p>
-          </div>
-          <!-- Card 4 -->
-          <div class="concept-card">
-            <h4>4. 数据类与类型注解（Dataclass）</h4>
-            <p><strong>工程类比</strong>：BIM 构件属性信息明细表。</p>
-            <p>
-              使用 <code>@dataclass</code> 装饰器，Python 会自动帮我们生成 <code>__init__</code> 构造函数和美观的打印字符串。配合 <code>x: float</code> 类型注解，构件参数一目了然，严谨可靠。
-            </p>
-          </div>
-        </div>
-
-        <div class="pitfall-box">
-          <div class="pitfall-title">⚠️ 土木工程师易犯的编码误区</div>
-          <div class="pitfall-content">
-            1. <strong>不要把子类当作万能大杂烩</strong>：子类应该只包含该特定几何专属的数学或拓扑特性，通用的采样与可视化接口务必下沉放到父类。<br>
-            2. <strong>注意循环导入 (Circular Import)</strong>：例如 <code>Point3D</code> 减法需要生成 <code>Vector3D</code>，而 <code>Vector3D</code> 可能会用到 <code>Point3D</code>。在 <code>src/</code> 中，我们在方法内部进行局部延迟导入（Deferred Import），彻底避免了解释器死锁报错。
-          </div>
-        </div>
-      </section>
-
-      <!-- ==================== SUMMARY ==================== -->
-      <section id="summary" class="section-card">
-        <h2><span class="icon">🎯</span> 全景总结与架构速查表</h2>
-
-        <p>最后，让我们通过一张整体类继承树和对比矩阵，彻底建立起全局架构认知：</p>
-
-        <div class="tree-view">
-📁 <span class="tree-node-base">src/ (纯粹几何与渲染核心包)</span><br>
-├── 📄 <span class="tree-node-base">_base.py</span> ....................... 🏛️ <strong>GeometryData (抽象基类根源)</strong><br>
-├── 📄 point3d.py ..................... 📍 Point3D (0D 空间点，集成减法运算符重载)<br>
-├── 📄 vector3d.py .................... ➡️ Vector3D (3D 向量，点乘、叉乘、单位化)<br>
-├── 📄 curve.py ....................... 〰️ <span class="tree-node-1d">Curve (1D 参数化曲线抽象基类)</span><br>
-│   ├── 📄 line3d.py .................. 📏 <strong>Line3D (直线段子类)</strong><br>
-│   ├── 📄 circle3d.py ................ ⭕ Circle3D (空间圆子类)<br>
-│   └── 📄 arc3d.py ................... 🏹 Arc3D (空间圆弧子类)<br>
-├── 📄 parametric_surface.py .......... 🌊 <span class="tree-node-2d">ParametricSurfaceData (2D 参数曲面抽象基类)</span><br>
-│   ├── 📄 hyperbolic_paraboloid.py ... 🐎 <strong>HyperbolicParaboloid (马鞍面子类)</strong><br>
-│   └── 📄 sphere_surface.py .......... 🌐 SphereSurface (球面参数曲面子类)<br>
-├── 📄 brep_data.py ................... 🧱 <span class="tree-node-3d">BrepData (3D 边界表示拓扑实体，点-边-面三元组)</span><br>
-├── 📄 mesh_data.py ................... 📐 <span class="tree-node-3d">MeshData (3D 离散多边形网格，顶点池+面片索引表)</span><br>
-├── 📄 factories.py ................... 🏭 create_cube_brep / create_pyramid_mesh (实体组装工厂)<br>
-└── 📄 render_engine.py ............... 🖥️ RenderEngine (多态渲染调度引擎)
-        </div>
-
-        <table class="styled-table">
-          <thead>
-            <tr>
-              <th>范式类型</th>
-              <th>代码核心类</th>
-              <th>继承关系 (父类 → 子类)</th>
-              <th>底层数学 / 拓扑特征</th>
-              <th>土木工程典型应用场景</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>连续参数曲面</strong></td>
-              <td><code>HyperbolicParaboloid</code></td>
-              <td><code>GeometryData</code> → <code>ParametricSurfaceData</code> → 子类</td>
-              <td>双参数映射 $(u, v) \to \mathbf{S}(u,v)$，解析法向量完美光滑</td>
-              <td>大跨度索网屋盖、曲面异形建筑表皮 (CAS)、空间桥梁放样</td>
-            </tr>
-            <tr>
-              <td><strong>边界表示实体</strong></td>
-              <td><code>BrepData</code></td>
-              <td><code>GeometryData</code> → <code>BrepData</code></td>
-              <td>几何点与拓扑边/面解耦，满足欧拉-庞加莱公式守恒</td>
-              <td>BIM 建筑信息模型构件、实体布尔运算（开窗开洞扣减）、体积重量计算</td>
-            </tr>
-            <tr>
-              <td><strong>离散多边形网格</strong></td>
-              <td><code>MeshData</code></td>
-              <td><code>GeometryData</code> → <code>MeshData</code></td>
-              <td>扁平顶点数组 + 多边形顶点索引缓冲，平面着色光栅化</td>
-              <td>有限元分析前处理剖分 (FEA)、3D 激光扫描逆向重建、GPU 高速渲染</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <div class="analogy-box" style="background:#f8fafc; border-left-color: var(--secondary);">
-          <div class="analogy-title" style="color:var(--secondary);">💡 终极学习心得</div>
-          <div class="analogy-content" style="color:#334155;">
-            作为土木工程师，编写代码的终极目标不是成为底层算法极客，而是<strong>将工程力学原理、建筑空间构想与标准化计算机架构无缝融合</strong>。
-            掌握了父类提炼共性、子类实现特性、抽象基类强制规范、多态性统一调度的思想，您就能轻松看懂并驾驭任何大型工业级 CAD、CAE 与 BIM 软件的底层数据逻辑！
-          </div>
-        </div>
-      </section>
-
-    </main>
   </div>
-
-  <!-- Footer -->
-  <footer>
-    <p>土木人的 Python 课系列讲义 · 几何内核与面向对象实战</p>
-    <p style="margin-top:6px; font-size:12px; color:#94a3b8;">
-      上海非解构数字科技有限公司 · 2026 教学课件配套文档
-    </p>
-  </footer>
 
 </body>
 </html>
