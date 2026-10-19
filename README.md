@@ -21,7 +21,8 @@ All video lectures, recordings, and upcoming live session bookings are available
 | **Session 01** | 2026-06-09 | Introduction & Conda/PyVista Development Environment | [Watch on Bilibili (BV1k8EE6gEdq)](https://www.bilibili.com/video/BV1k8EE6gEdq/) |
 | **Session 02** | 2026-06-25 | Geometric Primitives, 3D Engine & Collision Detection | [Watch on Bilibili (BV19kKS6EE9f)](https://www.bilibili.com/video/BV19kKS6EE9f/) |
 | **Session 03** | 2026-08-13 | Parametric Geometry, B-Rep & Mesh Generation | [Watch on Bilibili (BV13Ygp6LED6)](https://www.bilibili.com/video/BV13Ygp6LED6/) |
-| **Session 04** | 2026-09-24 | Solid & Surface Representations (Surface, B-Rep & Mesh) | [Book Live on Bilibili](http://t.bilibili.com/1251078433829552132?bsource=dynamic_reserve) · [3D Poster](https://drawing.python.venchy.online/posters/06-body-representation/) |
+| **Session 04** | 2026-09-24 | Solid & Surface Representations (Surface, B-Rep & Mesh) | [Watch on Bilibili (BV17yaN68EWn)](https://www.bilibili.com/video/BV17yaN68EWn/) · [3D Poster](https://drawing.python.venchy.online/posters/06-body-representation/) |
+| **Session 05** | 2026-10-28 | Geometric Transformations & Multi-View Projections | [3D Poster](https://drawing.python.venchy.online/posters/07-transform-projection/) · Booking Open |
 
 > For the complete live archive and updates, visit the [Live Archives Hub](https://drawing.python.venchy.online/live/).
 
@@ -40,6 +41,9 @@ All slides are built with HTML5, responsive styling, and embedded Three.js 3D in
 | **Chapter 05.01** | Object-Oriented Geometric Data Structure | 🔗 [05.01-basic-geometry-data-slides.html](https://drawing.python.venchy.online/slides/05.01-basic-geometry-data-slides.html) |
 | **Chapter 05.02** | OOP & Parametric Geometric Primitives | 🔗 [05.02-oop-parametric-geometry-slides.html](https://drawing.python.venchy.online/slides/05.02-oop-parametric-geometry-slides.html) |
 | **Chapter 06** | Solid & Surface Representations (Surface / B-Rep / Mesh) | 🔗 [06.01-body-representation-slides.html](https://drawing.python.venchy.online/slides/06.01-body-representation-slides.html) |
+| **Chapter 07** | Geometric Transformations & Engineering Projections | 🔗 [07.01-geometry-transform-projection-slides.html](https://drawing.python.venchy.online/slides/07.01-geometry-transform-projection-slides.html) |
+| **Chapter 08** | Geometric Intersection Algorithms (Point, Line, Plane, Solid) | 🔗 [08.01-geometry-intersection-slides.html](https://drawing.python.venchy.online/slides/08.01-geometry-intersection-slides.html) |
+
 
 ---
 

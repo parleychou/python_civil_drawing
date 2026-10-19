@@ -1,6 +1,6 @@
 """土木工程几何数据与渲染核心系统 (Pure Geometry & Render System)
 
-本包提供纯粹的几何建模与渲染能力，所有几何对象均继承自统一抽象基类 GeometryData。
+本包提供纯粹的几何建模、4x4矩阵变换、正交投影与渲染能力，所有几何对象均继承自统一抽象基类 GeometryData。
 """
 
 import sys
@@ -33,9 +33,50 @@ from mesh_data import MeshData
 from factories import (
     create_cube_brep,
     create_box_brep,
+    create_box_mesh,
     create_pyramid_mesh,
+    create_i_beam_brep,
+    create_bridge_pier_brep,
 )
 from render_engine import RenderEngine
+from transformation import TransformMatrix
+from projection import ProjectionEngine
+from transformable import (
+    transform_geometry,
+    transform_point,
+    transform_vector,
+    transform_line,
+    transform_plane,
+    transform_coordinate_system,
+    transform_brep,
+    transform_mesh,
+    attach_transform_methods,
+)
+from intersection import (
+    IntersectionType,
+    IntersectionStatus,
+    IntersectionResult,
+    EPS_SPATIAL,
+    EPS_ANGULAR,
+    EPS_PARAM,
+    intersect_point_point,
+    intersect_point_line,
+    intersect_point_plane,
+    point_in_mesh,
+    intersect_segments_2d,
+    intersect_lines_3d,
+    segment_distance_3d,
+    check_polyline_self_intersection,
+    intersect_line_plane,
+    intersect_ray_triangle,
+    intersect_triangle_triangle,
+    intersect_line_mesh,
+    slice_mesh_with_plane,
+    assemble_contour_loops,
+    intersect_planes,
+    intersect_mesh_mesh,
+    check_mesh_self_intersection,
+)
 
 __all__ = [
     "GeometryData",
@@ -55,6 +96,43 @@ __all__ = [
     "MeshData",
     "create_cube_brep",
     "create_box_brep",
+    "create_box_mesh",
     "create_pyramid_mesh",
+    "create_i_beam_brep",
+    "create_bridge_pier_brep",
     "RenderEngine",
+    "TransformMatrix",
+    "ProjectionEngine",
+    "transform_geometry",
+    "transform_point",
+    "transform_vector",
+    "transform_line",
+    "transform_plane",
+    "transform_coordinate_system",
+    "transform_brep",
+    "transform_mesh",
+    "attach_transform_methods",
+    "IntersectionType",
+    "IntersectionStatus",
+    "IntersectionResult",
+    "EPS_SPATIAL",
+    "EPS_ANGULAR",
+    "EPS_PARAM",
+    "intersect_point_point",
+    "intersect_point_line",
+    "intersect_point_plane",
+    "point_in_mesh",
+    "intersect_segments_2d",
+    "intersect_lines_3d",
+    "segment_distance_3d",
+    "check_polyline_self_intersection",
+    "intersect_line_plane",
+    "intersect_ray_triangle",
+    "intersect_triangle_triangle",
+    "intersect_line_mesh",
+    "slice_mesh_with_plane",
+    "assemble_contour_loops",
+    "intersect_planes",
+    "intersect_mesh_mesh",
+    "check_mesh_self_intersection",
 ]

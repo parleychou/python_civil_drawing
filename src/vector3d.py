@@ -96,3 +96,26 @@ class Vector3D(GeometryData):
             scale=length,
         )
         engine.add_mesh(arrow, color=color, show_edges=show_edges)
+
+    # =========================================================================
+    # 内置几何变换与投影 (Built-in Transform & Projection)
+    # =========================================================================
+    def transform(self, matrix) -> "Vector3D":
+        """应用 4x4 仿射变换矩阵变换向量 (齐次坐标 [x, y, z, 0]^T，不受平移影响)。"""
+        if hasattr(matrix, "apply_to_vector"):
+            return matrix.apply_to_vector(self)
+        arr = np.asarray(matrix, dtype=float)
+        v4 = np.array([self.x, self.y, self.z, 0.0], dtype=float)
+        res = arr @ v4
+        return Vector3D(float(res[0]), float(res[1]), float(res[2]), name=self.name)
+
+    def project_to_plane(self, plane) -> "Vector3D":
+        """将向量正交投影至指定平面 Plane3D (减去沿平面法向的分量)。"""
+        n = plane.normal.normalized()
+        comp = self.dot(n)
+        return Vector3D(
+            self.x - comp * n.x,
+            self.y - comp * n.y,
+            self.z - comp * n.z,
+            name=f"{self.name}_proj" if self.name else "",
+        )

@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>07.01 几何体的转换与投影 - 土木人的 Python 课</title>
+  <!-- Three.js 本地优先与 CDN 降级兜底 -->
+  <script src="./three.min.js"></script>
+  <script>
+    if (!window.THREE) {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+    }
+  </script>
+  <style>
+    :root {
+      --sun-50: #fff8e6;
+      --sun-100: #fff1ca;
+      --sun-200: #ffe29a;
+      --citrus: #f7a928;
+      --coral: #ff6f61;
+      --ocean: #1178a6;
+      --deep-ocean: #0d3f5e;
+      --palm: #2f8f6b;
+      --ink: #1f2a32;
+      --muted: #65717a;
+      --paper: #fffdf7;
+      --line: #e8d9b9;
+      --shell: #10384e;
+      --cloud: #f7fbf8;
+      --shadow: 0 22px 60px rgba(13, 63, 94, 0.14);
+      --soft-shadow: 0 12px 30px rgba(13, 63, 94, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% 12%, rgba(255, 226, 154, 0.72) 0 18%, transparent 19%),
+        linear-gradient(145deg, rgba(255, 248, 230, 0.96), rgba(232, 244, 247, 0.92) 68%, rgba(255, 253, 247, 0.98));
+      overflow: hidden;
+    }
+
+    .deck {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 4vh 5vw 6vh;
+      opacity: 0;
+      transform: translateX(28px);
+      pointer-events: none;
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .canvas {
+      width: min(1200px, 100%);
+      min-height: min(730px, 86vh);
+      position: relative;
+      padding: clamp(24px, 3.8vw, 48px);
+      border: 1px solid rgba(232, 217, 185, 0.92);
+      background: rgba(255, 253, 247, 0.94);
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .canvas::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(17, 120, 166, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 120, 166, 0.07) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
+      pointer-events: none;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 13.5px;
+      font-weight: 850;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ocean);
+      background: rgba(17, 120, 166, 0.1);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      color: var(--deep-ocean);
+      font-size: clamp(30px, 3.4vw, 44px);
+      line-height: 1.15;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: clamp(16px, 1.7vw, 20px);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: var(--soft-shadow);
+      position: relative;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      color: var(--deep-ocean);
+      font-size: 19px;
+      font-weight: 800;
+    }
+
+    .card p, .card li {
+      font-size: 15.5px;
+      line-height: 1.55;
+      color: var(--ink);
+    }
+
+    .code-box {
+      background: var(--shell);
+      color: #f7fbff;
+      border-left: 6px solid var(--citrus);
+      padding: 14px 18px;
+      border-radius: 4px;
+      font-family: ui-monospace, "Fira Code", Menlo, monospace;
+      font-size: 13.5px;
+      line-height: 1.45;
+      white-space: pre;
+      overflow-x: auto;
+      margin: 10px 0;
+    }
+
+    .math-formula {
+      background: rgba(255, 248, 230, 0.9);
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--coral);
+      padding: 12px 16px;
+      font-family: "Cambria Math", "Times New Roman", serif;
+      font-size: 16px;
+      line-height: 1.45;
+      margin: 10px 0;
+      color: var(--deep-ocean);
+    }
+
+    .badge-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .badge {
+      background: var(--sun-100);
+      color: var(--deep-ocean);
+      border: 1px solid var(--line);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    /* 3D 舞台容器 */
+    .viewport-3d {
+      width: 100%;
+      height: 380px;
+      background: linear-gradient(135deg, #f0f4f8, #e2e8f0);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .viewport-overlay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.88);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--deep-ocean);
+      border: 1px solid var(--line);
+      pointer-events: none;
+    }
+
+    /* 交互控制器条 */
+    .controls-panel {
+      background: #faf6ee;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 14px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .ctrl-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--deep-ocean);
+    }
+
+    .ctrl-item input[type="range"] {
+      width: 100px;
+    }
+
+    .btn-action {
+      background: var(--ocean);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-action:hover {
+      background: var(--deep-ocean);
+    }
+
+    /* 底部导航条 */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .nav-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .nav-btn {
+      background: white;
+      border: 1px solid var(--line);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--deep-ocean);
+    }
+    .nav-btn:hover {
+      background: var(--sun-50);
+    }
+
+    .progress-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #d8cbbb;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .dot.active {
+      background: var(--coral);
+      transform: scale(1.3);
+    }
+  </style>
+</head>
+<body>
+
+<div class="deck" id="slideDeck">
+
+  <!-- =====================================================================
+       SLIDE 1: 封面
+  ====================================================================== -->
+  <section class="slide active" data-index="0">
+    <div class="canvas">
+      <div>
+        <span class="eyebrow">土木人的 Python 课 · 第 07 讲</span>
+        <h1>几何体的转换与投影</h1>
+        <div class="subtitle">4×4 仿射变换矩阵 · 乘法复合顺序 · 局部坐标系基底映射 · 自动化工程三视图生成</div>
+      </div>
+
+      <div class="hero">
+        <div>
+          <div class="card" style="margin-bottom: 16px;">
+            <h3>为什么土木工程师必须精通 4×4 矩阵？</h3>
+            <p>在土木工程与 BIM 协同中，没有构件是“凭空悬挂”在三维坐标原点的：</p>
+            <ul>
+              <li><strong>标准预制构件</strong>：在工厂以构件局部中心为原点规范设计（局部坐标系）；</li>
+              <li><strong>施工现场放样</strong>：必须通过平移、旋转、缩放精准落位到全桥千米坐标上（世界坐标系）；</li>
+              <li><strong>工程施工出图</strong>：平面图、立面图、剖面图本质上都是三维实体在二维图纸面上的正交投影。</li>
+            </ul>
+          </div>
+          <div class="badge-bar">
+            <span class="badge">TransformMatrix</span>
+            <span class="badge">T @ R @ S</span>
+            <span class="badge">CoordinateSystem3D</span>
+            <span class="badge">ProjectionEngine</span>
+            <span class="badge">工程三视图</span>
+          </div>
+        </div>
+
+        <div class="viewport-3d" id="viewport-cover">
+          <div class="viewport-overlay">3D 交互舞台：旋转中的空间构件与三正交投影</div>
+        </div>
+      </div>
+
+      <div class="nav-bar">
+        <span>使用键盘 ← / → 或空格翻页</span>
+        <div class="progress-dots" id="dots-0"></div>
+        <div class="nav-btns">
+          <button class="nav-btn" onclick="nextSlide()">下一页 →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       SLIDE 2: 齐次坐标与 4×4 仿射矩阵
+  ====================================================================== -->
+  <section class="slide" data-index="1">
+    <div class="canvas">
+      <div>
+        <span class="eyebrow">核心数学一</span>
+        <h1>打破加法与乘法壁垒：齐次坐标系统</h1>
+        <div class="subtitle">为什么三维空间变换非要用四维矩阵？</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>笛卡尔坐标的计算困境</h3>
+          <p>在普通 3D 笛卡尔坐标中，平移与旋转在数学形式上是割裂的：</p>
+          <div class="math-formula">
+            旋转 / 缩放（线性乘法）： P' = M₃ₓ₃ · P<br>
+            平移操作（非线性加法）： P' = P + d
+          </div>
+          <p>由于加法与乘法无法统一，我们无法把连续的“旋转→缩放→平移”折叠为一个统一的变换矩阵，导致工程计算效率极低且无法链式求逆。</p>
+        </div>
+
+        <div class="card">
+          <h3>齐次坐标 (Homogeneous Coordinates) 的妙用</h3>
+          <p>引入第 4 维度 $w$，区分<strong>点 (Point)</strong> 与 <strong>向量 (Vector)</strong>：</p>
+          <div class="math-formula">
+            三维点： P = [x, y, z, 1]ᵀ （受平移影响）<br>
+            三维向量： V = [vx, vy, vz, 0]ᵀ （不受平移影响）
+          </div>
+          <p>所有仿射变换均统一为 4×4 矩阵乘法：</p>
+          <div class="code-box">P_transformed = M_4x4 @ P_homogeneous</div>
+        </div>
+      </div>
+
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="prevSlide()">← 上一页</button>
+        <div class="progress-dots" id="dots-1"></div>
+        <button class="nav-btn" onclick="nextSlide()">下一页 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       SLIDE 3: 三大基础几何变换矩阵
+  ====================================================================== -->
+  <section class="slide" data-index="2">
+    <div class="canvas">
+      <div>
+        <span class="eyebrow">核心数学二</span>
+        <h1>三大基础变换矩阵解析</h1>
+        <div class="subtitle">平移 T、主轴旋转 R 与非等比缩放 S</div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <h3>1. 平移矩阵 T</h3>
+          <div class="math-formula" style="font-size: 13.5px;">
+            [ 1  0  0  dx ]<br>
+            [ 0  1  0  dy ]<br>
+            [ 0  0  1  dz ]<br>
+            [ 0  0  0   1 ]
+          </div>
+          <p>将点沿空间向量 (dx, dy, dz) 平移；对向量变换时第 4 列乘以 0，向量长度与方向保持不变。</p>
+        </div>
+
+        <div class="card">
+          <h3>2. 旋转矩阵 R (以 Rz 为例)</h3>
+          <div class="math-formula" style="font-size: 13.5px;">
+            [ cosθ -sinθ  0  0 ]<br>
+            [ sinθ  cosθ  0  0 ]<br>
+            [  0     0    1  0 ]<br>
+            [  0     0    0  1 ]
+          </div>
+          <p>绕 Z 轴逆时针旋转角度 θ。同理可得 Rx 与 Ry，或绕任意空间单位轴的 Rodrigues 旋转公式。</p>
+        </div>
+
+        <div class="card">
+          <h3>3. 缩放矩阵 S</h3>
+          <div class="math-formula" style="font-size: 13.5px;">
+            [ sx  0   0   0 ]<br>
+            [  0  sy  0   0 ]<br>
+            [  0  0   sz  0 ]<br>
+            [  0  0   0   1 ]
+          </div>
+          <p>沿局部坐标轴进行尺寸缩放。当 sx=sy=sz 时为等比缩放；不相等时可用于拉伸截面或构件长细比。</p>
+        </div>
+      </div>
+
+      <div class="code-box"># Python 代码：极简面向对象链式构建
+from src import TransformMatrix
+m = TransformMatrix.translation(1000, 500, 0) @ TransformMatrix.rotation_z(0.785) @ TransformMatrix.scaling(1.5, 1, 1)</div>
+
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="prevSlide()">← 上一页</button>
+        <div class="progress-dots" id="dots-2"></div>
+        <button class="nav-btn" onclick="nextSlide()">下一页 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       SLIDE 4: 矩阵乘法顺序非交换性 (T@R vs R@T)
+  ====================================================================== -->
+  <section class="slide" data-index="3">
+    <div class="canvas">
+      <div>
+        <span class="eyebrow">致命易错点</span>
+        <h1>矩阵相乘顺序的玄机：T @ R ≠ R @ T</h1>
+        <div class="subtitle">先旋转后平移 vs 先平移后旋转</div>
+      </div>
+
+      <div class="hero">
+        <div>
+          <div class="card" style="margin-bottom: 12px;">
+            <h3 style="color: var(--palm);">M₁ = T @ R （自转后平移 · 工程标准）</h3>
+            <p>列向量计算顺序为从右向左：先在原点对构件进行姿态旋转，随后整体平移至目标桩号点。构件精确就位！</p>
+          </div>
+
+          <div class="card">
+            <h3 style="color: var(--coral);">M₂ = R @ T （平移后公转 · 严重跑偏）</h3>
+            <p>先将构件平移到目标点，再绕世界全局原点 (0,0,0) 进行大半径公转旋转，构件飞离目标位置！</p>
+          </div>
+
+          <div class="controls-panel">
+            <button class="btn-action" onclick="toggleMatrixOrderDemo()">切换动画演示：T@R vs R@T</button>
+            <span id="order-label" style="font-size: 13px; font-weight: bold; color: var(--deep-ocean);">当前显示：T @ R (工程正确落位)</span>
+          </div>
+        </div>
+
+        <div class="viewport-3d" id="viewport-order">
+          <div class="viewport-overlay">3D 视口：构件运动与公转轨迹对比</div>
+        </div>
+      </div>
+
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="prevSlide()">← 上一页</button>
+        <div class="progress-dots" id="dots-3"></div>
+        <button class="nav-btn" onclick="nextSlide()">下一页 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       SLIDE 5: 局部坐标系与世界坐标系映射
+  ====================================================================== -->
+  <section class="slide" data-index="4">
+    <div class="canvas">
+      <div>
+        <span class="eyebrow">空间装配核心</span>
+        <h1>局部坐标系 (Local) 与 世界坐标系 (World)</h1>
+        <div class="subtitle">从出厂预制到全桥落位</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>局部到全局映射矩阵 M_L2W</h3>
+          <p>给定施工局部坐标系原点 $\mathbf{O}$ 与三正交单位轴 $\mathbf{u}, \mathbf{v}, \mathbf{w}$：</p>
+          <div class="math-formula">
+            M_{L \to W} = 
+            [ u_x  v_x  w_x  O_x ]<br>
+            [ u_y  v_y  w_y  O_y ]<br>
+            [ u_z  v_z  w_z  O_z ]<br>
+            [  0    0    0    1  ]
+          </div>
+          <p>任何在局部图纸中定义的点，只需左乘 $M_{L \to W}$，即可直接获取世界坐标中的精准绝对三维位置！</p>
+        </div>
+
+        <div class="card">
+          <h3>测量反算：世界到局部逆矩阵 M_W2L</h3>
+          <p>当全站仪或三维激光扫描仪测得施工现场世界点 $\mathbf{P}_W$ 时，如何判断构件加工误差？</p>
+          <div class="code-box"># 逆矩阵即为局部坐标还原矩阵
+M_W2L = M_L2W.inverse()
+P_local = M_W2L.apply_to_point(P_world)</div>
+          <p>利用正交旋转矩阵的转置性质，能够以极致精度瞬间反解出构件横向偏差、竖向拱度与偏角。</p>
+        </div>
+      </div>
+
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="prevSlide()">← 上一页</button>
+        <div class="progress-dots" id="dots-4"></div>
+        <button class="nav-btn" onclick="nextSlide()">下一页 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       SLIDE 6: 空间正交投影计算引擎
+  ====================================================================== -->
+  <section class="slide" data-index="5">
+    <div class="canvas">
+      <div>
+        <span class="eyebrow">投影计算原理</span>
+        <h1>几何降维：空间正交投影算法</h1>
+        <div class="subtitle">垂足坐标计算与局部二维展开</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>点到任意平面的正交垂足</h3>
+          <p>设平面过点 $\mathbf{P}_0$，单位法向量为 $\mathbf{n}$。对于空间任意点 $\mathbf{P}$：</p>
+          <div class="math-formula">
+            有向垂直距离： d = (P - P₀) · n<br>
+            平面垂足坐标： P_proj = P - d · n
+          </div>
+          <p>对 <strong>B-Rep 实体</strong>：将所有顶点投射到平面，保持边、面索引拓扑连通，即可生成精确二维工程图线框！</p>
+          <p>对 <strong>Mesh 网格</strong>：将三角面片顶点投射到平面，生成投影阴影网格片。</p>
+        </div>
+
+        <div class="card">
+          <h3>自动化工程“三视图”生成</h3>
+          <div class="math-formula">
+            俯视图 (Top / Plan)：投影到 Z = -offset 平面<br>
+            主视图 (Front / Elevation)：投影到 Y = -offset 平面<br>
+            侧视图 (Side / Profile)：投影到 X = -offset 平面
+          </div>
+          <p>遵循“长对正、高平齐、宽相等”的制图投影准则，将空间 3D 模型一键投射展开为规范图纸排版。</p>
+        </div>
+      </div>
+
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="prevSlide()">← 上一页</button>
+        <div class="progress-dots" id="dots-5"></div>
+        <button class="nav-btn" onclick="nextSlide()">下一页 →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       SLIDE 7: 交互式三视图与实战总结
+  ====================================================================== -->
+  <section class="slide" data-index="6">
+    <div class="canvas">
+      <div>
+        <span class="eyebrow">实战与演练</span>
+        <h1>实战：构件三视图与全桥空间变换排布</h1>
+        <div class="subtitle">三维实体与投影底板的实时互动视口</div>
+      </div>
+
+      <div class="hero">
+        <div>
+          <div class="card" style="margin-bottom: 14px;">
+            <h3>本章配套 7 大实战脚本</h3>
+            <ul style="font-size: 14px; line-height: 1.5;">
+              <li><code>07_01_translation_rotation_scale.py</code>：三大基础矩阵</li>
+              <li><code>07_02_matrix_order_commutativity.py</code>：T@R 顺序本质</li>
+              <li><code>07_03_local_to_world_transform.py</code>：局部全局坐标转换</li>
+              <li><code>07_04_point_and_vector_projection.py</code>：点与斜面投影</li>
+              <li><code>07_05_brep_mesh_projection.py</code>：实体与网格投影</li>
+              <li><code>07_06_engineering_three_views.py</code>：三视图自动出图</li>
+              <li><code>07_07_bridge_pier_placement_scene.py</code>：曲线桥梁多墩放置</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3 style="color: var(--deep-ocean);">下一讲预告：第 08 讲 相交运算</h3>
+            <p style="font-size: 14px;">线与面、面与面相交计算，截面剖切多边形求交与碰撞初判。</p>
+          </div>
+        </div>
+
+        <div class="viewport-3d" id="viewport-threeviews">
+          <div class="viewport-overlay">3D 视口：三维桥墩与俯/正/侧三视图实时投影</div>
+        </div>
+      </div>
+
+      <div class="nav-bar">
+        <button class="nav-btn" onclick="prevSlide()">← 上一页</button>
+        <div class="progress-dots" id="dots-6"></div>
+        <button class="nav-btn" onclick="goToSlide(0)">回到首页 ↺</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // 幻灯片翻页逻辑
+  const slides = document.querySelectorAll('.slide');
+  let currentSlide = 0;
+  const totalSlides = slides.length;
+
+  function initDots() {
+    for (let i = 0; i < totalSlides; i++) {
+      const container = document.getElementById(`dots-${i}`);
+      if (!container) continue;
+      container.innerHTML = '';
+      for (let j = 0; j < totalSlides; j++) {
+        const dot = document.createElement('div');
+        dot.className = `dot ${j === i ? 'active' : ''}`;
+        dot.onclick = () => goToSlide(j);
+        container.appendChild(dot);
+      }
+    }
+  }
+
+  function goToSlide(n) {
+    slides[currentSlide].classList.remove('active');
+    currentSlide = (n + totalSlides) % totalSlides;
+    slides[currentSlide].classList.add('active');
+    initDots();
+  }
+
+  function nextSlide() { goToSlide(currentSlide + 1); }
+  function prevSlide() { goToSlide(currentSlide - 1); }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') nextSlide();
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
+  });
+
+  initDots();
+
+  // =========================================================================
+  // Three.js 3D 动画与视口逻辑
+  // =========================================================================
+  function createSceneHelper(elemId) {
+    const container = document.getElementById(elemId);
+    if (!container || !window.THREE) return null;
+
+    const width = container.clientWidth || 480;
+    const height = container.clientHeight || 380;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf2f6f9);
+
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    camera.position.set(5, 4.5, 6.5);
+    camera.lookAt(0, 0.5, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.85);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    dirLight.position.set(8, 12, 6);
+    scene.add(dirLight);
+
+    const grid = new THREE.GridHelper(10, 20, 0x1178a6, 0xd0dbe5);
+    grid.position.y = -1.2;
+    scene.add(grid);
+
+    return { scene, camera, renderer, container };
+  }
+
+  // --- 1. 封面视口 ---
+  const coverObj = createSceneHelper('viewport-cover');
+  if (coverObj) {
+    const { scene, camera, renderer } = coverObj;
+    // 空间构件 (长方体柱)
+    const boxGeo = new THREE.BoxGeometry(1.2, 2.2, 0.8);
+    const boxMat = new THREE.MeshStandardMaterial({ color: 0x1178a6, roughness: 0.3, metalness: 0.1 });
+    const box = new THREE.Mesh(boxGeo, boxMat);
+    scene.add(box);
+
+    // 地面投影 (暗红色投影面)
+    const projGeo = new THREE.PlaneGeometry(1.2, 0.8);
+    const projMat = new THREE.MeshBasicMaterial({ color: 0xff6f61, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
+    const proj = new THREE.Mesh(projGeo, projMat);
+    proj.rotation.x = -Math.PI / 2;
+    proj.position.y = -1.18;
+    scene.add(proj);
+
+    function animateCover() {
+      requestAnimationFrame(animateCover);
+      box.rotation.y += 0.008;
+      box.rotation.x = 0.15 + Math.sin(Date.now() * 0.001) * 0.05;
+      proj.rotation.z = box.rotation.y;
+      renderer.render(scene, camera);
+    }
+    animateCover();
+  }
+
+  // --- 2. 矩阵顺序对比视口 ---
+  let orderMode = true; // true: T@R, false: R@T
+  const orderObj = createSceneHelper('viewport-order');
+  let orderMesh, orbitLine;
+  if (orderObj) {
+    const { scene, camera, renderer } = orderObj;
+    camera.position.set(6, 6, 8);
+    camera.lookAt(0, 0, 0);
+
+    const geom = new THREE.BoxGeometry(0.8, 1.4, 0.6);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x2f8f6b, roughness: 0.3 });
+    orderMesh = new THREE.Mesh(geom, mat);
+    scene.add(orderMesh);
+
+    // 公转弧线
+    const curve = new THREE.EllipseCurve(0, 0, 2.5, 2.5, 0, Math.PI / 3, false, 0);
+    const pts = curve.getPoints(50);
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(pts.map(p => new THREE.Vector3(p.x, -1.18, p.y)));
+    orbitLine = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0xf7a928, linewidth: 3 }));
+    scene.add(orbitLine);
+    orbitLine.visible = false;
+
+    function animateOrder() {
+      requestAnimationFrame(animateOrder);
+      if (orderMode) {
+        // T @ R: 自转后平移到固定点 (1.8, 0, 0)
+        orderMesh.position.set(1.8, 0, 0);
+        orderMesh.rotation.y += 0.01;
+        orderMesh.material.color.setHex(0x2f8f6b);
+      } else {
+        // R @ T: 绕原点公转
+        const t = Date.now() * 0.0012;
+        orderMesh.position.set(2.4 * Math.cos(t), 0, 2.4 * Math.sin(t));
+        orderMesh.rotation.y = 0;
+        orderMesh.material.color.setHex(0xb22222);
+      }
+      renderer.render(scene, camera);
+    }
+    animateOrder();
+  }
+
+  function toggleMatrixOrderDemo() {
+    orderMode = !orderMode;
+    const label = document.getElementById('order-label');
+    if (orderMode) {
+      label.innerText = '当前显示：T @ R (先自转后平移 · 正确落位)';
+      label.style.color = 'var(--palm)';
+      if (orbitLine) orbitLine.visible = false;
+    } else {
+      label.innerText = '当前显示：R @ T (先平移后绕世界中心公转 · 严重跑偏)';
+      label.style.color = 'var(--coral)';
+      if (orbitLine) orbitLine.visible = true;
+    }
+  }
+
+  // --- 3. 三视图视口 ---
+  const tvObj = createSceneHelper('viewport-threeviews');
+  if (tvObj) {
+    const { scene, camera, renderer } = tvObj;
+    camera.position.set(5.5, 4.5, 7.5);
+    camera.lookAt(0, 0, 0);
+
+    // 变截面桥墩 (中央)
+    const pierGeo = new THREE.CylinderGeometry(0.6, 0.9, 2.4, 4);
+    const pierMat = new THREE.MeshStandardMaterial({ color: 0x708090, roughness: 0.4 });
+    const pier = new THREE.Mesh(pierGeo, pierMat);
+    pier.rotation.y = Math.PI / 4;
+    scene.add(pier);
+
+    // 三个正交投影面板
+    function createProjPlane(color, pos, rot) {
+      const pG = new THREE.PlaneGeometry(2.8, 2.8);
+      const pM = new THREE.MeshBasicMaterial({ color: color, side: THREE.DoubleSide, transparent: true, opacity: 0.35 });
+      const m = new THREE.Mesh(pG, pM);
+      m.position.copy(pos);
+      m.rotation.copy(rot);
+      scene.add(m);
+      return m;
+    }
+
+    createProjPlane(0x4169e1, new THREE.Vector3(0, -1.8, 0), new THREE.Euler(-Math.PI/2, 0, 0)); // 俯视图板
+    createProjPlane(0x2e8b57, new THREE.Vector3(0, 0, -2.2), new THREE.Euler(0, 0, 0));            // 主视图板
+    createProjPlane(0xff6f61, new THREE.Vector3(-2.2, 0, 0), new THREE.Euler(0, Math.PI/2, 0));   // 侧视图板
+
+    function animateThreeViews() {
+      requestAnimationFrame(animateThreeViews);
+      pier.rotation.y += 0.005;
+      renderer.render(scene, camera);
+    }
+    animateThreeViews();
+  }
+</script>
+
+</body>
+</html>

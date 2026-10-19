@@ -123,3 +123,28 @@ class CoordinateSystem3D(GeometryData):
         x_vec.render(engine, base_point=self.origin, color=colors[0], show_edges=show_edges)
         y_vec.render(engine, base_point=self.origin, color=colors[1], show_edges=show_edges)
         z_vec.render(engine, base_point=self.origin, color=colors[2], show_edges=show_edges)
+
+    # =========================================================================
+    # 内置几何变换与投影 (Built-in Transform & Projection)
+    # =========================================================================
+    def transform(self, matrix) -> "CoordinateSystem3D":
+        """应用 4x4 仿射变换矩阵变换坐标系 (原点为点变换，三个轴为方向向量变换)。"""
+        return CoordinateSystem3D(
+            origin=self.origin.transform(matrix),
+            x_axis=self.x_axis.transform(matrix).normalized(),
+            y_axis=self.y_axis.transform(matrix).normalized(),
+            z_axis=self.z_axis.transform(matrix).normalized(),
+            axis_length=self.axis_length,
+            name=self.name,
+        )
+
+    def project_to_plane(self, plane) -> "CoordinateSystem3D":
+        """将坐标系原点与各轴投影至指定平面 Plane3D。"""
+        return CoordinateSystem3D(
+            origin=self.origin.project_to_plane(plane),
+            x_axis=self.x_axis.project_to_plane(plane).normalized(),
+            y_axis=self.y_axis.project_to_plane(plane).normalized(),
+            z_axis=plane.normal.normalized(),
+            axis_length=self.axis_length,
+            name=f"{self.name}_proj" if self.name else "",
+        )

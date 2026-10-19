@@ -64,5 +64,32 @@ class Arc3D(Curve):
             angle=sweep_angle,
         )
 
+    # =========================================================================
+    # 内置几何变换与投影 (Built-in Transform & Projection)
+    # =========================================================================
+    def transform(self, matrix) -> "Arc3D":
+        """应用 4x4 仿射变换矩阵变换圆弧 (变换基准平面与圆心)。"""
+        new_plane = self.plane.transform(matrix)
+        return Arc3D(
+            center=new_plane.center,
+            radius=self.radius,
+            start_angle=self.start_angle,
+            end_angle=self.end_angle,
+            plane=new_plane,
+            name=self.name,
+        )
+
+    def project_to_plane(self, plane) -> "Arc3D":
+        """将圆弧投影至指定平面 Plane3D。"""
+        new_plane = self.plane.project_to_plane(plane)
+        return Arc3D(
+            center=new_plane.center,
+            radius=self.radius,
+            start_angle=self.start_angle,
+            end_angle=self.end_angle,
+            plane=new_plane,
+            name=f"{self.name}_proj" if self.name else "",
+        )
+
 
 Arc3d = Arc3D

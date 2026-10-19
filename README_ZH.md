@@ -21,7 +21,8 @@
 | **第一期** | 2026-06-09 | 导论与开发环境配置 (Conda / PyVista) | [在 B 站观看 (BV1k8EE6gEdq)](https://www.bilibili.com/video/BV1k8EE6gEdq/) |
 | **第二期** | 2026-06-25 | 几何对象构建、三维渲染引擎接入与碰撞检测 | [在 B 站观看 (BV19kKS6EE9f)](https://www.bilibili.com/video/BV19kKS6EE9f/) |
 | **第三期** | 2026-08-13 | 手搓三维几何与画法几何（参数曲面 / B-Rep / Mesh） | [在 B 站观看 (BV13Ygp6LED6)](https://www.bilibili.com/video/BV13Ygp6LED6/) |
-| **第四期** | 2026-09-24 | 面和体的表达（马鞍面、拓扑边界与三角网格） | [前往 B 站预约直播](http://t.bilibili.com/1251078433829552132?bsource=dynamic_reserve) · [3D 动态海报](https://drawing.python.venchy.online/posters/06-body-representation/) |
+| **第四期** | 2026-09-24 | 面和体的表达（马鞍面、拓扑边界与三角网格） | [在 B 站观看 (BV17yaN68EWn)](https://www.bilibili.com/video/BV17yaN68EWn/) · [3D 动态海报](https://drawing.python.venchy.online/posters/06-body-representation/) |
+| **第五期** | 2026-10-28 | 几何体的转换与投影（4×4矩阵变换、基底映射与工程三视图） | [3D 动态海报](https://drawing.python.venchy.online/posters/07-transform-projection/) · 直播预约中 |
 
 > 更多直播排期与历史记录可查看 [直播记录总览](https://drawing.python.venchy.online/live/)。
 
@@ -40,6 +41,9 @@
 | **第 05.01 章** | 基本几何数据与面向对象设计 | 🔗 [05.01-basic-geometry-data-slides.html](https://drawing.python.venchy.online/slides/05.01-basic-geometry-data-slides.html) |
 | **第 05.02 章** | 面向对象与几何参数化表达 | 🔗 [05.02-oop-parametric-geometry-slides.html](https://drawing.python.venchy.online/slides/05.02-oop-parametric-geometry-slides.html) |
 | **第 06 章** | 面和体的表达方式 (Surface / B-Rep / Mesh) | 🔗 [06.01-body-representation-slides.html](https://drawing.python.venchy.online/slides/06.01-body-representation-slides.html) |
+| **第 07 章** | 几何体的转换与投影 (4×4矩阵变换与工程三视图) | 🔗 [07.01-geometry-transform-projection-slides.html](https://drawing.python.venchy.online/slides/07.01-geometry-transform-projection-slides.html) |
+| **第 08 章** | 几何相交运算（点、线、面、体 4×4 完备相交体系） | 🔗 [08.01-geometry-intersection-slides.html](https://drawing.python.venchy.online/slides/08.01-geometry-intersection-slides.html) |
+
 
 ---
 

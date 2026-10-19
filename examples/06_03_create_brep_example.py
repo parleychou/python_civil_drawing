@@ -4,7 +4,7 @@
 并打印该拓扑结构的所有构成元素。
 """
 
-from src import create_cube_brep
+from src import *
 
 
 def main() -> None:

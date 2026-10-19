@@ -57,5 +57,28 @@ class Circle3D(Curve):
             angle=360.0,
         )
 
+    # =========================================================================
+    # 内置几何变换与投影 (Built-in Transform & Projection)
+    # =========================================================================
+    def transform(self, matrix) -> "Circle3D":
+        """应用 4x4 仿射变换矩阵变换圆 (变换基准平面与圆心)。"""
+        new_plane = self.plane.transform(matrix)
+        return Circle3D(
+            center=new_plane.center,
+            radius=self.radius,
+            plane=new_plane,
+            name=self.name,
+        )
+
+    def project_to_plane(self, plane) -> "Circle3D":
+        """将圆投影至指定平面 Plane3D。"""
+        new_plane = self.plane.project_to_plane(plane)
+        return Circle3D(
+            center=new_plane.center,
+            radius=self.radius,
+            plane=new_plane,
+            name=f"{self.name}_proj" if self.name else "",
+        )
+
 
 Circle3d = Circle3D

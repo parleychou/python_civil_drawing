@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>08.01 几何相交运算 - 土木人的 Python 课</title>
+  <!-- Three.js 本地优先与 CDN 降级兜底 -->
+  <script src="./three.min.js"></script>
+  <script>
+    if (!window.THREE) {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+    }
+  </script>
+  <style>
+    :root {
+      --sun-50: #fff8e6;
+      --sun-100: #fff1ca;
+      --sun-200: #ffe29a;
+      --citrus: #f7a928;
+      --coral: #ff6f61;
+      --ocean: #1178a6;
+      --deep-ocean: #0d3f5e;
+      --palm: #2f8f6b;
+      --ink: #1f2a32;
+      --muted: #65717a;
+      --paper: #fffdf7;
+      --line: #e8d9b9;
+      --shell: #10384e;
+      --shadow: 0 22px 60px rgba(13, 63, 94, 0.14);
+      --soft-shadow: 0 12px 30px rgba(13, 63, 94, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; overflow: hidden; }
+    body {
+      font-family: "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at 18% 12%, rgba(255, 226, 154, 0.72) 0 18%, transparent 19%),
+                  linear-gradient(145deg, rgba(255, 248, 230, 0.96), rgba(232, 244, 247, 0.92) 68%, rgba(255, 253, 247, 0.98));
+    }
+    .deck { width: 100vw; height: 100vh; position: relative; }
+    .slide {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      padding: 40px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    .slide.active { opacity: 1; pointer-events: auto; }
+    .card {
+      width: min(1180px, 94vw); height: min(720px, 88vh);
+      background: rgba(255, 253, 247, 0.95); border: 1px solid var(--line);
+      border-radius: 28px; box-shadow: var(--shadow);
+      padding: 38px 46px; display: flex; flex-direction: column; position: relative;
+    }
+    .eyebrow {
+      font-size: 13px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.12em; color: var(--ocean); margin-bottom: 8px;
+    }
+    h1, h2 { margin: 0 0 12px; color: var(--deep-ocean); font-weight: 800; }
+    h1 { font-size: 38px; }
+    h2 { font-size: 28px; }
+    p.desc { font-size: 16px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; flex: 1; min-height: 0; }
+    .viewport-box {
+      width: 100%; height: 100%; border-radius: 18px;
+      background: #151d24; position: relative; overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    .controls {
+      background: #faf6ed; border: 1px solid var(--line); border-radius: 16px;
+      padding: 20px; display: flex; flex-direction: column; gap: 14px;
+    }
+    .control-row { display: flex; align-items: center; justify-content: space-between; font-size: 14px; }
+    input[type=range] { width: 60%; accent-color: var(--ocean); }
+    .stat-badge {
+      display: inline-block; padding: 6px 12px; border-radius: 8px;
+      font-weight: 700; font-size: 13px; background: rgba(17, 120, 166, 0.12); color: var(--ocean);
+    }
+    .stat-badge.warn { background: rgba(255, 111, 97, 0.15); color: var(--coral); }
+    .stat-badge.success { background: rgba(47, 143, 107, 0.15); color: var(--palm); }
+    .nav {
+      position: fixed; bottom: 24px; right: 36px; display: flex; gap: 12px; z-index: 100;
+    }
+    .nav-btn {
+      width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line);
+      background: var(--paper); color: var(--deep-ocean); font-size: 18px;
+      display: grid; place-items: center; cursor: pointer; box-shadow: var(--soft-shadow);
+      transition: all 0.2s;
+    }
+    .nav-btn:hover { background: var(--ocean); color: #fff; transform: translateY(-2px); }
+    .page-indicator {
+      position: fixed; bottom: 34px; left: 40px; font-weight: 700;
+      color: var(--muted); font-size: 14px; letter-spacing: 0.05em;
+    }
+    .matrix-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    .matrix-table th, .matrix-table td { border: 1px solid var(--line); padding: 10px; text-align: center; }
+    .matrix-table th { background: var(--sun-100); color: var(--deep-ocean); }
+    .matrix-table td.core { background: rgba(47, 143, 107, 0.08); font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="deck">
+  <!-- Slide 1: 封面 -->
+  <section class="slide active" id="slide-1">
+    <div class="card" style="justify-content: center; align-items: center; text-align: center;">
+      <div class="eyebrow">土木人的 Python 课 · 第 08 章</div>
+      <h1 style="font-size: 46px; margin: 16px 0;">几何相交运算体系</h1>
+      <p style="font-size: 20px; color: var(--citrus); font-weight: 700; margin: 0 0 16px;">Geometric Intersection Algorithms</p>
+      <p class="desc" style="max-width: 680px; font-size: 16px;">
+        从微观放样到宏观空间包络 —— 建立涵盖点、线、面、体各自自身与相互之间的 4×4 完备相交底座，打通管道穿墙、双坡屋棱、截面剖切切片与管综碰撞检测。
+      </p>
+      <div style="display: flex; gap: 14px; margin-top: 20px;">
+        <span class="stat-badge success">4×4 完备矩阵</span>
+        <span class="stat-badge">Möller-Trumbore 算法</span>
+        <span class="stat-badge">网格切片 Mesh Slicing</span>
+        <span class="stat-badge warn">BIM 机电管综碰撞</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: 4x4 完备矩阵全景 -->
+  <section class="slide" id="slide-2">
+    <div class="card">
+      <div class="eyebrow">架构总览 · ARCHITECTURE</div>
+      <h2>几何体相交完备交互矩阵 (4×4 Matrix)</h2>
+      <p class="desc">三层公差体系支撑：空间长度公差 ε_spatial (1e-4 mm) · 角度公差 ε_angular (1e-9 rad) · 参数公差 ε_param (1e-7)</p>
+      <table class="matrix-table">
+        <tr>
+          <th>相交对象</th>
+          <th>点 (Point)</th>
+          <th>线 (Line)</th>
+          <th>面 (Plane)</th>
+          <th>体 (Solid/Mesh)</th>
+        </tr>
+        <tr>
+          <th>点 (Point)</th>
+          <td class="core">点-点重合判定</td>
+          <td class="core">点在线段上 (t投影参数)</td>
+          <td class="core">点在平面/面片内</td>
+          <td class="core">点在实体内 (3D微扰射线奇偶法)</td>
+        </tr>
+        <tr>
+          <th>线 (Line)</th>
+          <td>线-点关联</td>
+          <td class="core">2D/3D线线相交&折线自交</td>
+          <td class="core">3D线面穿透&MT算法</td>
+          <td class="core">线穿透实体多区间&厚度提取</td>
+        </tr>
+        <tr>
+          <th>面 (Plane)</th>
+          <td>面-点关联</td>
+          <td>面-线相交</td>
+          <td class="core">双平面交线&面自相交</td>
+          <td class="core">平面剖切切片提取闭合轮廓环</td>
+        </tr>
+        <tr>
+          <th>体 (Solid)</th>
+          <td>体-点包含</td>
+          <td>体-线穿透</td>
+          <td>体-面剖切</td>
+          <td class="core">AABB粗筛+Mesh碰撞+完全包含</td>
+        </tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- Slide 3: 2D 线段跨立试验 -->
+  <section class="slide" id="slide-3">
+    <div class="card">
+      <div class="eyebrow">线与线 · 2D STRADDLE TEST</div>
+      <h2>二维线段跨立试验动态模拟器</h2>
+      <p class="desc">利用向量叉积正负号判定线段互相跨立：(AB×AC)·(AB×AD) &lt; 0 且 (CD×CA)·(CD×CB) &lt; 0。</p>
+      <div class="grid-2">
+        <div class="viewport-box" id="vp-straddle"></div>
+        <div class="controls">
+          <div class="control-row">
+            <span>调节线段 1 角度:</span>
+            <input type="range" id="rg-straddle-ang" min="0" max="360" value="45">
+          </div>
+          <div class="control-row">
+            <span>调节线段 2 高度:</span>
+            <input type="range" id="rg-straddle-y" min="-150" max="150" value="0">
+          </div>
+          <hr style="border: 0; border-top: 1px solid var(--line); margin: 10px 0;">
+          <div class="control-row">
+            <span>相交状态:</span>
+            <span id="badge-straddle" class="stat-badge success">严格相交</span>
+          </div>
+          <div class="control-row">
+            <span>交点坐标 (X, Y):</span>
+            <span id="txt-straddle-pt" style="font-family: monospace; font-weight: 700;">(0.0, 0.0)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 4: 3D 异面公垂线与净距 -->
+  <section class="slide" id="slide-4">
+    <div class="card">
+      <div class="eyebrow">线与线 · 3D SKEW LINES</div>
+      <h2>空间管线错层公垂线与净距检测</h2>
+      <p class="desc">公垂线方向 n_c = d1 × d2。公垂线最短距离 d_min = |(P2 - P1)·n_c| / ||n_c||。</p>
+      <div class="grid-2">
+        <div class="viewport-box" id="vp-skew"></div>
+        <div class="controls">
+          <div class="control-row">
+            <span>上层给水管标高 Z (mm):</span>
+            <input type="range" id="rg-skew-z" min="2800" max="3600" value="3200">
+          </div>
+          <div class="control-row">
+            <span>下层强电桥架标高 Z (mm):</span>
+            <input type="range" id="rg-skew-z2" min="2500" max="3300" value="3050">
+          </div>
+          <hr style="border: 0; border-top: 1px solid var(--line); margin: 10px 0;">
+          <div class="control-row">
+            <span>空间垂直净距:</span>
+            <span id="txt-skew-dist" style="font-weight: 800; font-size: 18px; color: var(--ocean);">150.0 mm</span>
+          </div>
+          <div class="control-row">
+            <span>规范安全评级:</span>
+            <span id="badge-skew" class="stat-badge success">满足规范 (≥150mm)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: Möller-Trumbore 射线三角形 -->
+  <section class="slide" id="slide-5">
+    <div class="card">
+      <div class="eyebrow">线与面 · MÖLLER-TRUMBORE ALGORITHM</div>
+      <h2>Möller-Trumbore 黄金穿透算法</h2>
+      <p class="desc">直接通过标量三重积解算克莱姆法则线性方程组，无需预先显式计算支撑平面方程与法向量。</p>
+      <div class="grid-2">
+        <div class="viewport-box" id="vp-mt"></div>
+        <div class="controls">
+          <div class="control-row">
+            <span>射线原点 X:</span>
+            <input type="range" id="rg-mt-x" min="-100" max="100" value="0">
+          </div>
+          <div class="control-row">
+            <span>射线原点 Y:</span>
+            <input type="range" id="rg-mt-y" min="-100" max="100" value="0">
+          </div>
+          <hr style="border: 0; border-top: 1px solid var(--line); margin: 10px 0;">
+          <div class="control-row">
+            <span>命中状态:</span>
+            <span id="badge-mt" class="stat-badge success">HIT 穿透</span>
+          </div>
+          <div class="control-row">
+            <span>重心坐标 (u, v):</span>
+            <span id="txt-mt-uv" style="font-family: monospace; font-weight: 700;">(0.333, 0.333)</span>
+          </div>
+          <div class="control-row">
+            <span>穿透距离 t:</span>
+            <span id="txt-mt-t" style="font-family: monospace; font-weight: 700;">200.0 mm</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 6: 平面剖切切片 Mesh Slicing -->
+  <section class="slide" id="slide-6">
+    <div class="card">
+      <div class="eyebrow">面与体 · MESH SLICING</div>
+      <h2>空间平面剖切箱梁实时切片提取</h2>
+      <p class="desc">剖切平面与三角面片求交生成离散线段，通过空间哈希容差聚类缝合为闭合内外轮廓环。</p>
+      <div class="grid-2">
+        <div class="viewport-box" id="vp-slicing"></div>
+        <div class="controls">
+          <div class="control-row">
+            <span>剖切标高 Z (mm):</span>
+            <input type="range" id="rg-slice-z" min="-100" max="100" value="0">
+          </div>
+          <div class="control-row">
+            <span>剖切倾角 θ (°):</span>
+            <input type="range" id="rg-slice-rot" min="-30" max="30" value="15">
+          </div>
+          <hr style="border: 0; border-top: 1px solid var(--line); margin: 10px 0;">
+          <div class="control-row">
+            <span>生成切片交线段:</span>
+            <span style="font-weight: 700;">8 条线段</span>
+          </div>
+          <div class="control-row">
+            <span>缝合闭合截面轮廓:</span>
+            <span class="stat-badge success">1 个外轮廓环 (Closed)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 7: 总结与布尔运算预告 -->
+  <section class="slide" id="slide-7">
+    <div class="card" style="justify-content: center; align-items: center; text-align: center;">
+      <div class="eyebrow">课程总结 · SUMMARY</div>
+      <h2>打通数字建造相交底座</h2>
+      <p class="desc" style="max-width: 720px; font-size: 16px;">
+        本章实现了 4×4 完备相交矩阵与面向对象原生内置方法（Point3D, Line3D, Plane3D, MeshData, BrepData），
+        解决了管道穿墙预留套管放样与空间异面净距检测。
+      </p>
+      <div style="background: var(--sun-100); border: 1px solid var(--citrus); border-radius: 16px; padding: 24px 36px; max-width: 600px; margin-top: 10px;">
+        <h3 style="margin: 0 0 8px; color: var(--deep-ocean);">下节预告：第 09 章 布尔运算 (CSG)</h3>
+        <p style="margin: 0; font-size: 14px; color: var(--muted); line-height: 1.6;">
+          基于相交环截面线框，进行实体求并 (Union)、求交 (Intersection)、求差 (Difference) 实体开洞与榫卯拼装！
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- 导航按钮 -->
+<div class="page-indicator" id="page-num">01 / 07</div>
+<div class="nav">
+  <button class="nav-btn" id="btn-prev">❮</button>
+  <button class="nav-btn" id="btn-next">❯</button>
+</div>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  const pageNum = document.getElementById('page-num');
+
+  function updateSlide(index) {
+    slides.forEach((s, idx) => {
+      s.classList.toggle('active', idx === index);
+    });
+    pageNum.textContent = `${String(index + 1).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+  }
+
+  document.getElementById('btn-prev').addEventListener('click', () => {
+    currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+    updateSlide(currentSlide);
+  });
+
+  document.getElementById('btn-next').addEventListener('click', () => {
+    currentSlide = (currentSlide + 1) % totalSlides;
+    updateSlide(currentSlide);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+      currentSlide = (currentSlide + 1) % totalSlides;
+      updateSlide(currentSlide);
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+      updateSlide(currentSlide);
+    }
+  });
+
+  // =========================================================================
+  // Three.js 动态交互组件初始化
+  // =========================================================================
+  function init3DComponent(containerId, renderFn) {
+    const el = document.getElementById(containerId);
+    if (!el || !window.THREE) return;
+    const w = el.clientWidth || 500;
+    const h = el.clientHeight || 450;
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x151d24);
+    const camera = new THREE.PerspectiveCamera(45, w / h, 1, 2000);
+    camera.position.set(0, 0, 400);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(w, h);
+    el.appendChild(renderer.domElement);
+
+    const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+    scene.add(ambient);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+    dir.position.set(200, 300, 400);
+    scene.add(dir);
+
+    renderFn(scene, camera, renderer);
+  }
+
+  window.addEventListener('load', () => {
+    // 1. 2D 跨立试验
+    init3DComponent('vp-straddle', (scene, camera, renderer) => {
+      const matLine1 = new THREE.LineBasicMaterial({ color: 0x1178a6, linewidth: 4 });
+      const matLine2 = new THREE.LineBasicMaterial({ color: 0xf7a928, linewidth: 4 });
+      const matPt = new THREE.MeshBasicMaterial({ color: 0xff6f61 });
+
+      const geoPt = new THREE.SphereGeometry(6, 16, 16);
+      const meshPt = new THREE.Mesh(geoPt, matPt);
+      scene.add(meshPt);
+
+      function render() {
+        renderer.render(scene, camera);
+        requestAnimationFrame(render);
+      }
+      render();
+    });
+
+    // 2. 3D 空间公垂线
+    init3DComponent('vp-skew', (scene, camera, renderer) => {
+      camera.position.set(300, 200, 300);
+      camera.lookAt(0, 0, 0);
+
+      // 管线 1 (蓝色)
+      const geo1 = new THREE.CylinderGeometry(8, 8, 300, 16);
+      const mat1 = new THREE.MeshStandardMaterial({ color: 0x1178a6, roughness: 0.3 });
+      const pipe1 = new THREE.Mesh(geo1, mat1);
+      pipe1.rotation.z = Math.PI / 2;
+      pipe1.position.y = 50;
+      scene.add(pipe1);
+
+      // 管线 2 (橙色)
+      const geo2 = new THREE.CylinderGeometry(8, 8, 300, 16);
+      const mat2 = new THREE.MeshStandardMaterial({ color: 0xf7a928, roughness: 0.3 });
+      const pipe2 = new THREE.Mesh(geo2, mat2);
+      pipe2.rotation.x = Math.PI / 2;
+      pipe2.position.y = -50;
+      scene.add(pipe2);
+
+      // 公垂线 (红色)
+      const geoPerp = new THREE.CylinderGeometry(3, 3, 100, 8);
+      const matPerp = new THREE.MeshBasicMaterial({ color: 0xff6f61 });
+      const perp = new THREE.Mesh(geoPerp, matPerp);
+      scene.add(perp);
+
+      function render() {
+        scene.rotation.y += 0.003;
+        renderer.render(scene, camera);
+        requestAnimationFrame(render);
+      }
+      render();
+    });
+
+    // 3. Möller-Trumbore
+    init3DComponent('vp-mt', (scene, camera, renderer) => {
+      camera.position.set(200, 150, 250);
+      camera.lookAt(0, 0, 0);
+
+      const geom = new THREE.BufferGeometry();
+      const vertices = new Float32Array([
+        -100, -80, 0,
+         100, -80, 0,
+           0,  100, 0
+      ]);
+      geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+      const mat = new THREE.MeshStandardMaterial({ color: 0x2f8f6b, side: THREE.DoubleSide, opacity: 0.6, transparent: true });
+      const tri = new THREE.Mesh(geom, mat);
+      scene.add(tri);
+
+      // 穿透点
+      const ptGeo = new THREE.SphereGeometry(6, 16, 16);
+      const ptMat = new THREE.MeshBasicMaterial({ color: 0xf7a928 });
+      const hitPt = new THREE.Mesh(ptGeo, ptMat);
+      scene.add(hitPt);
+
+      function render() {
+        scene.rotation.y += 0.003;
+        renderer.render(scene, camera);
+        requestAnimationFrame(render);
+      }
+      render();
+    });
+
+    // 4. 切片 Slicing
+    init3DComponent('vp-slicing', (scene, camera, renderer) => {
+      camera.position.set(250, 200, 250);
+      camera.lookAt(0, 0, 0);
+
+      // 箱梁立方体
+      const boxGeo = new THREE.BoxGeometry(160, 100, 120);
+      const boxMat = new THREE.MeshStandardMaterial({ color: 0x999999, transparent: true, opacity: 0.35 });
+      const box = new THREE.Mesh(boxGeo, boxMat);
+      scene.add(box);
+
+      // 剖切平面
+      const planeGeo = new THREE.PlaneGeometry(240, 200);
+      const planeMat = new THREE.MeshStandardMaterial({ color: 0x1178a6, side: THREE.DoubleSide, transparent: true, opacity: 0.4 });
+      const plane = new THREE.Mesh(planeGeo, planeMat);
+      plane.rotation.x = Math.PI / 6;
+      scene.add(plane);
+
+      function render() {
+        scene.rotation.y += 0.004;
+        renderer.render(scene, camera);
+        requestAnimationFrame(render);
+      }
+      render();
+    });
+  });
+</script>
+
+</body>
+</html>

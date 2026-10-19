@@ -1,6 +1,8 @@
 """BrepData — custom B-Rep boundary representation data structure."""
+from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, Optional
 
 import numpy as np
 import pyvista as pv
@@ -45,3 +47,50 @@ class BrepData(GeometryData):
             lines.append(2)
             lines.extend(edge)
         return pv.PolyData(points, lines=lines)
+
+    # =========================================================================
+    # 内置几何变换与投影 (Built-in Transform & Projection)
+    # =========================================================================
+    def transform(self, matrix) -> "BrepData":
+        """应用 4x4 仿射变换矩阵变换 B-Rep 实体的所有顶点，保持拓扑连接关系不变。"""
+        new_vertices = tuple(v.transform(matrix) for v in self.vertices)
+        return BrepData(
+            vertices=new_vertices,
+            edges=self.edges,
+            faces=self.faces,
+            name=self.name,
+        )
+
+    def project_to_plane(self, plane) -> "BrepData":
+        """将 B-Rep 实体正交投影至指定平面 Plane3D，生成二维拓扑图元。"""
+        proj_vertices = tuple(v.project_to_plane(plane) for v in self.vertices)
+        return BrepData(
+            vertices=proj_vertices,
+            edges=self.edges,
+            faces=self.faces,
+            name=f"{self.name}_proj" if self.name else "",
+        )
+
+    def to_triangulated_mesh(self) -> "Any":
+        """将多面体 B-Rep 的多边形面片扇形三角化为 MeshData 网格模型."""
+        from mesh_data import MeshData
+        tri_faces = []
+        for face in self.faces:
+            if len(face) == 3:
+                tri_faces.append(face)
+            elif len(face) >= 4:
+                for k in range(1, len(face) - 1):
+                    tri_faces.append((face[0], face[k], face[k + 1]))
+        return MeshData(
+            vertices=self.vertices,
+            faces=tuple(tri_faces),
+            name=f"{self.name}_tri_mesh" if self.name else "Brep_TriMesh",
+        )
+
+    # =========================================================================
+    # 内置相交运算 (Built-in Intersection Operations)
+    # =========================================================================
+    def intersect(self, other: Any, tol: float = 1e-4) -> Any:
+        """原生内置相交运算统一入口，自动委托三角化网格执行多态分发."""
+        mesh = self.to_triangulated_mesh()
+        return mesh.intersect(other, tol=tol)

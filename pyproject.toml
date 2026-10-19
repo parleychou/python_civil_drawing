@@ -11,3 +11,8 @@ requires-python = ">=3.9"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["src*"]
+
+[tool.pytest.ini_options]
+pythonpath = [".", "src"]
+testpaths = ["test"]
+
