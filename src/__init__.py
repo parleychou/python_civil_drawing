@@ -77,6 +77,40 @@ from intersection import (
     intersect_mesh_mesh,
     check_mesh_self_intersection,
 )
+from polygon2d import Polygon2D
+from boolean_ops import (
+    BooleanOperationType,
+    FaceSpatialRelation,
+    BooleanResult,
+    boolean_union_mesh,
+    boolean_difference_mesh,
+    boolean_intersection_mesh,
+    split_triangle_by_segments,
+    validate_mesh_manifold,
+)
+from collision import (
+    AABB,
+    OBB,
+    ClashType,
+    ClashSeverity,
+    ClashRecord,
+    ClashReport,
+    SpatialHashGrid,
+    sweep_and_prune,
+    BVHNode,
+    BVHTree,
+    calculate_mesh_minimum_clearance,
+    check_narrow_phase_clash,
+    cluster_clash_points_dbscan,
+    cluster_clash_records,
+    ClashRuleMatrix,
+    ClashEngine,
+)
+from clash_report import (
+    export_clash_report_csv_excel,
+    export_bcf_viewpoint,
+)
+
 
 __all__ = [
     "GeometryData",
@@ -135,4 +169,33 @@ __all__ = [
     "intersect_planes",
     "intersect_mesh_mesh",
     "check_mesh_self_intersection",
+    # Chapter 09: Boolean Operations
+    "Polygon2D",
+    "BooleanOperationType",
+    "FaceSpatialRelation",
+    "BooleanResult",
+    "boolean_union_mesh",
+    "boolean_difference_mesh",
+    "boolean_intersection_mesh",
+    "split_triangle_by_segments",
+    "validate_mesh_manifold",
+    # Chapter 10: Collision Detection & BIM Clash Management
+    "AABB",
+    "OBB",
+    "ClashType",
+    "ClashSeverity",
+    "ClashRecord",
+    "ClashReport",
+    "SpatialHashGrid",
+    "sweep_and_prune",
+    "BVHNode",
+    "BVHTree",
+    "calculate_mesh_minimum_clearance",
+    "check_narrow_phase_clash",
+    "cluster_clash_points_dbscan",
+    "cluster_clash_records",
+    "ClashRuleMatrix",
+    "ClashEngine",
+    "export_clash_report_csv_excel",
+    "export_bcf_viewpoint",
 ]

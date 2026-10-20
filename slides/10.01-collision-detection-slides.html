@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>10.01 BIM 碰撞检测与空间加速体系 - 土木人的 Python 课</title>
+  <!-- Three.js 本地优先与 CDN 降级兜底 -->
+  <script src="./three.min.js"></script>
+  <script>
+    if (!window.THREE) {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+    }
+  </script>
+  <style>
+    :root {
+      --sun-50: #fff8e6;
+      --sun-100: #fff1ca;
+      --sun-200: #ffe29a;
+      --citrus: #f7a928;
+      --coral: #ff6f61;
+      --ocean: #1178a6;
+      --deep-ocean: #0d3f5e;
+      --palm: #2f8f6b;
+      --ink: #1f2a32;
+      --muted: #65717a;
+      --paper: #fffdf7;
+      --line: #e8d9b9;
+      --shadow: 0 22px 60px rgba(13, 63, 94, 0.14);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; overflow: hidden; }
+    body {
+      font-family: "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at 18% 12%, rgba(255, 226, 154, 0.72) 0 18%, transparent 19%),
+                  linear-gradient(145deg, rgba(255, 248, 230, 0.96), rgba(232, 244, 247, 0.92) 68%, rgba(255, 253, 247, 0.98));
+    }
+    .deck { width: 100vw; height: 100vh; position: relative; }
+    .slide {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      padding: 40px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    .slide.active { opacity: 1; pointer-events: auto; }
+    .card {
+      width: min(1180px, 94vw); height: min(720px, 88vh);
+      background: rgba(255, 253, 247, 0.95); border: 1px solid var(--line);
+      border-radius: 28px; box-shadow: var(--shadow);
+      padding: 38px 46px; display: flex; flex-direction: column; position: relative;
+    }
+    .eyebrow {
+      font-size: 13px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.12em; color: var(--ocean); margin-bottom: 8px;
+    }
+    h1, h2 { margin: 0 0 12px; color: var(--deep-ocean); font-weight: 800; }
+    h1 { font-size: 38px; }
+    h2 { font-size: 28px; }
+    p.desc { font-size: 16px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; flex: 1; min-height: 0; }
+    .viewport-box {
+      width: 100%; height: 100%; border-radius: 18px;
+      background: #111a24; position: relative; overflow: hidden;
+      border: 1px solid rgba(17, 120, 166, 0.3);
+    }
+    .viewport-canvas { width: 100%; height: 100%; display: block; }
+    .viewport-overlay {
+      position: absolute; bottom: 12px; left: 12px; right: 12px;
+      background: rgba(13, 63, 94, 0.85); backdrop-filter: blur(8px);
+      padding: 10px 14px; border-radius: 10px; color: #fff; font-size: 13px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .info-pane {
+      display: flex; flex-direction: column; justify-content: space-between;
+      overflow-y: auto; padding-right: 10px;
+    }
+    .badge-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    .badge {
+      background: var(--sun-100); border: 1px solid var(--citrus);
+      color: var(--deep-ocean); padding: 4px 12px; border-radius: 999px;
+      font-size: 12px; font-weight: 700;
+    }
+    .code-box {
+      background: #1e293b; color: #f8fafc; border-radius: 12px;
+      padding: 14px 18px; font-family: ui-monospace, Consolas, monospace;
+      font-size: 13px; line-height: 1.5; margin-bottom: 16px; overflow-x: auto;
+    }
+    .code-box .kw { color: #f43f5e; font-weight: bold; }
+    .code-box .fn { color: #38bdf8; }
+    .code-box .str { color: #4ade80; }
+    .code-box .num { color: #fbbf24; }
+    .bullet-list { list-style: none; padding: 0; margin: 0 0 16px; }
+    .bullet-list li {
+      position: relative; padding-left: 20px; margin-bottom: 10px;
+      font-size: 14px; color: var(--ink); line-height: 1.5;
+    }
+    .bullet-list li::before {
+      content: "■"; color: var(--citrus); font-size: 10px;
+      position: absolute; left: 0; top: 3px;
+    }
+    .ctrl-row {
+      display: flex; gap: 12px; align-items: center; margin-top: 10px;
+    }
+    .ctrl-btn {
+      background: var(--ocean); color: #fff; border: none; padding: 8px 16px;
+      border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .ctrl-btn:hover { background: var(--deep-ocean); }
+    .nav-bar {
+      position: absolute; bottom: 24px; left: 0; right: 0;
+      display: flex; justify-content: center; align-items: center; gap: 20px;
+      pointer-events: auto;
+    }
+    .nav-btn {
+      background: var(--paper); border: 1px solid var(--line);
+      color: var(--deep-ocean); width: 44px; height: 44px; border-radius: 50%;
+      cursor: pointer; display: grid; place-items: center; font-size: 18px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06); transition: transform 0.2s;
+    }
+    .nav-btn:hover { transform: scale(1.08); background: var(--sun-50); }
+    .dots { display: flex; gap: 8px; }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%; background: var(--line);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .dot.active { background: var(--ocean); width: 28px; border-radius: 999px; }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <!-- Slide 1: 封面 -->
+    <div class="slide active" id="slide-0">
+      <div class="card" style="text-align: center; justify-content: center; align-items: center;">
+        <div class="eyebrow">土木工程三维计算几何 · 第十讲</div>
+        <h1 style="font-size: 46px; margin: 12px 0 20px;">BIM 碰撞检测与空间加速排查体系</h1>
+        <p class="desc" style="max-width: 680px; font-size: 18px; margin-bottom: 36px;">
+          深入解析工程设计“错漏碰缺”核心痛点：从 AABB/OBB 包围盒数学到 $O(N)$ 空间哈希网格与 BVH 二叉树剪枝，
+          再到三角网格精检、DBSCAN 空间聚类收敛及 openBIM BCF 3.0 交付。
+        </p>
+        <div class="badge-row" style="justify-content: center;">
+          <span class="badge">AABB & OBB (SAT 15轴)</span>
+          <span class="badge">Spatial Hash Grid O(N)</span>
+          <span class="badge">BVH 层次树遍历</span>
+          <span class="badge">软硬碰撞净距解算</span>
+          <span class="badge">DBSCAN 工单收敛</span>
+          <span class="badge">openBIM BCF 3.0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2: 包围盒数学与 SAT 分离轴定理 -->
+    <div class="slide" id="slide-1">
+      <div class="card">
+        <div class="eyebrow">Lesson 1 · 包围盒数学与 SAT 定理</div>
+        <h2>AABB vs OBB 空间紧致度与 15 轴分离判定</h2>
+        <p class="desc">常规 AABB 沿坐标轴对齐，在倾斜斜撑构件中会产生剧烈的“包围盒体积空隙膨胀”导致误报虚警；而 OBB 沿主惯性轴紧致包络，结合 SAT 15 候选分离轴实现精准初筛。</p>
+        <div class="grid-2">
+          <div class="viewport-box" id="vp-box-1">
+            <canvas class="viewport-canvas" id="canvas-1"></canvas>
+            <div class="viewport-overlay">
+              <span id="vp1-status">旋转角度: 45° | AABB体积膨胀率: 7.7x</span>
+              <button class="ctrl-btn" id="vp1-rotate-btn">旋转 15°</button>
+            </div>
+          </div>
+          <div class="info-pane">
+            <div>
+              <div class="badge-row">
+                <span class="badge">AABB: 6个正交区间判定</span>
+                <span class="badge">OBB: SAT 15轴投影测试</span>
+              </div>
+              <div class="code-box">
+<span class="kw">from</span> collision <span class="kw">import</span> AABB, OBB
+<span class="comment"># AABB 快速区间排查</span>
+aabb_a = AABB.from_mesh(brace_mesh)
+aabb_overlap = aabb_a.overlaps(aabb_b, tolerance=<span class="num">0.0</span>)
+
+<span class="comment"># OBB 15轴分离轴定理 (SAT) 精准判定</span>
+obb_a = OBB(center, axes, half_extents)
+is_real_clash = obb_a.overlaps(obb_b)
+              </div>
+              <ul class="bullet-list">
+                <li><strong>AABB 优势与局限：</strong>计算速度快 $O(1)$，但在大跨斜拉索、斜柱中体积严重虚胖；</li>
+                <li><strong>OBB 紧致贴合：</strong>沿构件主轴建立正交基底，体积最小化，消除 90% 虚假包围盒相交；</li>
+                <li><strong>SAT 15 轴完备性：</strong>3 条 A 面法向 + 3 条 B 面法向 + 9 条边矢量叉乘，投影重叠即碰撞。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: 空间网格哈希 (Spatial Hash Grid) -->
+    <div class="slide" id="slide-2">
+      <div class="card">
+        <div class="eyebrow">Lesson 2 · 大规模场景初筛</div>
+        <h2>空间网格哈希 (Spatial Hash Grid) O(N) 极速初筛</h2>
+        <p class="desc">暴力两两排查复杂度高达 $O(N^2)$，面对超万构件即刻崩溃。通过三维体素空间哈希映射，将物体注册至覆盖体素桶，只比对同桶邻近构件，实现百倍加速。</p>
+        <div class="grid-2">
+          <div class="viewport-box" id="vp-box-2">
+            <canvas class="viewport-canvas" id="canvas-2"></canvas>
+            <div class="viewport-overlay">
+              <span id="vp2-status">体素网格: 5000mm | 1200构件加速比: 30.9x</span>
+              <button class="ctrl-btn" id="vp2-toggle-grid">切换网格线</button>
+            </div>
+          </div>
+          <div class="info-pane">
+            <div>
+              <div class="badge-row">
+                <span class="badge">空间体素划分</span>
+                <span class="badge">多单元格跨越注册</span>
+                <span class="badge">候选对哈希去重</span>
+              </div>
+              <div class="code-box">
+grid = SpatialHashGrid(cell_size=<span class="num">5000.0</span>)
+<span class="kw">for</span> item_id, aabb <span class="kw">in</span> scene_objects:
+    grid.insert(item_id, aabb)
+
+<span class="comment"># O(N) 极速提取相交候选对</span>
+candidates = grid.query_candidates(tolerance=<span class="num">100.0</span>)
+              </div>
+              <ul class="bullet-list">
+                <li><strong>坐标整除量化：</strong>$(i, j, k) = \lfloor (x, y, z) / \text{cell\_size} \rfloor$，常数时间索引；</li>
+                <li><strong>跨体素无缝包络：</strong>大构件跨越多格时全部注册，确保交界处构件绝不漏检；</li>
+                <li><strong>唯一配对收集器：</strong>通过规范化元组 <code>(min(a,b), max(a,b))</code> 彻底避免重复检测。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4: 层次包围盒树 (BVH) 与树-树剪枝 -->
+    <div class="slide" id="slide-3">
+      <div class="card">
+        <div class="eyebrow">Lesson 3 · 层次空间索引</div>
+        <h2>层次包围盒树 (BVH) 构建与树-树递归剪枝</h2>
+        <p class="desc">基于最长轴中位数自适应切分构建平衡 AABB 二叉树。遍历求交时两节点包围盒不相交则整棵子树直接剪枝，复杂度逼近 $O(N \log N)$，并支持高速射线拾取。</p>
+        <div class="grid-2">
+          <div class="viewport-box" id="vp-box-3">
+            <canvas class="viewport-canvas" id="canvas-3"></canvas>
+            <div class="viewport-overlay">
+              <span id="vp3-status">BVH 二叉深度: 3 层 | 射线拾取命中: 2 处</span>
+              <button class="ctrl-btn" id="vp3-depth-btn">切换层级显示</button>
+            </div>
+          </div>
+          <div class="info-pane">
+            <div>
+              <div class="badge-row">
+                <span class="badge">最长轴中位数划分</span>
+                <span class="badge">树-树递归求交</span>
+                <span class="badge">Slab 射线拾取</span>
+              </div>
+              <div class="code-box">
+tree_a = BVHTree.build_top_down(beams)
+tree_b = BVHTree.build_top_down(pipes)
+
+<span class="comment"># 双树递归剪枝，自动展开体积较大节点</span>
+clash_pairs = tree_a.intersect_tree(tree_b)
+
+<span class="comment"># 模拟激光扫描/放样视线射线求交</span>
+hits = tree_a.ray_cast(origin, direction)
+              </div>
+              <ul class="bullet-list">
+                <li><strong>自适应中位数分割：</strong>避免空间八叉树受空旷区域导致的深度不均衡，二叉树极致紧致；</li>
+                <li><strong>启发式优先级展开：</strong>递归遍历时优先展开体积更大的一方，极速命中分离面实施剪枝；</li>
+                <li><strong>Slab 射线求交加速：</strong>三对平行平面求交区间交集快速判定，为全自动测距提供底层支撑。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5: 窄阶段精检与软硬碰撞解算 -->
+    <div class="slide" id="slide-4">
+      <div class="card">
+        <div class="eyebrow">Lesson 4 · 精确窄阶段与安全净距</div>
+        <h2>硬碰撞穿透体积与软碰撞最小空间净距</h2>
+        <p class="desc">突破传统包围盒初筛，深入三角面片级精细求交：精确解算穿透体积与侵入深度；对物理分离构件解算空间公垂线最近净距，排查运维检修缓冲区侵入。</p>
+        <div class="grid-2">
+          <div class="viewport-box" id="vp-box-4">
+            <canvas class="viewport-canvas" id="canvas-4"></canvas>
+            <div class="viewport-overlay">
+              <span id="vp4-status">结构梁 vs 暖通风管: 硬穿透 350mm | 水管软碰撞: 净距 45mm</span>
+              <button class="ctrl-btn" id="vp4-toggle-buffer">显示净距缓冲</button>
+            </div>
+          </div>
+          <div class="info-pane">
+            <div>
+              <div class="badge-row">
+                <span class="badge">Hard: 实体空间穿透</span>
+                <span class="badge">Soft: 净距小于安全阈值</span>
+                <span class="badge">公垂线欧氏距离</span>
+              </div>
+              <div class="code-box">
+<span class="comment"># 窄阶段精检与软硬碰撞一体化解算</span>
+rec = check_narrow_phase_clash(
+    id_a=<span class="str">"BEAM"</span>, mesh_a=beam,
+    id_b=<span class="str">"PIPE"</span>, mesh_b=pipe,
+    clearance=<span class="num">100.0</span> <span class="comment"># 规范安全间距</span>
+)
+<span class="kw">if</span> rec.clash_type == ClashType.HARD:
+    print(f<span class="str">"穿透深度: {rec.penetration_depth}mm"</span>)
+              </div>
+              <ul class="bullet-list">
+                <li><strong>硬碰撞 (Hard Clash)：</strong>构件几何实体发生空间体积干涉，必须出具结构开洞或路由变更；</li>
+                <li><strong>软碰撞 (Soft Clash)：</strong>物理未接触，但侵入保温层、绝缘距离或施工吊装检修作业空间；</li>
+                <li><strong>面向对象原生内置：</strong><code>mesh_a.clash_with(mesh_b, clearance=100.0)</code> 一行调用。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 6: 地下室管综实战与 openBIM BCF 交付 -->
+    <div class="slide" id="slide-5">
+      <div class="card">
+        <div class="eyebrow">Lesson 5-6 · 工程全流程实战</div>
+        <h2>商业地下室多专业排查、DBSCAN 聚类与 BCF 3.0</h2>
+        <p class="desc">综合实战：串联土建、暖通、给排水、电气与消防 5 大专业。通过 DBSCAN 空间密度聚类将碎片化点云收敛为单一工单，输出带 UTF-8 BOM 的 Excel 与 openBIM BCF 视点包。</p>
+        <div class="grid-2">
+          <div class="viewport-box" id="vp-box-5">
+            <canvas class="viewport-canvas" id="canvas-5"></canvas>
+            <div class="viewport-overlay">
+              <span id="vp5-status">受检构件: 12 | 确诊工单: 7 | 碎片降噪率: 97.1%</span>
+              <button class="ctrl-btn" id="vp5-avoid-btn">模拟自动避让</button>
+            </div>
+          </div>
+          <div class="info-pane">
+            <div>
+              <div class="badge-row">
+                <span class="badge">DBSCAN 密度聚类收敛</span>
+                <span class="badge">ClashRuleMatrix 规则矩阵</span>
+                <span class="badge">BCF 3.0 视点标注包</span>
+              </div>
+              <div class="code-box">
+<span class="comment"># 统一冲突排查调度器全流程</span>
+engine = ClashEngine(rule_matrix=rules, cluster_eps=<span class="num">300.0</span>)
+report = engine.run(scene_elements)
+
+<span class="comment"># 交付 openBIM 视点相机与 Excel 报表</span>
+export_clash_report_csv_excel(report, <span class="str">"report.csv"</span>)
+export_bcf_viewpoint(report.clashes[<span class="num">0</span>], <span class="str">"view.bcfv"</span>)
+              </div>
+              <ul class="bullet-list">
+                <li><strong>告警风暴消除：</strong>DBSCAN 自动识别连续穿腹板交点群，合并为 1 处高聚合开洞工单；</li>
+                <li><strong>专业白名单豁免：</strong>忽略同专业自来水三通连接接触，专注 cross-disciplinary 核心风险；</li>
+                <li><strong>openBIM 规范互通：</strong>自动计算视点相机坐标与观察仰角，无缝导入 Navisworks 与 BIM 平台。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部幻灯片导航栏 -->
+  <div class="nav-bar">
+    <button class="nav-btn" id="prev-btn">‹</button>
+    <div class="dots" id="dots-container">
+      <div class="dot active" data-index="0"></div>
+      <div class="dot" data-index="1"></div>
+      <div class="dot" data-index="2"></div>
+      <div class="dot" data-index="3"></div>
+      <div class="dot" data-index="4"></div>
+      <div class="dot" data-index="5"></div>
+    </div>
+    <button class="nav-btn" id="next-btn">›</button>
+  </div>
+
+  <script>
+    // -------------------------------------------------------------
+    // 幻灯片翻页逻辑
+    // -------------------------------------------------------------
+    let currentSlide = 0;
+    const slides = document.querySelectorAll(".slide");
+    const dots = document.querySelectorAll(".dot");
+
+    function goToSlide(idx) {
+      if (idx < 0 || idx >= slides.length) return;
+      slides[currentSlide].classList.remove("active");
+      dots[currentSlide].classList.remove("active");
+      currentSlide = idx;
+      slides[currentSlide].classList.add("active");
+      dots[currentSlide].classList.add("active");
+
+      // 触发对应视口大小重置
+      window.dispatchEvent(new Event("resize"));
+    }
+
+    document.getElementById("prev-btn").addEventListener("click", () => goToSlide(currentSlide - 1));
+    document.getElementById("next-btn").addEventListener("click", () => goToSlide(currentSlide + 1));
+    dots.forEach((dot, idx) => dot.addEventListener("click", () => goToSlide(idx)));
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") goToSlide(currentSlide - 1);
+      if (e.key === "ArrowRight") goToSlide(currentSlide + 1);
+    });
+
+    // -------------------------------------------------------------
+    // Three.js 交互视口辅助初始化
+    // -------------------------------------------------------------
+    function createThreeViewport(canvasId, setupScene) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas || !window.THREE) return null;
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+      camera.position.set(20, 20, 25);
+      camera.lookAt(0, 0, 0);
+
+      const ambLight = new THREE.AmbientLight(0xffffff, 0.7);
+      scene.add(ambLight);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLight.position.set(20, 40, 30);
+      scene.add(dirLight);
+
+      const grid = new THREE.GridHelper(30, 30, 0x1178a6, 0x1e293b);
+      grid.position.y = -5;
+      scene.add(grid);
+
+      const controls = setupScene(scene, camera, renderer);
+
+      function resize() {
+        const w = canvas.parentElement.clientWidth;
+        const h = canvas.parentElement.clientHeight;
+        if (w > 0 && h > 0) {
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+          renderer.setSize(w, h);
+        }
+      }
+      window.addEventListener("resize", resize);
+
+      function animate() {
+        requestAnimationFrame(animate);
+        if (controls && controls.update) controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+      return { scene, camera, renderer, controls };
+    }
+
+    // -------------------------------------------------------------
+    // Viewport 1: AABB vs OBB 旋转紧致度模拟器
+    // -------------------------------------------------------------
+    let angleVp1 = 45;
+    createThreeViewport("canvas-1", (scene) => {
+      const braceGeo = new THREE.BoxGeometry(16, 2, 2);
+      const braceMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.3 });
+      const braceMesh = new THREE.Mesh(braceGeo, braceMat);
+      scene.add(braceMesh);
+
+      const obbGeo = new THREE.BoxGeometry(16.2, 2.2, 2.2);
+      const obbWire = new THREE.WireframeGeometry(obbGeo);
+      const obbLine = new THREE.LineSegments(obbWire, new THREE.LineBasicMaterial({ color: 0x4ade80, linewidth: 2 }));
+      braceMesh.add(obbLine);
+
+      const aabbBox = new THREE.Box3Helper(new THREE.Box3(), 0xf43f5e);
+      scene.add(aabbBox);
+
+      function updateRotation() {
+        const rad = THREE.MathUtils.degToRad(angleVp1);
+        braceMesh.rotation.z = rad;
+        braceMesh.updateMatrixWorld(true);
+        aabbBox.box.setFromObject(braceMesh);
+        const ratio = (aabbBox.box.getSize(new THREE.Vector3()).x * aabbBox.box.getSize(new THREE.Vector3()).y) / (16 * 2);
+        document.getElementById("vp1-status").innerText = `旋转角度: ${angleVp1}° | AABB面积膨胀率: ${ratio.toFixed(1)}x`;
+      }
+      updateRotation();
+
+      document.getElementById("vp1-rotate-btn").addEventListener("click", () => {
+        angleVp1 = (angleVp1 + 15) % 360;
+        updateRotation();
+      });
+
+      return {
+        update: () => {
+          braceMesh.rotation.y += 0.003;
+          aabbBox.box.setFromObject(braceMesh);
+        }
+      };
+    });
+
+    // -------------------------------------------------------------
+    // Viewport 2: 空间网格哈希 (Spatial Hash Grid)
+    // -------------------------------------------------------------
+    createThreeViewport("canvas-2", (scene) => {
+      const voxelGroup = new THREE.Group();
+      scene.add(voxelGroup);
+
+      // 创建体素线框立方体群
+      for (let x = -10; x <= 10; x += 5) {
+        for (let z = -10; z <= 10; z += 5) {
+          const vBox = new THREE.Box3Helper(new THREE.Box3(new THREE.Vector3(x, -5, z), new THREE.Vector3(x+5, 5, z+5)), 0x1178a6);
+          voxelGroup.add(vBox);
+        }
+      }
+
+      // 添加随机分布构件
+      const elemGeo = new THREE.BoxGeometry(2, 2, 2);
+      for (let i = 0; i < 20; i++) {
+        const mat = new THREE.MeshStandardMaterial({ color: i % 3 === 0 ? 0xf43f5e : 0xfbbf24 });
+        const mesh = new THREE.Mesh(elemGeo, mat);
+        mesh.position.set((Math.random() - 0.5) * 18, (Math.random() - 0.5) * 8, (Math.random() - 0.5) * 18);
+        scene.add(mesh);
+      }
+
+      let showGrid = true;
+      document.getElementById("vp2-toggle-grid").addEventListener("click", () => {
+        showGrid = !showGrid;
+        voxelGroup.visible = showGrid;
+      });
+
+      return {
+        update: () => {
+          scene.rotation.y += 0.002;
+        }
+      };
+    });
+
+    // -------------------------------------------------------------
+    // Viewport 3: BVH 层次二叉树与射线求交
+    // -------------------------------------------------------------
+    createThreeViewport("canvas-3", (scene) => {
+      // 构件梁与管道
+      const beamMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, opacity: 0.8, transparent: true });
+      const b1 = new THREE.Mesh(new THREE.BoxGeometry(16, 2, 2), beamMat);
+      b1.position.set(0, 2, 0);
+      scene.add(b1);
+
+      const b2 = new THREE.Mesh(new THREE.BoxGeometry(16, 2, 2), beamMat);
+      b2.position.set(0, -2, 0);
+      scene.add(b2);
+
+      const pipeMat = new THREE.MeshStandardMaterial({ color: 0xf43f5e });
+      const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 14, 16), pipeMat);
+      pipe.rotation.z = Math.PI / 2;
+      pipe.position.set(0, 0, 0);
+      scene.add(pipe);
+
+      // BVH 根节点包络
+      const rootHelper = new THREE.Box3Helper(new THREE.Box3(new THREE.Vector3(-9, -4, -2), new THREE.Vector3(9, 4, 2)), 0xfacc15);
+      scene.add(rootHelper);
+
+      // 射线指示器
+      const rayGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-14, 0, 0), new THREE.Vector3(14, 0, 0)]);
+      const rayLine = new THREE.Line(rayGeo, new THREE.LineBasicMaterial({ color: 0x4ade80, linewidth: 3 }));
+      scene.add(rayLine);
+
+      let mode = 0;
+      document.getElementById("vp3-depth-btn").addEventListener("click", () => {
+        mode = (mode + 1) % 2;
+        rootHelper.visible = (mode === 0);
+      });
+
+      return {
+        update: () => {
+          scene.rotation.y += 0.003;
+        }
+      };
+    });
+
+    // -------------------------------------------------------------
+    // Viewport 4: 窄阶段精检与软硬碰撞
+    // -------------------------------------------------------------
+    createThreeViewport("canvas-4", (scene) => {
+      // 混凝土梁
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(18, 3, 2), new THREE.MeshStandardMaterial({ color: 0x64748b, transparent: true, opacity: 0.6 }));
+      beam.position.set(0, 2, 0);
+      scene.add(beam);
+
+      // 硬碰撞风管 (穿透梁)
+      const duct = new THREE.Mesh(new THREE.BoxGeometry(3, 8, 3), new THREE.MeshStandardMaterial({ color: 0xf43f5e }));
+      duct.position.set(-4, 2, 0);
+      scene.add(duct);
+
+      // 软碰撞管道 (梁底下方 1.5 单位，安全缓冲 2.5)
+      const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 8, 16), new THREE.MeshStandardMaterial({ color: 0xfbbf24 }));
+      pipe.rotation.x = Math.PI / 2;
+      pipe.position.set(4, -0.2, 0);
+      scene.add(pipe);
+
+      // 缓冲区指示线框
+      const bufferMesh = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 8, 16), new THREE.MeshBasicMaterial({ color: 0x38bdf8, wireframe: true }));
+      bufferMesh.rotation.x = Math.PI / 2;
+      bufferMesh.position.set(4, -0.2, 0);
+      scene.add(bufferMesh);
+
+      document.getElementById("vp4-toggle-buffer").addEventListener("click", () => {
+        bufferMesh.visible = !bufferMesh.visible;
+      });
+
+      return {
+        update: () => {
+          scene.rotation.y += 0.003;
+        }
+      };
+    });
+
+    // -------------------------------------------------------------
+    // Viewport 5: 地下室管综碰撞与避让
+    // -------------------------------------------------------------
+    createThreeViewport("canvas-5", (scene) => {
+      const group = new THREE.Group();
+      scene.add(group);
+
+      // 框架结构
+      const bX = new THREE.Mesh(new THREE.BoxGeometry(20, 2, 2), new THREE.MeshStandardMaterial({ color: 0x475569, transparent: true, opacity: 0.4 }));
+      bX.position.set(0, 3, 0);
+      group.add(bX);
+
+      // 排烟风管
+      const duct = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 18), new THREE.MeshStandardMaterial({ color: 0x38bdf8 }));
+      duct.position.set(-3, 3, 0);
+      group.add(duct);
+
+      // 碰撞红球
+      const clashMarker = new THREE.Mesh(new THREE.SphereGeometry(1.0, 16, 16), new THREE.MeshStandardMaterial({ color: 0xf43f5e }));
+      clashMarker.position.set(-3, 3, 0);
+      group.add(clashMarker);
+
+      let isAvoided = false;
+      document.getElementById("vp5-avoid-btn").addEventListener("click", () => {
+        isAvoided = !isAvoided;
+        duct.position.y = isAvoided ? 0.5 : 3.0; // 下翻避让梁底
+        clashMarker.visible = !isAvoided;
+        document.getElementById("vp5-status").innerText = isAvoided ? "【碰撞已解除】风管已下翻避让至梁底下方" : "【冲突报警】排烟主风管与结构主梁腹板硬相交";
+      });
+
+      return {
+        update: () => {
+          group.rotation.y += 0.002;
+        }
+      };
+    });
+  </script>
+</body>
+</html>

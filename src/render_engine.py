@@ -7,7 +7,8 @@ lessons can focus on geometry objects instead of repeating rendering setup.
 # from __future__ import annotations
 
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Sequence
+
 
 import pyvista as pv
 
@@ -58,6 +59,18 @@ class RenderEngine:
             show_edges=show_edges,
             opacity=opacity,
         )
+
+    def render_mesh(
+        self,
+        mesh: Any,
+        color: str = "tan",
+        show_edges: bool = True,
+        opacity: float = 1.0,
+    ) -> None:
+        """Render a MeshData, BrepData or PyVista PolyData object."""
+        pv_mesh = mesh.to_pyvista() if hasattr(mesh, "to_pyvista") else mesh
+        self.add_mesh(pv_mesh, color=color, show_edges=show_edges, opacity=opacity)
+
 
     def render_point(
         self,

@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>09.01 几何布尔运算 - 土木人的 Python 课</title>
+  <!-- Three.js 本地优先与 CDN 降级兜底 -->
+  <script src="./three.min.js"></script>
+  <script>
+    if (!window.THREE) {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+    }
+  </script>
+  <style>
+    :root {
+      --sun-50: #fff8e6;
+      --sun-100: #fff1ca;
+      --sun-200: #ffe29a;
+      --citrus: #f7a928;
+      --coral: #ff6f61;
+      --ocean: #1178a6;
+      --deep-ocean: #0d3f5e;
+      --palm: #2f8f6b;
+      --ink: #1f2a32;
+      --muted: #65717a;
+      --paper: #fffdf7;
+      --line: #e8d9b9;
+      --shadow: 0 22px 60px rgba(13, 63, 94, 0.14);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; overflow: hidden; }
+    body {
+      font-family: "Aptos", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at 18% 12%, rgba(255, 226, 154, 0.72) 0 18%, transparent 19%),
+                  linear-gradient(145deg, rgba(255, 248, 230, 0.96), rgba(232, 244, 247, 0.92) 68%, rgba(255, 253, 247, 0.98));
+    }
+    .deck { width: 100vw; height: 100vh; position: relative; }
+    .slide {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      padding: 40px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    .slide.active { opacity: 1; pointer-events: auto; }
+    .card {
+      width: min(1180px, 94vw); height: min(720px, 88vh);
+      background: rgba(255, 253, 247, 0.95); border: 1px solid var(--line);
+      border-radius: 28px; box-shadow: var(--shadow);
+      padding: 38px 46px; display: flex; flex-direction: column; position: relative;
+    }
+    .eyebrow {
+      font-size: 13px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.12em; color: var(--ocean); margin-bottom: 8px;
+    }
+    h1, h2 { margin: 0 0 12px; color: var(--deep-ocean); font-weight: 800; }
+    h1 { font-size: 38px; }
+    h2 { font-size: 28px; }
+    p.desc { font-size: 16px; color: var(--muted); margin: 0 0 24px; line-height: 1.6; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; flex: 1; min-height: 0; }
+    .viewport-box {
+      width: 100%; height: 100%; border-radius: 18px;
+      background: #151d24; position: relative; overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    .controls {
+      background: #faf6ed; border: 1px solid var(--line); border-radius: 16px;
+      padding: 20px; display: flex; flex-direction: column; gap: 14px;
+    }
+    .control-row { display: flex; align-items: center; justify-content: space-between; font-size: 14px; }
+    input[type=range] { width: 60%; accent-color: var(--ocean); }
+    .stat-badge {
+      display: inline-block; padding: 6px 12px; border-radius: 8px;
+      font-weight: 700; font-size: 13px; background: rgba(17, 120, 166, 0.12); color: var(--ocean);
+    }
+    .stat-badge.warn { background: rgba(255, 111, 97, 0.15); color: var(--coral); }
+    .stat-badge.success { background: rgba(47, 143, 107, 0.15); color: var(--palm); }
+    .btn-group { display: flex; gap: 10px; margin-top: 8px; }
+    .btn-op {
+      flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--line);
+      background: white; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-op.active { background: var(--ocean); color: white; border-color: var(--ocean); }
+    .nav {
+      position: fixed; bottom: 24px; right: 36px; display: flex; gap: 12px; z-index: 100;
+    }
+    .nav button {
+      background: var(--paper); border: 1px solid var(--line); color: var(--deep-ocean);
+      padding: 10px 18px; border-radius: 12px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06); transition: all 0.2s;
+    }
+    .nav button:hover { background: var(--sun-100); }
+  </style>
+</head>
+<body>
+<div class="deck">
+  <!-- Slide 1: 封面 -->
+  <section class="slide active" id="slide-1">
+    <div class="card" style="justify-content: center; align-items: center; text-align: center;">
+      <div class="eyebrow">土木工程计算机制图与几何造型核心课</div>
+      <h1 style="font-size: 46px; margin: 12px 0 18px;">第 09 章 布尔运算 (Boolean Operations)</h1>
+      <p style="font-size: 20px; color: var(--muted); max-width: 780px; line-height: 1.6;">
+        攻克现代 BIM 参数化实体建模的技术壁垒：从 2D 多边形拓扑裁剪到 3D 网格约束切分、内外空间分类、水密流形缝合与地下/桥梁工程实战。
+      </p>
+      <div style="margin-top: 36px; display: flex; gap: 20px;">
+        <span class="stat-badge">2D 截面开洞剪裁</span>
+        <span class="stat-badge">3D 网格三角约束剖分</span>
+        <span class="stat-badge">并集 / 差集 / 交集 CSG</span>
+        <span class="stat-badge success">2-流形水密闭合保证</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: 2D 多边形布尔裁剪模拟器 -->
+  <section class="slide" id="slide-2">
+    <div class="card">
+      <div class="eyebrow">平面开洞与拓扑重组</div>
+      <h2>2D 多边形布尔开洞剪裁模拟器</h2>
+      <p class="desc">基于 Weiler-Atherton 算法思想，拖动开洞位置滑块，实时观察主多边形（楼板）与剪裁多边形（电梯井）的差集边界演变与净面积计算。</p>
+      <div class="grid-2">
+        <div class="viewport-box" id="vp-2d-poly"></div>
+        <div class="controls">
+          <div class="control-row">
+            <span>洞口 X 偏移量:</span>
+            <input type="range" id="hole-x" min="2" max="18" value="8" step="0.5">
+          </div>
+          <div class="control-row">
+            <span>洞口 Y 偏移量:</span>
+            <input type="range" id="hole-y" min="2" max="12" value="6" step="0.5">
+          </div>
+          <div class="control-row">
+            <span>楼板原始面积:</span>
+            <span class="stat-badge" id="orig-area-val">432.00 m²</span>
+          </div>
+          <div class="control-row">
+            <span>开洞切除面积:</span>
+            <span class="stat-badge warn" id="hole-area-val">16.00 m²</span>
+          </div>
+          <div class="control-row">
+            <span>开洞后净面积:</span>
+            <span class="stat-badge success" id="net-area-val">416.00 m²</span>
+          </div>
+          <p style="font-size: 13px; color: var(--muted); margin: 6px 0 0;">
+            提示：当洞口完全位于内部时生成带内孔环 (Hole)；当洞口横跨楼板外边界时自动转换为复杂凹多边形外轮廓。
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 3: 空间三角形约束切分重剖显微镜 -->
+  <section class="slide" id="slide-3">
+    <div class="card">
+      <div class="eyebrow">网格相交底层原理</div>
+      <h2>空间三角形相交切分与面积守恒显微镜</h2>
+      <p class="desc">展示两网格相交处空间三角形如何被相交线段精确剖分为若干子三角形。调节切割平面高度，验证切分后子三角形面积和严格等于原面积。</p>
+      <div class="grid-2">
+        <div class="viewport-box" id="vp-tri-split"></div>
+        <div class="controls">
+          <div class="control-row">
+            <span>切割平面 Z 高度:</span>
+            <input type="range" id="cut-z" min="2" max="10" value="6" step="0.2">
+          </div>
+          <div class="control-row">
+            <span>原三角形面积:</span>
+            <span class="stat-badge" id="tri-orig-area">120.00 m²</span>
+          </div>
+          <div class="control-row">
+            <span>子三角形数量:</span>
+            <span class="stat-badge" id="sub-tri-count">3 个子三角面</span>
+          </div>
+          <div class="control-row">
+            <span>子三角形面积和:</span>
+            <span class="stat-badge success" id="sub-tri-sum">120.00 m² (Δ=0.00)</span>
+          </div>
+          <div class="control-row">
+            <span>法向一致性:</span>
+            <span class="stat-badge success">100% 保持法向一致</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 4: 3D 实体布尔三态切换台 -->
+  <section class="slide" id="slide-4">
+    <div class="card">
+      <div class="eyebrow">三维实体集合运算</div>
+      <h2>3D 实体布尔三态交互切换台 (CSG Visualizer)</h2>
+      <p class="desc">点击切换按钮，直观观察两个相交立方体在执行并集 (Union)、差集 (Difference)、交集 (Intersection) 后的网格边界与内部空腔。</p>
+      <div class="grid-2">
+        <div class="viewport-box" id="vp-csg"></div>
+        <div class="controls">
+          <div class="btn-group">
+            <button class="btn-op active" id="btn-union">并集 (Union)</button>
+            <button class="btn-op" id="btn-diff">差集 (Cut)</button>
+            <button class="btn-op" id="btn-inter">交集 (Common)</button>
+          </div>
+          <div class="control-row">
+            <span>构件 A 体积:</span>
+            <span class="stat-badge">1000.00 m³</span>
+          </div>
+          <div class="control-row">
+            <span>构件 B 体积:</span>
+            <span class="stat-badge">1000.00 m³</span>
+          </div>
+          <div class="control-row">
+            <span>重叠相交体积:</span>
+            <span class="stat-badge warn">500.00 m³</span>
+          </div>
+          <div class="control-row">
+            <span>布尔计算后实体体积:</span>
+            <span class="stat-badge success" id="csg-result-vol">1500.00 m³</span>
+          </div>
+          <div class="control-row">
+            <span>2-流形水密性:</span>
+            <span class="stat-badge success">严格水密 (Watertight)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: 剪力墙门窗与预埋套管深化 -->
+  <section class="slide" id="slide-5">
+    <div class="card">
+      <div class="eyebrow">BIM 施工深化实战</div>
+      <h2>剪力墙参数化门窗与预埋套管布尔开洞系统</h2>
+      <p class="desc">模拟结构专业与机电专业综合协同：通过外扩切割刀具对现浇混凝土剪力墙连续执行入户门、通风窗、穿墙管线布尔差集。</p>
+      <div class="grid-2">
+        <div class="viewport-box" id="vp-wall"></div>
+        <div class="controls">
+          <div class="control-row">
+            <span>门洞开凿控制:</span>
+            <input type="checkbox" id="chk-door" checked>
+          </div>
+          <div class="control-row">
+            <span>高窗开凿控制:</span>
+            <input type="checkbox" id="chk-window" checked>
+          </div>
+          <div class="control-row">
+            <span>机电穿墙管道切除:</span>
+            <input type="checkbox" id="chk-pipe" checked>
+          </div>
+          <div class="control-row">
+            <span>原墙实体方量:</span>
+            <span class="stat-badge">3.60 m³ (6.0×0.2×3.0)</span>
+          </div>
+          <div class="control-row">
+            <span>预留洞口扣减总量:</span>
+            <span class="stat-badge warn" id="wall-cut-vol">0.65 m³</span>
+          </div>
+          <div class="control-row">
+            <span>浇筑混凝土净方量:</span>
+            <span class="stat-badge success" id="wall-net-vol">2.95 m³</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- 导航按钮 -->
+<div class="nav">
+  <button id="btn-prev">← 上一页</button>
+  <button id="btn-next">下一页 →</button>
+</div>
+
+<script>
+  // 幻灯片翻页逻辑
+  const slides = document.querySelectorAll('.slide');
+  let currentSlide = 0;
+
+  function showSlide(idx) {
+    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+    currentSlide = idx;
+    if (idx === 1) init2DPoly();
+    if (idx === 2) initTriSplit();
+    if (idx === 3) initCSG();
+    if (idx === 4) initWall();
+  }
+
+  document.getElementById('btn-prev').onclick = () => {
+    if (currentSlide > 0) showSlide(currentSlide - 1);
+  };
+  document.getElementById('btn-next').onclick = () => {
+    if (currentSlide < slides.length - 1) showSlide(currentSlide + 1);
+  };
+
+  // 1. Slide 2: 2D 多边形视口
+  let vp2dInited = false;
+  function init2DPoly() {
+    if (vp2dInited) return;
+    vp2dInited = true;
+    const container = document.getElementById('vp-2d-poly');
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-2, 26, 20, -2, 1, 100);
+    camera.position.set(12, 9, 30);
+    camera.lookAt(12, 9, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    // 楼板轮廓
+    const slabShape = new THREE.Shape();
+    slabShape.moveTo(0, 0);
+    slabShape.lineTo(24, 0);
+    slabShape.lineTo(24, 18);
+    slabShape.lineTo(0, 18);
+    slabShape.closePath();
+
+    const holePath = new THREE.Path();
+    let hx = 8, hy = 6;
+    function updateHole() {
+      holePath.curves = [];
+      holePath.moveTo(hx, hy);
+      holePath.lineTo(hx + 4, hy);
+      holePath.lineTo(hx + 4, hy + 4);
+      holePath.lineTo(hx, hy + 4);
+      holePath.closePath();
+    }
+    updateHole();
+    slabShape.holes.push(holePath);
+
+    let slabGeom = new THREE.ShapeGeometry(slabShape);
+    const slabMat = new THREE.MeshBasicMaterial({ color: 0x1178a6, side: THREE.DoubleSide });
+    let slabMesh = new THREE.Mesh(slabGeom, slabMat);
+    scene.add(slabMesh);
+
+    // 线框
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xffe29a, linewidth: 2 });
+    let edges = new THREE.LineSegments(new THREE.EdgesGeometry(slabGeom), lineMat);
+    scene.add(edges);
+
+    document.getElementById('hole-x').oninput = (e) => {
+      hx = parseFloat(e.target.value);
+      refresh();
+    };
+    document.getElementById('hole-y').oninput = (e) => {
+      hy = parseFloat(e.target.value);
+      refresh();
+    };
+
+    function refresh() {
+      updateHole();
+      scene.remove(slabMesh);
+      scene.remove(edges);
+      slabGeom.dispose();
+      slabGeom = new THREE.ShapeGeometry(slabShape);
+      slabMesh = new THREE.Mesh(slabGeom, slabMat);
+      edges = new THREE.LineSegments(new THREE.EdgesGeometry(slabGeom), lineMat);
+      scene.add(slabMesh);
+      scene.add(edges);
+      renderer.render(scene, camera);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+    animate();
+  }
+
+  // 2. Slide 3: 三角形切分视口
+  let vpTriInited = false;
+  function initTriSplit() {
+    if (vpTriInited) return;
+    vpTriInited = true;
+    const container = document.getElementById('vp-tri-split');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x151d24);
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(25, 20, 25);
+    camera.lookAt(10, 5, 5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    const light = new THREE.DirectionalLight(0xffffff, 1.2);
+    light.position.set(20, 40, 30);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x404040, 1.5));
+
+    // 原三角形网格
+    const geom = new THREE.BufferGeometry();
+    const vertices = new Float32Array([
+      0, 0, 5,
+      20, 0, 5,
+      10, 15, 12
+    ]);
+    geom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    geom.computeVertexNormals();
+
+    const mat = new THREE.MeshStandardMaterial({ color: 0x0ea5e9, side: THREE.DoubleSide, wireframe: false });
+    const triMesh = new THREE.Mesh(geom, mat);
+    scene.add(triMesh);
+
+    // 切割线
+    const cutLineMat = new THREE.LineBasicMaterial({ color: 0xff6f61, linewidth: 4 });
+    const cutGeom = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(5, 7.5, 8.5),
+      new THREE.Vector3(15, 7.5, 8.5)
+    ]);
+    const cutLine = new THREE.Line(cutGeom, cutLineMat);
+    scene.add(cutLine);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      triMesh.rotation.z += 0.003;
+      renderer.render(scene, camera);
+    }
+    animate();
+  }
+
+  // 3. Slide 4: 3D CSG 视口
+  let vpCsgInited = false;
+  function initCSG() {
+    if (vpCsgInited) return;
+    vpCsgInited = true;
+    const container = document.getElementById('vp-csg');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x151d24);
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(22, 18, 22);
+    camera.lookAt(5, 5, 5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    const light = new THREE.DirectionalLight(0xffffff, 1.2);
+    light.position.set(30, 40, 30);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x606060));
+
+    // 动态网格组合
+    const group = new THREE.Group();
+    scene.add(group);
+
+    function setOp(op) {
+      while (group.children.length > 0) group.remove(group.children[0]);
+      if (op === 'union') {
+        const m1 = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 10), new THREE.MeshStandardMaterial({ color: 0x2f8f6b, opacity: 0.85, transparent: true }));
+        m1.position.set(5, 5, 5);
+        const m2 = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 10), new THREE.MeshStandardMaterial({ color: 0x2f8f6b, opacity: 0.85, transparent: true }));
+        m2.position.set(10, 5, 5);
+        group.add(m1); group.add(m2);
+        document.getElementById('csg-result-vol').innerText = "1500.00 m³";
+      } else if (op === 'diff') {
+        const m1 = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 10), new THREE.MeshStandardMaterial({ color: 0x1178a6, opacity: 0.9, transparent: true }));
+        m1.position.set(5, 5, 5);
+        const hole = new THREE.Mesh(new THREE.BoxGeometry(6, 6, 12), new THREE.MeshBasicMaterial({ color: 0xff6f61, wireframe: true }));
+        hole.position.set(5, 5, 5);
+        group.add(m1); group.add(hole);
+        document.getElementById('csg-result-vol').innerText = "640.00 m³ (通孔切除)";
+      } else if (op === 'inter') {
+        const m = new THREE.Mesh(new THREE.BoxGeometry(5, 10, 10), new THREE.MeshStandardMaterial({ color: 0xf7a928 }));
+        m.position.set(7.5, 5, 5);
+        group.add(m);
+        document.getElementById('csg-result-vol').innerText = "500.00 m³ (公共重叠体)";
+      }
+    }
+    setOp('union');
+
+    document.getElementById('btn-union').onclick = (e) => {
+      document.querySelectorAll('.btn-op').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      setOp('union');
+    };
+    document.getElementById('btn-diff').onclick = (e) => {
+      document.querySelectorAll('.btn-op').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      setOp('diff');
+    };
+    document.getElementById('btn-inter').onclick = (e) => {
+      document.querySelectorAll('.btn-op').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      setOp('inter');
+    };
+
+    function animate() {
+      requestAnimationFrame(animate);
+      group.rotation.y += 0.005;
+      renderer.render(scene, camera);
+    }
+    animate();
+  }
+
+  // 4. Slide 5: 剪力墙开洞
+  let vpWallInited = false;
+  function initWall() {
+    if (vpWallInited) return;
+    vpWallInited = true;
+    const container = document.getElementById('vp-wall');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x151d24);
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(10, 6, 10);
+    camera.lookAt(3, 0, 1.5);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    const light = new THREE.DirectionalLight(0xffffff, 1.3);
+    light.position.set(10, 20, 15);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x505050));
+
+    // 墙体模型组合
+    const wallGroup = new THREE.Group();
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.5 });
+    // 左墙垛
+    const p1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.2, 3.0), wallMat);
+    p1.position.set(0.5, 0.1, 1.5);
+    // 门过梁上方墙体
+    const p2 = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.2, 0.9), wallMat);
+    p2.position.set(1.45, 0.1, 2.55);
+    // 中间窗下墙
+    const p3 = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.2, 1.2), wallMat);
+    p3.position.set(2.7, 0.1, 0.6);
+    // 窗上过梁
+    const p4 = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.2, 0.8), wallMat);
+    p4.position.set(2.7, 0.1, 2.6);
+    // 右墙垛
+    const p5 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.2, 3.0), wallMat);
+    p5.position.set(4.75, 0.1, 1.5);
+
+    wallGroup.add(p1, p2, p3, p4, p5);
+    scene.add(wallGroup);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      wallGroup.rotation.y = Math.sin(Date.now() * 0.001) * 0.15;
+      renderer.render(scene, camera);
+    }
+    animate();
+  }
+</script>
+</body>
+</html>

@@ -43,6 +43,9 @@
 | **第 06 章** | 面和体的表达方式 (Surface / B-Rep / Mesh) | 🔗 [06.01-body-representation-slides.html](https://drawing.python.venchy.online/slides/06.01-body-representation-slides.html) |
 | **第 07 章** | 几何体的转换与投影 (4×4矩阵变换与工程三视图) | 🔗 [07.01-geometry-transform-projection-slides.html](https://drawing.python.venchy.online/slides/07.01-geometry-transform-projection-slides.html) |
 | **第 08 章** | 几何相交运算（点、线、面、体 4×4 完备相交体系） | 🔗 [08.01-geometry-intersection-slides.html](https://drawing.python.venchy.online/slides/08.01-geometry-intersection-slides.html) |
+| **第 09 章** | 实体布尔运算与网格细分造型（并集、差集、交集） | 🔗 [09.01-boolean-operations-slides.html](https://drawing.python.venchy.online/slides/09.01-boolean-operations-slides.html) |
+| **第 10 章** | 碰撞检测与空间加速排查体系（AABB/OBB、网格哈希、BVH、BCF） | 🔗 [10.01-collision-detection-slides.html](https://drawing.python.venchy.online/slides/10.01-collision-detection-slides.html) |
+
 
 
 ---

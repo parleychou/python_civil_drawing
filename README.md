@@ -43,6 +43,9 @@ All slides are built with HTML5, responsive styling, and embedded Three.js 3D in
 | **Chapter 06** | Solid & Surface Representations (Surface / B-Rep / Mesh) | 🔗 [06.01-body-representation-slides.html](https://drawing.python.venchy.online/slides/06.01-body-representation-slides.html) |
 | **Chapter 07** | Geometric Transformations & Engineering Projections | 🔗 [07.01-geometry-transform-projection-slides.html](https://drawing.python.venchy.online/slides/07.01-geometry-transform-projection-slides.html) |
 | **Chapter 08** | Geometric Intersection Algorithms (Point, Line, Plane, Solid) | 🔗 [08.01-geometry-intersection-slides.html](https://drawing.python.venchy.online/slides/08.01-geometry-intersection-slides.html) |
+| **Chapter 09** | Solid Boolean Operations & Mesh Subdivision (Union, Cut, Intersect) | 🔗 [09.01-boolean-operations-slides.html](https://drawing.python.venchy.online/slides/09.01-boolean-operations-slides.html) |
+| **Chapter 10** | Collision Detection & Spatial Partitioning (AABB/OBB, HashGrid, BVH, BCF) | 🔗 [10.01-collision-detection-slides.html](https://drawing.python.venchy.online/slides/10.01-collision-detection-slides.html) |
+
 
 
 ---

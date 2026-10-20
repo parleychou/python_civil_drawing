@@ -94,3 +94,26 @@ class BrepData(GeometryData):
         """原生内置相交运算统一入口，自动委托三角化网格执行多态分发."""
         mesh = self.to_triangulated_mesh()
         return mesh.intersect(other, tol=tol)
+
+    # =========================================================================
+    # 内置实体布尔运算 (Built-in Boolean Operations)
+    # =========================================================================
+    def boolean_union(self, other: Any, tol: float = 1e-4) -> Any:
+        """计算自身与目标实体的布尔并集 (A ∪ B)."""
+        return self.to_triangulated_mesh().boolean_union(other, tol=tol)
+
+    def boolean_difference(self, other: Any, tol: float = 1e-4) -> Any:
+        """计算自身与目标实体的布尔差集 (Cut / A \\ B)."""
+        return self.to_triangulated_mesh().boolean_difference(other, tol=tol)
+
+    def cut(self, other: Any, tol: float = 1e-4) -> Any:
+        """boolean_difference 的工程别名."""
+        return self.boolean_difference(other, tol=tol)
+
+    def boolean_intersection(self, other: Any, tol: float = 1e-4) -> Any:
+        """计算自身与目标实体的布尔交集 (Common / A ∩ B)."""
+        return self.to_triangulated_mesh().boolean_intersection(other, tol=tol)
+
+    def common(self, other: Any, tol: float = 1e-4) -> Any:
+        """boolean_intersection 的工程别名."""
+        return self.boolean_intersection(other, tol=tol)

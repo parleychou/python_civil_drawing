@@ -113,3 +113,74 @@ class MeshData(GeometryData):
         """排查网格曲面是否存在自相交折叠面片."""
         from intersection import check_mesh_self_intersection
         return check_mesh_self_intersection(self, tol=tol)
+
+    # =========================================================================
+    # 内置实体网格布尔运算 (Built-in Solid Boolean Operations)
+    # =========================================================================
+    def boolean_union(self, other: Any, tol: float = 1e-4) -> Any:
+        """计算自身与目标实体的布尔并集 (A ∪ B)."""
+        from boolean_ops import boolean_union_mesh
+        target = other.to_triangulated_mesh() if hasattr(other, "to_triangulated_mesh") else other
+        return boolean_union_mesh(self, target, tolerance=tol)
+
+    def boolean_difference(self, other: Any, tol: float = 1e-4) -> Any:
+        """计算自身与目标实体的布尔差集 (Cut / A \\ B)."""
+        from boolean_ops import boolean_difference_mesh
+        target = other.to_triangulated_mesh() if hasattr(other, "to_triangulated_mesh") else other
+        return boolean_difference_mesh(self, target, tolerance=tol)
+
+    def cut(self, other: Any, tol: float = 1e-4) -> Any:
+        """boolean_difference 的工程别名."""
+        return self.boolean_difference(other, tol=tol)
+
+    def boolean_intersection(self, other: Any, tol: float = 1e-4) -> Any:
+        """计算自身与目标实体的布尔交集 (Common / A ∩ B)."""
+        from boolean_ops import boolean_intersection_mesh
+        target = other.to_triangulated_mesh() if hasattr(other, "to_triangulated_mesh") else other
+        return boolean_intersection_mesh(self, target, tolerance=tol)
+
+    def common(self, other: Any, tol: float = 1e-4) -> Any:
+        """boolean_intersection 的工程别名."""
+        return self.boolean_intersection(other, tol=tol)
+
+    def __add__(self, other: Any) -> "MeshData":
+        res = self.boolean_union(other)
+        if not res.success or res.mesh is None:
+            raise RuntimeError(f"并集运算失败: {res.warning_message}")
+        return res.mesh
+
+    def __sub__(self, other: Any) -> "MeshData":
+        res = self.boolean_difference(other)
+        if not res.success or res.mesh is None:
+            raise RuntimeError(f"差集运算失败: {res.warning_message}")
+        return res.mesh
+
+    def __and__(self, other: Any) -> "MeshData":
+        res = self.boolean_intersection(other)
+        if not res.success or res.mesh is None:
+            raise RuntimeError(f"交集运算失败: {res.warning_message}")
+        return res.mesh
+
+    # =========================================================================
+    # 内置空间碰撞检测与包围盒 (Built-in Clash Detection & Bounding Box)
+    # =========================================================================
+    @property
+    def aabb(self) -> Any:
+        """获取网格的轴对齐包围盒 AABB."""
+        from collision import AABB
+        return AABB.from_mesh(self)
+
+    def clash_with(self, other: "MeshData", clearance: float = 0.0) -> Any:
+        """排查自身网格与目标网格的硬穿透碰撞或软碰撞最小净距.
+
+        返回 ClashRecord 冲突记录，若无冲突则返回 None。
+        """
+        from collision import check_narrow_phase_clash
+        return check_narrow_phase_clash(
+            id_a=self.name or "Mesh_A",
+            mesh_a=self,
+            id_b=other.name or "Mesh_B",
+            mesh_b=other,
+            clearance=clearance,
+        )
+
